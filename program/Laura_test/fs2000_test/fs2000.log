@@ -1,0 +1,32 @@
+Starting Dynare (version 4.5.3).
+Starting preprocessing of the model file ...
+Substitution of endo leads >= 2: added 1 auxiliary variables and equations.
+Found 15 equation(s).
+Evaluating expressions...done
+Computing static model derivatives:
+ - order 1
+Computing dynamic model derivatives:
+ - order 1
+ - order 2
+Processing outputs ...
+done
+Preprocessing completed.
+
+STEADY-STATE RESULTS:
+
+m                		 1.011
+P                		 2.25815
+c                		 0.447711
+e                		 1
+W                		 4.5959
+R                		 1.02121
+k                		 5.80121
+d                		 0.849425
+n                		 0.187216
+l                		 0.860425
+gy_obs           		 1.003
+gp_obs           		 1.00797
+y                		 0.580765
+dA               		 1.003
+Initial value of the log posterior (or likelihood): 1279.0938
+Total computing time : 0h00m00s
