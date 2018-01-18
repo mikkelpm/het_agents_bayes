@@ -1,0 +1,84 @@
+Starting Dynare (version 4.4.3).
+Starting preprocessing of the model file ...
+WARNING: you are using a function (max, min, abs, sign) or an operator (<, >, <=, >=, ==, !=) which is unsuitable for a stochastic context; see the reference manual, section about "Expressions", for more details.
+Found 71 equation(s).
+Evaluating expressions...done
+Computing static model derivatives:
+ - order 1
+Computing dynamic model derivatives:
+ - order 1
+Processing outputs ...done
+Preprocessing completed.
+Starting MATLAB/Octave computing.
+
+Computing steady state...
+Computing initial guess from histogram...
+Compute steady state from parametric family...
+... Done!  Elapsed time: 49.23 seconds 
+
+
+MODEL SUMMARY
+
+  Number of variables:         71
+  Number of stochastic shocks: 1
+  Number of state variables:   9
+  Number of jumpers:           52
+  Number of static variables:  10
+
+
+MATRIX OF COVARIANCE OF EXOGENOUS SHOCKS
+
+Variables           aggregateTFPShock 
+aggregateTFPShock             1.000000
+
+POLICY AND TRANSITION FUNCTIONS
+                        aggregateTFP               logAggregateOutput         logAggregateConsumption    logAggregateInvestment     logWage                    r                          
+Constant                           0        0.459977        0.161932       -0.895857        0.086316        0.039666
+moment_1_1(-1)                     0        0.006173        0.012731       -0.012717        0.006172       -0.001533
+moment_2_1(-1)                     0        0.082007        0.134546       -0.069306        0.082002       -0.020364
+moment_1_2(-1)                     0               0       -0.001021        0.002940               0               0
+moment_2_2(-1)                     0               0       -0.001391        0.004006               0               0
+moment_1_3(-1)                     0               0        0.000215       -0.000619               0               0
+moment_2_3(-1)                     0               0        0.000329       -0.000949               0               0
+mHat_1(-1)                         0               0        0.124492       -0.358537               0               0
+mHat_2(-1)                         0               0        2.790432       -8.036430               0               0
+aggregateTFP(-1)            0.859000        0.859000        0.371803        2.262124        0.858952        0.119985
+aggregateTFPShock           0.014000        0.014000        0.006060        0.036868        0.013999        0.001956
+
+
+THEORETICAL MOMENTS (HP filter, lambda = 100)
+
+VARIABLE                     MEAN    STD. DEV.   VARIANCE 
+aggregateTFP                  0.0000     0.0132     0.0002
+logAggregateOutput            0.4600     0.0132     0.0002
+logAggregateConsumption       0.1619     0.0066     0.0000
+logAggregateInvestment       -0.8959     0.0350     0.0012
+logWage                       0.0863     0.0132     0.0002
+r                             0.0397     0.0020     0.0000
+
+
+
+MATRIX OF CORRELATIONS (HP filter, lambda = 100)
+
+Variables                       aggregateTFP          logAggregateOutput    logAggregateConsumption   logAggregateInvestment          logWage                     r            
+aggregateTFP                                1.0000                   0.9857                   0.8300                   0.9985                   0.9857                   0.9593
+logAggregateOutput                          0.9857                   1.0000                   0.9122                   0.9751                   1.0000                   0.8979
+logAggregateConsumption                     0.8300                   0.9122                   1.0000                   0.7987                   0.9122                   0.6387
+logAggregateInvestment                      0.9985                   0.9751                   0.7987                   1.0000                   0.9751                   0.9731
+logWage                                     0.9857                   1.0000                   0.9122                   0.9751                   1.0000                   0.8979
+r                                           0.9593                   0.8979                   0.6387                   0.9731                   0.8979                   1.0000
+
+
+
+COEFFICIENTS OF AUTOCORRELATION (HP filter, lambda = 100)
+
+Order                        1       2       3       4       5   
+aggregateTFP               0.4504  0.0846 -0.1322 -0.2369 -0.2637
+logAggregateOutput         0.4933  0.1332 -0.0972 -0.2223 -0.2691
+logAggregateConsumption    0.6610  0.3232  0.0401 -0.1650 -0.2895
+logAggregateInvestment     0.4417  0.0747 -0.1395 -0.2401 -0.2628
+logWage                    0.4933  0.1332 -0.0972 -0.2223 -0.2691
+r                          0.4303  0.0618 -0.1487 -0.2438 -0.2613
+Total computing time : 0h01m13s
+Note: 1 warning(s) encountered in the preprocessor
+Note: warning(s) encountered in MATLAB/Octave code
