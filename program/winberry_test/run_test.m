@@ -1,9 +1,13 @@
 clear all;
 
+tag_date = datestr(now,'yyyymmdd');
+
+is_data_gen = 0; % whether simulate data
+is_profile = 0; %whether run profiler for execution time
 
 %% Settings
 
-bbetas = [.95 .96];%linspace(0.9,0.99,10);     % beta values to loop over
+bbetas = linspace(0.9,0.99,10);     % beta values to loop over
 T = 200;                            % Number of periods of simulated data
 num_burnin_periods = 100;           % Number of burn-in periods for simulations
 num_smooth_draws = 25;              % Number of draws from the smoothing distribution (for each beta)
@@ -79,12 +83,17 @@ dynare firstOrderDynamics_polynomials noclearall;                   % Run Dynare
 
 %% Simulate data
 
-% Simulate
-set_dynare_seed(rng_seed);                                          % Seed RNG
-sim_struct = simulate_model(T,num_burnin_periods,M_,oo_,options_);  % Simulate data
+if is_data_gen
+    % Simulate
+    set_dynare_seed(rng_seed);                                          % Seed RNG
+    sim_struct = simulate_model(T,num_burnin_periods,M_,oo_,options_);  % Simulate data
+    
+    % Store simulated data
+    save('simul.mat', '-struct', 'sim_struct');                         % Save simulated data
+else
+    load('simul.mat')
+end
 
-% Store simulated data
-save('simul.mat', '-struct', 'sim_struct');                         % Save simulated data
 
 %% Smoothing and likelihood
 
@@ -111,7 +120,7 @@ loglikes2 = zeros(size(bbetas));
 N_hh = 1000;
 n_obs_hh = 2; % [labor, income]
 
-for i_beta=[2 1]%1:length(bbetas) % For each alpha...
+for i_beta=1:length(bbetas) % For each alpha...
 
     fprintf('%s%6.4f\n', 'beta=', bbetas(i_beta));
     bbeta = bbetas(i_beta);                          % Set beta
@@ -125,7 +134,7 @@ for i_beta=[2 1]%1:length(bbetas) % For each alpha...
 
     %% Simulate individual labor and income
     
-    if i_beta == 2
+    if abs(bbeta-0.96) < 1e-6 && is_data_gen
         % assign individuals to different smooth draws
         simul_data_hh_grpid = nan(2,N_hh,T);
         simul_data_hh_grpid(1,:,:) = 1; % labor = 1
@@ -186,7 +195,9 @@ for i_beta=[2 1]%1:length(bbetas) % For each alpha...
                 end
             end
         end
-        save('simul_data_hh.mat','simul_data_hh_grpid','simul_data_hh')   
+        save('simul_data_hh.mat','simul_data_hh_grpid','simul_data_hh') 
+    else
+        load('simul_data_hh.mat')
     end
     %% Likelihood
    
@@ -240,10 +251,14 @@ for i_beta=[2 1]%1:length(bbetas) % For each alpha...
         end
     end
     
-    loglikes2(i_beta) = loglikes2(i_beta)+sum(loglikes_hh(:));
+    loglikes2(i_beta) = loglikes(i_beta)+sum(loglikes_hh(:));
     
     %% Save
-    save(['loglikes_hh_beta' num2str(i_beta) '.mat'],'loglikes_hh')    
+    save(['loglikes_hh_beta' num2str(i_beta) '_' tag_date '.mat'],'loglikes_hh')    
 end
 
 cd('../');
+
+if is_profile
+    profsave(profile('info'),['profile_results_' tag_date])
+end
