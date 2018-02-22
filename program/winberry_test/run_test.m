@@ -186,7 +186,7 @@ for i_beta=[2 1]%1:length(bbetas) % For each alpha...
                 end
             end
         end
-        save('simul_data_hh_beta.mat','simul_data_hh_grpid','simul_data_hh')   
+        save('simul_data_hh.mat','simul_data_hh_grpid','simul_data_hh')   
     end
     %% Likelihood
    
