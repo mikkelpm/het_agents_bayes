@@ -1,17 +1,23 @@
 clear all;
 
-tag_date = datestr(now,'yyyymmdd');
-
-is_data_gen = 0; % whether simulate data
-is_profile = 0; %whether run profiler for execution time
-
 %% Settings
 
+is_data_gen = 1; % whether simulate data
+is_profile = 0; %whether run profiler for execution time
+
 bbetas = linspace(0.9,0.99,10);     % beta values to loop over
-T = 200;                            % Number of periods of simulated data
+
+T = 200;                            % Number of periods of simulated macro data
+ts_hh = 20:20:200;                  % Time periods where we observe micro data
+N_hh = 1e3;                         % Number of households per non-missing time period
+
+constr_tol = 1e-6;                  % Numerical tolerance for whether assets are at borrowing constraint
 num_burnin_periods = 100;           % Number of burn-in periods for simulations
 num_smooth_draws = 25;              % Number of draws from the smoothing distribution (for each beta)
-rng_seed = 20180116;                % Random number generator seed for initial simulation
+
+rng_seed = 201803021;                % Random number generator seed for initial simulation
+
+tag_date = datestr(now,'yyyymmdd');
 
 
 %% Set economic parameters 
@@ -35,6 +41,7 @@ uDuration = 1;
 
 % Unemployment benefits
 mmu = .15;
+ttau = mmu*(1-aggEmployment)/aggEmployment;
 
 % Aggregate Shocks
 rrhoTFP = .859;										
@@ -84,41 +91,30 @@ dynare firstOrderDynamics_polynomials noclearall;                   % Run Dynare
 %% Simulate data
 
 if is_data_gen
+    
     % Simulate
     set_dynare_seed(rng_seed);                                          % Seed RNG
     sim_struct = simulate_model(T,num_burnin_periods,M_,oo_,options_);  % Simulate data
-    
-    % Store simulated data
     save('simul.mat', '-struct', 'sim_struct');                         % Save simulated data
+    
+    % draw individual incomes
+    simul_data_hh = simulate_hh(sim_struct, ts_hh, N_hh);
+    save('simul_data_hh.mat','simul_data_hh');
+    
 else
+    
     load('simul.mat')
+    load('simul_data_hh.mat');
+    
 end
 
 
 %% Smoothing and likelihood
 
-% Determine variables to smooth
-smooth_vars_aux1 = cell(nEpsilon,nMeasure);
-smooth_vars_aux2 = cell(nEpsilon,nMeasure);
-for i_Measure = 1:nMeasure
-    for i_Epsilon = 1:nEpsilon
-        smooth_vars_aux1{i_Epsilon,i_Measure} = ['moment_' num2str(i_Epsilon) '_' num2str(i_Measure)];
-        smooth_vars_aux2{i_Epsilon,i_Measure} = ['measureCoefficient_' num2str(i_Epsilon) '_' num2str(i_Measure)];
-    end
-end
-
-smooth_vars = char([{'w'; 'r'; 'mHat_1' ; 'mHat_2'}; smooth_vars_aux1(:); smooth_vars_aux2(:)]);%char(setxor(cellstr(M_.endo_names), options_.varobs)); % All endogenous variables except observed ones
-
-
 % Loop over beta values
 loglikes = zeros(size(bbetas));
-smooth_draws = cell(length(bbetas),num_smooth_draws);
-
-% Heterogeneous agent
-ttau = mmu*(1-aggEmployment)/aggEmployment;
-loglikes2 = zeros(size(bbetas));
-N_hh = 1000;
-n_obs_hh = 2; % [labor, income]
+loglikes_macro = zeros(size(bbetas));
+loglikes_hh = zeros(size(bbetas));
 
 for i_beta=1:length(bbetas) % For each alpha...
 
@@ -127,134 +123,9 @@ for i_beta=1:length(bbetas) % For each alpha...
     saveParameters;
     setDynareParameters;
 
-    % Durbin-Koopman simulation smoother
-    [the_ll, ~, the_smooth_draws] = simulation_smoother('simul.mat', smooth_vars, num_smooth_draws, num_burnin_periods, M_, oo_, options_);
-    loglikes(i_beta) = the_ll;                       % Store log likelihood
-    smooth_draws(i_beta,:) = the_smooth_draws;       % Store smoothing draws
-
-    %% Simulate individual labor and income
+    [loglikes(i_beta), loglikes_macro(i_beta), loglikes_hh(i_beta)] = ...
+        loglike_compute('simul.mat', simul_data_hh, ts_hh, num_smooth_draws, num_burnin_periods, constr_tol, M_, oo_, options_);
     
-    if abs(bbeta-0.96) < 1e-6 && is_data_gen
-        % assign individuals to different smooth draws
-        simul_data_hh_grpid = nan(2,N_hh,T);
-        simul_data_hh_grpid(1,:,:) = 1; % labor = 1
-        N_unemp_hh = round((1-aggEmployment)*N_hh);
-        simul_data_hh_grpid(1,1:N_unemp_hh,:) = 0; % labor = 0
-        simul_data_hh_grpid(2,:,:) = repmat(1:num_smooth_draws,1,N_hh/num_smooth_draws,T); % id of which smooth draws
-        simul_data_hh_grpid(2,floor(N_unemp_hh/num_smooth_draws)*num_smooth_draws+(1:num_smooth_draws),:)...
-            =  reshape(randsample(num_smooth_draws,num_smooth_draws*T,true),num_smooth_draws,T);
-        
-        % draw individual incomes
-        simul_data_hh = nan(n_obs_hh,N_hh,T);
-        simul_data_hh(1,:,:) = simul_data_hh_grpid(1,:,:);
-        for t = 1:T
-            for eepsilon = 0:1
-                for i_grp = 1:num_smooth_draws
-                    ix = find(simul_data_hh_grpid(1,:,t)==eepsilon & simul_data_hh_grpid(2,:,t)==i_grp);
-                    
-                    % prepare the parameters
-                    mHat = eval(['smooth_draws{' num2str(i_beta) ',' num2str(i_grp) '}.mHat_' num2str(eepsilon+1) '(t)']);
-                    moment = nan(1,nMeasure);
-                    measureCoefficient = nan(1,nMeasure);
-                    for i_Measure = 1:nMeasure
-                        moment(i_Measure) = eval(['smooth_draws{' num2str(i_beta) ',' num2str(i_grp) '}.moment_' num2str(eepsilon+1) '_' num2str(i_Measure) '(t)']);
-                        measureCoefficient(i_Measure) = eval(['smooth_draws{' num2str(i_beta) ',' num2str(i_grp) '}.measureCoefficient_' num2str(eepsilon+1) '_' num2str(i_Measure) '(t)']);
-                    end
-                    
-                    % draw asset
-                    n_ix = length(ix);
-                    asset_aux = nan(1,n_ix);
-                    ix0 = rand(1,n_ix)<mHat;
-                    ix1 = setdiff(1:n_ix,ix0);
-                    
-                    % constrained assets
-                    asset_aux(ix0) = aaBar;
-                    
-                    % unconstrained assets
-                    mGridMoments = zeros(nAssetsQuadrature,nMeasure);
-                    mGridMoments(:,1) = vAssetsGridQuadrature-moment(1);
-                    for iMoment = 2:nMeasure
-                        mGridMoments(:,iMoment) = (vAssetsGridQuadrature-moment(1)).^iMoment-moment(iMoment);
-                    end
-                    normalization = parametersResidual(measureCoefficient',mGridMoments);
-                    
-                    n_ix1 = length(ix1);
-                    uu = rand(1,n_ix1);
-                    ccdf = @(a) integral(@(x) exp((x-moment(1))*measureCoefficient(1)...
-                        +((x-moment(1)).^2-moment(2))*measureCoefficient(2)...
-                        +(x-moment(1)).^3-moment(3)*measureCoefficient(3))/normalization,-inf,a);
-                    for i_ix1 = 1:n_ix1
-                        asset_aux(ix1(i_ix1)) = fzero(@(a) ccdf(a)-uu(i_ix1),moment(1));
-                    end
-                    
-                    if eepsilon == 0
-                        simul_data_hh(2,ix,t) = smooth_draws{i_beta,i_grp}.w(t)*mmu+(1+smooth_draws{i_beta,i_grp}.r(t))*asset_aux;
-                    else
-                        simul_data_hh(2,ix,t) = smooth_draws{i_beta,i_grp}.w(t)*(1-ttau)+(1+smooth_draws{i_beta,i_grp}.r(t))*asset_aux;
-                    end
-                end
-            end
-        end
-        save('simul_data_hh.mat','simul_data_hh_grpid','simul_data_hh') 
-    else
-        load('simul_data_hh.mat')
-    end
-    %% Likelihood
-   
-    loglikes_hh = nan(T,N_hh);
-    for t = 1:T
-        for eepsilon = 0:1
-            ix = find(simul_data_hh_grpid(1,:,t)==eepsilon);
-            prob_aux = nan(num_smooth_draws,length(ix));
-            for i_grp = 1:num_smooth_draws
-                
-                % assets
-                if eepsilon == 0
-                    asset_aux = (simul_data_hh(2,ix,t)-smooth_draws{i_beta,i_grp}.w(t)*mmu)/(1+smooth_draws{i_beta,i_grp}.r(t));
-                else
-                    asset_aux = (simul_data_hh(2,ix,t)-smooth_draws{i_beta,i_grp}.w(t)*(1-ttau))/(1+smooth_draws{i_beta,i_grp}.r(t));
-                end
-                
-                % probability
-                % prepare the parameters
-                ix0 = abs(asset_aux-aaBar)<1e-6;
-                ix1 = abs(asset_aux-aaBar)>=1e-6;
-                mHat = eval(['smooth_draws{' num2str(i_beta) ',' num2str(i_grp) '}.mHat_' num2str(eepsilon+1) '(t)']);
-                moment = nan(1,nMeasure);
-                measureCoefficient = nan(1,nMeasure);
-                for i_Measure = 1:nMeasure
-                    moment(i_Measure) = eval(['smooth_draws{' num2str(i_beta) ',' num2str(i_grp) '}.moment_' num2str(eepsilon+1) '_' num2str(i_Measure) '(t)']);
-                    measureCoefficient(i_Measure) = eval(['smooth_draws{' num2str(i_beta) ',' num2str(i_grp) '}.measureCoefficient_' num2str(eepsilon+1) '_' num2str(i_Measure) '(t)']);
-                end
-                
-                % constrained assets
-                prob_aux(i_grp,ix0) = mHat;
-                
-                % unconstrained assets
-                mGridMoments = zeros(nAssetsQuadrature,nMeasure);
-                mGridMoments(:,1) = vAssetsGridQuadrature-moment(1);
-                for iMoment = 2:nMeasure
-                    mGridMoments(:,iMoment) = (vAssetsGridQuadrature-moment(1)).^iMoment-moment(iMoment);
-                end
-                normalization = parametersResidual(measureCoefficient',mGridMoments);
-                
-                mGridMoments = zeros(length(ix1),nMeasure);
-                mGridMoments(:,1) = asset_aux(ix1)'-moment(1);
-                for iMoment = 2:nMeasure
-                    mGridMoments(:,iMoment) = (asset_aux(ix1)'-moment(1)).^iMoment-moment(iMoment);
-                end
-                prob_aux(i_grp,ix1) = (1-mHat)* exp(mGridMoments*measureCoefficient')...
-                    /normalization;
-                
-            end
-            loglikes_hh(t,ix) = log(mean(prob_aux));
-        end
-    end
-    
-    loglikes2(i_beta) = loglikes(i_beta)+sum(loglikes_hh(:));
-    
-    %% Save
-    save(['loglikes_hh_beta' num2str(i_beta) '_' tag_date '.mat'],'loglikes_hh')    
 end
 
 cd('../');
