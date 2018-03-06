@@ -30,12 +30,15 @@ fprintf('Computing initial guess from histogram...\n')
     % Solve for market clearing capital stock
     f = @(capital) computeMCResidualHistogram(capital);
     options = optimoptions('fsolve','Display',displayOpt,'TolFun',1e-2); % In older versions of MATLAB, use: options = optimset('Display',displayOpt); 
-    [aggregateCapitalInit,err,exitflag] = fsolve(f,1.01*kRepSS,options);
+    [aggregateCapitalInit,err,exitflag,output] = fsolve(f,1.01*kRepSS,options);
 
     % Return exitflag if market clearing not solved
     if exitflag < 1
-        check = 1;
-        return; 
+        fprintf('%s%d\n', 'Warning: initial market clearing failed. Exit flag: ', exitflag);
+        disp('Optimization output message:');
+        disp(output.message);
+%         check = 1;
+%         return; 
     end	
 
     if strcmp(displayOpt,'iter-detailed') == 1

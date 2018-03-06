@@ -37,6 +37,9 @@ if newParam
     %----------------------------------------------------------------
 
     coreSteadyState;
+    if check
+        return;
+    end
 
     % Prices
     r = aalpha * (aggregateCapital ^ (aalpha - 1)) * (aggEmployment ^ (1 - aalpha)) - ddelta;

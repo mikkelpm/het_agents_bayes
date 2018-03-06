@@ -65,7 +65,7 @@ for i_draw = 1:num_smooth_draws
             moment_aux(1) = 0;
             g = @(a) exp(measureCoefficient*((a-moment(1)).^((1:nMeasure)')-moment_aux'));
             normalization = integral(g, aaBar, Inf);
-            the_likes(ix1) = (1-mHat)*g(asset_aux)/normalization;
+            the_likes(ix1) = (1-mHat)*g(asset_aux(ix1))/normalization;
 
             the_loglikes_hh_draw_t(ix) = log(the_likes);
 
