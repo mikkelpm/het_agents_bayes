@@ -4,7 +4,7 @@ function [loglike, loglike_macro, loglike_hh, smooth_draws]...
 
 % Compute likelihood for Krusell-Smith model
 
-global aaBar nEpsilon nMeasure mmu ttau fl fl_param;
+global aaBar nEpsilon nMeasure mmu ttau mu_l;
 
 %% Macro likelihood and simulation smoother
 
@@ -28,6 +28,9 @@ smooth_vars = char([{'w'; 'r'; 'mHat_1' ; 'mHat_2'}; smooth_vars_aux1(:); smooth
 T_hh = length(ts_hh);
 loglikes_hh = nan(1,num_smooth_draws);
 
+disp('Individual likelihood...');
+timer = tic;
+    
 for i_draw = 1:num_smooth_draws
     
     the_loglikes_hh_draw = nan(1,T_hh);
@@ -58,12 +61,14 @@ for i_draw = 1:num_smooth_draws
             moment_aux(1) = 0;
             g = @(a) exp(measureCoefficient*((a-moment(1)).^((1:nMeasure)')-moment_aux'));
             normalization = integral(g, aaBar, Inf);
-            g_all = @(a) (1-mHat)*g(a)/normalization*(a>=aaBar+constr_tol)+mHat*(a<aaBar+constr_tol & a>=aaBar);
+            g_pos = @(a) g(a).*(a>aaBar)/normalization;
             
-            fy = @(x) (x-smooth_draws{i_draw}.w(t)*((1-eepsilon)*mmu+eepsilon*(1-ttau)))/(1+smooth_draws{i_draw}.r(t));
+            a_tilde = @(y_tilde) (y_tilde-smooth_draws{i_draw}.w(t)*((1-eepsilon)*mmu+eepsilon*(1-ttau)))/(1+smooth_draws{i_draw}.r(t));
             for i_ix = 1:n_ix
-            the_likes(i_ix) = integral(@(x) g_all(fy(simul_data_hh(it,ix(i_ix),2)/x))*fl(log(x))/x/fl_param.g0, 0, Inf);
+                the_likes(i_ix) = (1-mHat)*integral(@(lam) g_pos(a_tilde(simul_data_hh_indv_param(it,ix(i_ix),2)./lam)).*lognpdf(lam,mu_l,sqrt(-2*mu_l)), 0, Inf);
             end
+            lam_bound_aux = simul_data_hh_indv_param(it,ix,2)/(smooth_draws{i_draw}.w(t)*((1-eepsilon)*mmu+eepsilon*(1-ttau)));
+            the_likes = the_likes+mHat*lognpdf(lam_bound_aux,mu_l,sqrt(-2*mu_l));
 
             the_loglikes_hh_draw_t(ix) = log(the_likes);
 
@@ -77,6 +82,7 @@ for i_draw = 1:num_smooth_draws
     
 end
 
+fprintf('Individual likelihood time: %6.1f sec\n\n', toc(timer));
 
 %% Sum log likelihood
 

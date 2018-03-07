@@ -2,7 +2,7 @@ clear all;
 
 %% Settings
 
-is_data_gen = 1; % whether simulate data:  
+is_data_gen = 0; % whether simulate data:  
                  % 0: no simulation; 
                  % 1: simulation (with indv params, based on simulation without indv params)
                  % 2: simulation (with indv params, start from scratch)
@@ -10,10 +10,8 @@ is_profile = 0; % whether run profiler for execution time
 
 bbetas = linspace(0.93,0.99,3);     % beta values to loop over
 n_beta = length(bbetas);
-g2s = [-0.75 -0.5 -0.25];           % params for dist of indv params
-n_g2 = length(g2s);
-g3s = [-0.25 0 0.25];
-n_g3 = length(g3s);
+mu_ls = [-0.75 -0.5 -0.25];           % params for dist of indv params
+n_mul = length(mu_ls);
 
 T = 200;                            % Number of periods of simulated macro data
 ts_hh = 20:20:200;                  % Time periods where we observe micro data
@@ -31,7 +29,7 @@ tag_date = datestr(now,'yyyymmdd');
 %% Set economic parameters 
 
 global bbeta ssigma aaBar aalpha ddelta vEpsilonGrid aggEmployment uDuration ...
-	mmu rrhoTFP ssigmaTFP fl_param;
+	mmu rrhoTFP ssigmaTFP mu_l;
 	
 % Preferences
 bbeta = .96;										% discount factor (annual calibration)
@@ -57,9 +55,7 @@ ssigmaTFP = .014;
 
 % Distribution of indv params log(lambda_i) ~ N(-1/2,1), 
 % so lambda_i > 0 and E(lambda_i) = 1
-fl_param.mm = [-0.5 0 0];
-fl_param.gg = [0 -0.5 0];
-fl_param.g0 = 1/sqrt(2*pi);
+mu_l = -0.5;
 
 %% Set approximation parameters
 
@@ -129,7 +125,7 @@ else
     save('simul_data_hh.mat','simul_data_hh');
     
     % draw individual productivities and incomes
-    simul_data_hh_indv_param = simulate_hh_indv_param(sim_data_hh);
+    simul_data_hh_indv_param = simulate_hh_indv_param(simul_data_hh);
     save('simul_data_hh_indv_param.mat','simul_data_hh_indv_param');
     
 end
@@ -137,37 +133,22 @@ end
 
 %% Smoothing and likelihood
 
-global g2 g3 fl;
-
 % Loop over beta values
-loglikes = zeros(size(bbetas));
-loglikes_macro = zeros(size(bbetas));
-loglikes_hh = zeros(size(bbetas));
+loglikes = zeros(n_mul,n_beta);
+loglikes_macro = zeros(n_mul,n_beta);
+loglikes_hh = zeros(n_mul,n_beta);
 
 for i_beta=1:n_beta % For each param...
     bbeta = bbetas(i_beta);                          % Set beta
     saveParameters;
     setDynareParameters;
     
-    for i_g2 = 1:n_g2
-        g2 = g2s(i_g2);
-        for i_g3 = 1:n_g3
-            g3 = g3s(i_g3);
-            fprintf([repmat('%s%6.4f',1,3) '\n'], 'beta=', bbeta, 'g2=', g2, 'g3=', g3);
-            
-            % other parameters
-            param = fsolve(@exp_poly_dist,[fl_param.mm fl_param.gg(1)]);
-            fl_param.mm = param(1:3);
-            fl_param.gg = [param(4) g2 g3];
-
-            mm_aux = fl_param.mm;
-            mm_aux(1) = 0;
-            fl = @(l) exp(fl_param.gg*((l-fl_param.mm(1)).^((1:nMeasure)')-mm_aux'));
-            fl_param.g0 = integral(fl, -Inf, Inf);
-            
-            [loglikes(i_beta), loglikes_macro(i_beta), loglikes_hh(i_beta)] = ...
-                loglike_compute_indv_param('simul.mat', simul_data_hh_indv_param, ts_hh, num_smooth_draws, num_burnin_periods, constr_tol, M_, oo_, options_);
-        end
+    for i_mul = 1:n_mul
+        mu_l = mu_ls(i_mul);
+        fprintf([repmat('%s%6.4f',1,2) '\n'], 'beta=', bbeta, ', mu_l=', mu_l);
+        
+        [loglikes(i_mul,i_beta), loglikes_macro(i_mul,i_beta), loglikes_hh(i_mul,i_beta)] = ...
+            loglike_compute_indv_param('simul.mat', simul_data_hh_indv_param, ts_hh, num_smooth_draws, num_burnin_periods, constr_tol, M_, oo_, options_);
     end
     
 end
