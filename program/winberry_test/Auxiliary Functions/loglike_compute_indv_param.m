@@ -65,10 +65,10 @@ for i_draw = 1:num_smooth_draws
             
             a_tilde = @(y_tilde) (y_tilde-smooth_draws{i_draw}.w(t)*((1-eepsilon)*mmu+eepsilon*(1-ttau)))/(1+smooth_draws{i_draw}.r(t));
             for i_ix = 1:n_ix
-                the_likes(i_ix) = (1-mHat)*integral(@(lam) g_pos(a_tilde(simul_data_hh_indv_param(it,ix(i_ix),2)./lam)).*lognpdf(lam,mu_l,sqrt(-2*mu_l)), 0, Inf);
+                the_likes(i_ix) = (1-mHat)*integral(@(lam) g_pos(a_tilde(simul_data_hh_indv_param(it,ix(i_ix),2)./lam)).*gampdf(lam,mu_l,1/mu_l), 0, Inf);
             end
             lam_bound_aux = simul_data_hh_indv_param(it,ix,2)/(smooth_draws{i_draw}.w(t)*((1-eepsilon)*mmu+eepsilon*(1-ttau)));
-            the_likes = the_likes+mHat*lognpdf(lam_bound_aux,mu_l,sqrt(-2*mu_l));
+            the_likes = the_likes+mHat*lognpdf(lam_bound_aux,mu_l,1/mu_l);
 
             the_loglikes_hh_draw_t(ix) = log(the_likes);
 

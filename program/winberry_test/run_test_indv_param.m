@@ -2,7 +2,7 @@ clear all;
 
 %% Settings
 
-is_data_gen = 0; % whether simulate data:  
+is_data_gen = 2; % whether simulate data:  
                  % 0: no simulation; 
                  % 1: simulation (with indv params, based on simulation without indv params)
                  % 2: simulation (with indv params, start from scratch)
@@ -10,7 +10,7 @@ is_profile = 0; % whether run profiler for execution time
 
 bbetas = linspace(0.93,0.99,3);     % beta values to loop over
 n_beta = length(bbetas);
-mu_ls = [-0.75 -0.5 -0.25];           % params for dist of indv params
+mu_ls = [1 2 3];           % params for dist of indv params
 n_mul = length(mu_ls);
 
 T = 200;                            % Number of periods of simulated macro data
@@ -29,7 +29,7 @@ tag_date = datestr(now,'yyyymmdd');
 %% Set economic parameters 
 
 global bbeta ssigma aaBar aalpha ddelta vEpsilonGrid aggEmployment uDuration ...
-	mmu rrhoTFP ssigmaTFP mu_l;
+	mmu ttau rrhoTFP ssigmaTFP mu_l;
 	
 % Preferences
 bbeta = .96;										% discount factor (annual calibration)
@@ -55,7 +55,7 @@ ssigmaTFP = .014;
 
 % Distribution of indv params log(lambda_i) ~ N(-1/2,1), 
 % so lambda_i > 0 and E(lambda_i) = 1
-mu_l = -0.5;
+mu_l = 2;
 
 %% Set approximation parameters
 
@@ -138,12 +138,12 @@ loglikes = zeros(n_mul,n_beta);
 loglikes_macro = zeros(n_mul,n_beta);
 loglikes_hh = zeros(n_mul,n_beta);
 
-for i_beta=1:n_beta % For each param...
+for i_beta=1:2%n_beta % For each param...
     bbeta = bbetas(i_beta);                          % Set beta
     saveParameters;
     setDynareParameters;
     
-    for i_mul = 1:n_mul
+    for i_mul = 2%1:n_mul
         mu_l = mu_ls(i_mul);
         fprintf([repmat('%s%6.4f',1,2) '\n'], 'beta=', bbeta, ', mu_l=', mu_l);
         
