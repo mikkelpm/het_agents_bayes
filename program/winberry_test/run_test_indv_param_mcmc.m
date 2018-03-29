@@ -10,620 +10,25 @@ is_data_gen = 2; % whether simulate data:
 is_profile = 0; %whether run profiler for execution time
 
 % Model/data settings
-T = 100;                            % Number of periods of simulated macro data
-ts_hh = 25:25:100;                  % Time periods where we observe micro data
-N_hh = 50;                         % Number of households per non-missing time period
+T = 100;                                % Number of periods of simulated macro data
+ts_hh = 25:25:100;                      % Time periods where we observe micro data
+N_hh = 50;                              % Number of households per non-missing time period
 
 % Prior
-prior_logdens_logbeta = @(x) sum(x);     % Log prior density of log(beta)
-prior_init_logbeta = @() log([0.9 1]);     % Distribution of initial log(beta) draw
+prior_logdens_log = @(x) sum(x);    % Log prior density of log(beta)
+prior_init_log = @() log([0.96 2]);  % Distribution of initial log(beta) draw
 
 % MCMC settings
-mcmc_num_draws = 2
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-00;              % Number of MCMC steps (total, including initial phase)
-mcmc_num_adapt = 50;                % Number of initial steps with larger (but gradually decreasing) step size
-mcmc_stepsize = 1e-3;               % MCMC step size after initial phase
-mcmc_stepsize_init = 10*mcmc_stepsize; % Initial MCMC steps size (gradually decreased during initial phase)
-mcmc_smooth_draws = 500;            % Number of draws from the smoothing distribution (for unbiased likelihood estimate)
-mcmc_filename = 'output/mcmc.mat';  % File name of MCMC output
+mcmc_num_draws = 200;                   % Number of MCMC steps (total, including initial phase)
+mcmc_num_adapt = 50;                    % Number of initial steps with larger (but gradually decreasing) step size
+mcmc_stepsizes = [1e-3 1e-2];           % MCMC step size after initial phase
+mcmc_stepsizes_init = 10*mcmc_stepsizes; % Initial MCMC steps size (gradually decreased during initial phase)
+mcmc_smooth_draws = 500;                % Number of draws from the smoothing distribution (for unbiased likelihood estimate)
+mcmc_filename = 'output/mcmc.mat';      % File name of MCMC output
 
 % Numerical settings
-constr_tol = 1e-6;                  % Numerical tolerance for whether assets are at borrowing constraint
-num_burnin_periods = 100;           % Number of burn-in periods for simulations
-rng_seed = 20180305;                % Random number generator seed for initial simulation
+num_burnin_periods = 100;               % Number of burn-in periods for simulations
+rng_seed = 20180329;                    % Random number generator seed for initial simulation
 
 % Profiler save settings
 tag_date = datestr(now,'yyyymmdd');
@@ -693,6 +98,7 @@ dampening = .95;
 %% Save parameters
 
 cd('./Auxiliary Functions');
+delete steady_vars.mat;
 saveParameters;
 
 
@@ -738,8 +144,8 @@ end
 
 %% MCMC
 
-curr_logbeta = prior_init_logbeta();        % Initial draw
-post_draws_beta = nan(mcmc_num_draws,2);
+curr_log = prior_init_log();        % Initial draw
+post_draws = nan(mcmc_num_draws,2);
 accepts = zeros(mcmc_num_draws,1);
 
 curr_loglike = -Inf;
@@ -750,27 +156,30 @@ loglikes_prop_hh = nan(mcmc_num_draws,1);
 disp('MCMC...');
 timer_mcmc = tic;
 
+poolobj = parpool;
+
 for i_mcmc=1:mcmc_num_draws % For each MCMC step...
 
-    fprintf('%s%6.4f%s%6.4f\n', 'current  beta=', exp(curr_logbeta(1)), ', mu_l=', exp(curr_logbeta(2)));
+    fprintf('%s%6.4f%s%6.4f\n', 'current  beta=', exp(curr_log(1)), ', mu_l=', exp(curr_log(2)));
     
     % Proposed log(beta) (modified to always start with initial draw)
-    the_stepsize = (i_mcmc>1)*(mcmc_stepsize + max(1-(i_mcmc-2)/mcmc_num_adapt,0)*(mcmc_stepsize_init-mcmc_stepsize)); % Step size
-    prop_logbeta = curr_logbeta + the_stepsize*randn(1,2); % Proposal
+    the_stepsizes = (i_mcmc>1)*(mcmc_stepsizes + max(1-(i_mcmc-2)/mcmc_num_adapt,0)*(mcmc_stepsizes_init-mcmc_stepsizes)); % Step size
+    prop_log = curr_log + the_stepsizes.*randn(size(curr_log)); % Proposal
     
-    % Set new beta
-    bbeta = exp(prop_logbeta(1));
-    mu_l = exp(prop_logbeta(2));
+    % Set new parameters
+    bbeta = exp(prop_log(1));
+    mu_l = exp(prop_log(2));
     fprintf('%s%6.4f%s%6.4f\n', 'proposed beta=', bbeta, ', mu_l=', mu_l);
     
-    saveParameters;
-    setDynareParameters;
+    saveParameters;         % Save parameter values to files
+    setDynareParameters;    % Update Dynare parameters in model struct
+    compute_steady_state;   % Compute steady state once and for all
 
     % Log likelihood of proposal
     success = true;
     try
         [loglikes_prop(i_mcmc), loglikes_prop_macro(i_mcmc), loglikes_prop_hh(i_mcmc)] = ...
-            loglike_compute_indv_param('simul.mat', simul_data_hh_indv_param, ts_hh, mcmc_smooth_draws, num_burnin_periods, constr_tol, M_, oo_, options_);
+            loglike_compute_indv_param('simul.mat', simul_data_hh_indv_param, ts_hh, mcmc_smooth_draws, num_burnin_periods, M_, oo_, options_);
     catch ME
         success = false;
         disp('Error encountered in likelihood evaluation. Message:');
@@ -779,19 +188,19 @@ for i_mcmc=1:mcmc_num_draws % For each MCMC step...
     
     if success
         % Log prior ratio
-        logratio_prior = prior_logdens_logbeta(prop_logbeta)-prior_logdens_logbeta(curr_logbeta);
+        logratio_prior = prior_logdens_log(prop_log)-prior_logdens_log(curr_log);
 
         % Accept/reject
         if loglikes_prop(i_mcmc)-curr_loglike+logratio_prior > log(rand())
             fprintf('%s\n', 'Accepted!');
-            curr_logbeta = prop_logbeta;
+            curr_log = prop_log;
             curr_loglike = loglikes_prop(i_mcmc);
             accepts(i_mcmc) = 1;
         end
     end
     
     % Store
-    post_draws_beta(i_mcmc,:) = exp(curr_logbeta);
+    post_draws(i_mcmc,:) = exp(curr_log);
     
     % Print acceptance rate
     fprintf('%s%5.1f%s\n', 'Accept. rate last 100: ', 100*mean(accepts(max(i_mcmc-99,1):i_mcmc)), '%');
@@ -799,13 +208,15 @@ for i_mcmc=1:mcmc_num_draws % For each MCMC step...
     
 end
 
+delete(poolobj);
+
 mcmc_elapsed = toc(timer_mcmc);
 fprintf('%s%8.2f\n', 'MCMC done. Elapsed minutes: ', mcmc_elapsed/60);
 
-save(mcmc_filename, 'mcmc_*', 'post_draws_beta', 'accepts', 'loglikes_prop_*');
+save(mcmc_filename, 'mcmc_*', 'post_draws', 'accepts', 'loglikes_prop*');
 
 cd('../');
 
 if is_profile
-    profsave(profile('info'),['profile_results_' tag_date])
+    profsave(profile('info'),['profile_results_' tag_date]);
 end

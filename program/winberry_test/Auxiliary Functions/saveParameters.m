@@ -2,13 +2,7 @@
 % 2018-01-16
 
 
-%% Indicate new parameter vector
-
-global newParam;
-newParam = true;
-
-
-%% Set parameters
+%% Call parameters (the next set of commands will overwrite some)
 
 setParameters;
 
@@ -49,3 +43,5 @@ else	% if using splines to approximate individual decisions
 		vAssetsGridQuadrature mEpsilonGridQuadrature mAssetsGridQuadrature
 	
 end
+
+

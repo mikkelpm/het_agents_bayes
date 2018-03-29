@@ -2,26 +2,23 @@ clear all;
 
 %% Settings
 
-is_data_gen = 2; % whether simulate data:  
+is_data_gen = 0; % whether simulate data:  
                  % 0: no simulation; 
                  % 1: simulation (with indv params, based on simulation without indv params)
                  % 2: simulation (with indv params, start from scratch)
 is_profile = 0; % whether run profiler for execution time
 
 bbetas = linspace(0.93,0.99,3);     % beta values to loop over
-n_beta = length(bbetas);
 mu_ls = [1 2 3];           % params for dist of indv params
-n_mul = length(mu_ls);
 
 T = 200;                            % Number of periods of simulated macro data
 ts_hh = 20:20:200;                  % Time periods where we observe micro data
-N_hh = 1e3;                         % Number of households per non-missing time period
+N_hh = 1e2;                         % Number of households per non-missing time period
 
-constr_tol = 1e-6;                  % Numerical tolerance for whether assets are at borrowing constraint
 num_burnin_periods = 100;           % Number of burn-in periods for simulations
-num_smooth_draws = 25;              % Number of draws from the smoothing distribution (for each beta)
+num_smooth_draws = 500;              % Number of draws from the smoothing distribution (for each beta)
 
-rng_seed = 20180305;                % Random number generator seed for initial simulation
+rng_seed = 20180329;                % Random number generator seed for initial simulation
 
 tag_date = datestr(now,'yyyymmdd');
 
@@ -89,6 +86,7 @@ dampening = .95;
 %% Save parameters
 
 cd('./Auxiliary Functions');
+delete steady_vars.mat;
 saveParameters;
 
 
@@ -133,28 +131,37 @@ end
 
 %% Smoothing and likelihood
 
+n_beta = length(bbetas);
+n_mul = length(mu_ls);
+
 % Loop over beta values
 loglikes = zeros(n_mul,n_beta);
 loglikes_macro = zeros(n_mul,n_beta);
 loglikes_hh = zeros(n_mul,n_beta);
 
-for i_beta=1:2%n_beta % For each param...
-    bbeta = bbetas(i_beta);                          % Set beta
-    saveParameters;
-    setDynareParameters;
+poolobj = parpool;
+
+for i_beta=1:n_beta % For each param...
     
-    for i_mul = 2%1:n_mul
+    bbeta = bbetas(i_beta); % Set beta
+    saveParameters;         % Save parameter values to files
+    setDynareParameters;    % Update Dynare parameters in model struct
+    compute_steady_state;   % Compute steady state once and for all
+    
+    for i_mul = 1:n_mul
         mu_l = mu_ls(i_mul);
         fprintf([repmat('%s%6.4f',1,2) '\n'], 'beta=', bbeta, ', mu_l=', mu_l);
         
         [loglikes(i_mul,i_beta), loglikes_macro(i_mul,i_beta), loglikes_hh(i_mul,i_beta)] = ...
-            loglike_compute_indv_param('simul.mat', simul_data_hh_indv_param, ts_hh, num_smooth_draws, num_burnin_periods, constr_tol, M_, oo_, options_);
+            loglike_compute_indv_param('simul.mat', simul_data_hh_indv_param, ts_hh, num_smooth_draws, num_burnin_periods, M_, oo_, options_);
     end
     
 end
 
+delete(poolobj);
+
 cd('../');
 
 if is_profile
-    profsave(profile('info'),['profile_results_' tag_date])
+    profsave(profile('info'),['profile_results_' tag_date]);
 end

@@ -1,10 +1,11 @@
-function [loglike, loglike_macro, loglike_hh, smooth_draws]...
-    = loglike_compute_indv_param(sim_macro, simul_data_hh_indv_param,...
-      ts_hh, num_smooth_draws, num_burnin_periods, constr_tol, M_, oo_, options_)
+function [loglike, loglike_macro, loglike_hh]...
+    = loglike_compute_indv_param(data_macro, data_hh,...
+      ts_hh, num_smooth_draws, num_burnin_periods, M_, oo_, options_)
 
 % Compute likelihood for Krusell-Smith model
 
 global aaBar nEpsilon nMeasure mmu ttau mu_l;
+
 
 %% Macro likelihood and simulation smoother
 
@@ -19,19 +20,40 @@ for i_Measure = 1:nMeasure
 end
 smooth_vars = char([{'w'; 'r'; 'mHat_1' ; 'mHat_2'}; smooth_vars_aux1(:); smooth_vars_aux2(:)]); %char(setxor(cellstr(M_.endo_names), options_.varobs)); % All endogenous variables except observed ones
 
-% Run smoother and compute macro likelihood
-[loglike_macro, ~, smooth_draws] = simulation_smoother(sim_macro, smooth_vars, num_smooth_draws, num_burnin_periods, M_, oo_, options_);
+% Run mean smoother and compute macro likelihood
+timer = tic;
+[loglike_macro, smooth_means, M_new, oo_new, options_new, dataset_, dataset_info, xparam1, estim_params_, bayestopt_] ...
+    = likelihood_smoother(data_macro, smooth_vars, M_, oo_, options_);
+fprintf('Macro likelihood/smoother time: %6.1f sec\n\n', toc(timer));
 
 
-%% Household likelihood per period, given smoothing draws
+%% Household likelihood per period
 
 T_hh = length(ts_hh);
-loglikes_hh = nan(1,num_smooth_draws);
+nobs = dataset_.nobs;
 
+% Make local versions of global variables so Matlab doesn't complain in the parfor loop
+aaBar_local = aaBar;
+nMeasure_local = nMeasure;
+mmu_local = mmu;
+ttau_local = ttau;
+mu_l_local = mu_l;
+
+% Seeds for simulation smoother
+rand_seeds = randi(2^32,1,num_smooth_draws);
+
+loglikes_hh = nan(1,num_smooth_draws);
 disp('Individual likelihood...');
 timer = tic;
+
+parfor i_draw = 1:num_smooth_draws
     
-for i_draw = 1:num_smooth_draws
+    dataset_fake = struct;
+    dataset_fake.nobs = nobs;
+    
+    % Compute smoothing draw
+    the_smooth_draw = simulation_smoother(smooth_means, smooth_vars, num_burnin_periods, rand_seeds(i_draw), ...
+                                          M_new, oo_new, options_new, dataset_fake, dataset_info, xparam1, estim_params_, bayestopt_);
     
     the_loglikes_hh_draw = nan(1,T_hh);
 
@@ -39,36 +61,45 @@ for i_draw = 1:num_smooth_draws
     
         t = ts_hh(it);
 
-        the_loglikes_hh_draw_t = nan(1,length(simul_data_hh_indv_param(it,:,1)));
+        the_loglikes_hh_draw_t = nan(1,length(data_hh(it,:,1)));
 
         for eepsilon = 0:1
 
-            ix = find(simul_data_hh_indv_param(it,:,1)==eepsilon);
+            ix = find(data_hh(it,:,1)==eepsilon);
             n_ix = length(ix);
             the_likes = nan(1,n_ix);
 
             % probability
             % prepare the parameters
-            mHat = smooth_draws{i_draw}.(['mHat_' num2str(eepsilon+1)])(t);
-            moment = nan(1,nMeasure);
-            measureCoefficient = nan(1,nMeasure);
-            for i_Measure = 1:nMeasure
-                moment(i_Measure) = smooth_draws{i_draw}.(['moment_' num2str(eepsilon+1) '_' num2str(i_Measure)])(t);
-                measureCoefficient(i_Measure) = smooth_draws{i_draw}.(['measureCoefficient_' num2str(eepsilon+1) '_' num2str(i_Measure)])(t);
+            mHat = the_smooth_draw.(['mHat_' num2str(eepsilon+1)])(t);
+            moment = nan(1,nMeasure_local);
+            measureCoefficient = nan(1,nMeasure_local);
+            for i_Measure = 1:nMeasure_local
+                moment(i_Measure) = the_smooth_draw.(['moment_' num2str(eepsilon+1) '_' num2str(i_Measure)])(t);
+                measureCoefficient(i_Measure) = the_smooth_draw.(['measureCoefficient_' num2str(eepsilon+1) '_' num2str(i_Measure)])(t);
             end
 
             moment_aux = moment;
             moment_aux(1) = 0;
-            g = @(a) exp(measureCoefficient*((a-moment(1)).^((1:nMeasure)')-moment_aux'));
-            normalization = integral(g, aaBar, Inf);
-            g_pos = @(a) g(a).*(a>aaBar)/normalization;
+            g = @(a) exp(measureCoefficient*((a-moment(1)).^((1:nMeasure_local)')-moment_aux'));
+            normalization = integral(g, aaBar_local, Inf);
+            g_norm = @(a) g(a)/normalization;
             
-            a_tilde = @(y_tilde) (y_tilde-smooth_draws{i_draw}.w(t)*((1-eepsilon)*mmu+eepsilon*(1-ttau)))/(1+smooth_draws{i_draw}.r(t));
+            c = the_smooth_draw.w(t)*((1-eepsilon)*mmu_local+eepsilon*(1-ttau_local));
+            R = 1+the_smooth_draw.r(t);
+            bounds_aux = data_hh(it,ix,2)/(c+R*aaBar_local);
+            
+            % Continuous part
             for i_ix = 1:n_ix
-                the_likes(i_ix) = (1-mHat)*integral(@(lam) g_pos(a_tilde(simul_data_hh_indv_param(it,ix(i_ix),2)./lam))./lam.*gampdf(lam,mu_l,1/mu_l), 0, Inf);
+                the_likes(i_ix) = (1-mHat)/R*...
+                                  integral(@(lam) g_norm((data_hh(it,ix(i_ix),2)./lam-c)/R) ...
+                                                  ./lam ...
+                                                  .*gampdf(lam,mu_l_local,1/mu_l_local), ...
+                                           0, bounds_aux(i_ix));
             end
-            lam_bound_aux = simul_data_hh_indv_param(it,ix,2)/(smooth_draws{i_draw}.w(t)*((1-eepsilon)*mmu+eepsilon*(1-ttau)));
-            the_likes = the_likes+mHat*gampdf(lam_bound_aux,mu_l,1/mu_l)./lam_bound_aux;
+            
+            % Add contribution from point mass
+            the_likes = the_likes + mHat/(c+R*aaBar_local)*gampdf(bounds_aux,mu_l_local,1/mu_l_local);
 
             the_loglikes_hh_draw_t(ix) = log(the_likes);
 
@@ -80,9 +111,16 @@ for i_draw = 1:num_smooth_draws
     
     loglikes_hh(i_draw) = sum(the_loglikes_hh_draw);
     
+    % Print progress
+    if mod(i_draw,ceil(num_smooth_draws/50))==0
+        offs = floor(50*i_draw/num_smooth_draws);
+        fprintf(['%' num2str(offs+3) 'd%s\n'], round(100*i_draw/num_smooth_draws), '%');
+    end
+    
 end
 
 fprintf('Individual likelihood time: %6.1f sec\n\n', toc(timer));
+
 
 %% Sum log likelihood
 
