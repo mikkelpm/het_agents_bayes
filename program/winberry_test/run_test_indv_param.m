@@ -139,7 +139,7 @@ loglikes = zeros(n_mul,n_beta);
 loglikes_macro = zeros(n_mul,n_beta);
 loglikes_hh = zeros(n_mul,n_beta);
 
-poolobj = parpool;
+poolobj = parpool(3);
 
 for i_beta=1:n_beta % For each param...
     
@@ -148,7 +148,7 @@ for i_beta=1:n_beta % For each param...
     setDynareParameters;    % Update Dynare parameters in model struct
     compute_steady_state;   % Compute steady state once and for all
     
-    for i_mul = 1:n_mul
+    for i_mul = 2%1:n_mul
         mu_l = mu_ls(i_mul);
         fprintf([repmat('%s%6.4f',1,2) '\n'], 'beta=', bbeta, ', mu_l=', mu_l);
         
@@ -160,6 +160,7 @@ end
 
 delete(poolobj);
 
+%%
 cd('../');
 
 if is_profile

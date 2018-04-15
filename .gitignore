@@ -1,4 +1,8 @@
-*.mat
-*.sh
-*.fig
-*.html
+# First, ignore everything
+*
+# Now, whitelist anything that's a directory
+!*/
+# And all the file types you're interested in.
+!*.m
+!*.mod
+!*.gitignore
