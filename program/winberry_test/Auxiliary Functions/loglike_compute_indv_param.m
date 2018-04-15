@@ -31,8 +31,7 @@ fprintf('Macro likelihood/smoother time: %6.1f sec\n\n', toc(timer));
 
 T_hh = length(ts_hh);
 nobs = dataset_.nobs;
-n_lambdaquad = 100;
-[v_lambdaquad0,w_lambdaquad] = computeGaussLegendreQuadrature(n_lambdaquad);
+n_lambda = 500;
 
 % Make local versions of global variables so Matlab doesn't complain in the parfor loop
 aaBar_local = aaBar;
@@ -100,16 +99,14 @@ parfor i_draw = 1:num_smooth_draws
             %                                                   .*gampdf(lam,mu_l_local,1/mu_l_local), ...
             %                                            0, bounds_aux(i_ix));
             %             end
-            v_lambdaquad = .5*(v_lambdaquad0+1)*bounds_aux;
-            g_aux = measureCoefficient(1)*((repmat(data_hh(it,ix,2),n_lambdaquad,1)./v_lambdaquad-c)/R-moment(1));
+            v_lambda = linspace(0+1/n_lambda/2,1-1/n_lambda/2,n_lambda)'*bounds_aux;
+            g_aux = measureCoefficient(1)*((repmat(data_hh(it,ix,2),n_lambda,1)./v_lambda-c)/R-moment(1));
             for i_Measure = 2:nMeasure_local
-                g_aux = g_aux+measureCoefficient(i_Measure)*(((repmat(data_hh(it,ix,2),n_lambdaquad,1)./v_lambdaquad-c)/R-moment(1)).^i_Measure-moment_aux(i_Measure));
+                g_aux = g_aux+measureCoefficient(i_Measure)*(((repmat(data_hh(it,ix,2),n_lambda,1)./v_lambda-c)/R-moment(1)).^i_Measure-moment_aux(i_Measure));
             end
-            the_likes = (1-mHat)/R*(w_lambdaquad'*...
-                (exp(g_aux)/normalization ...
-                ./v_lambdaquad ...
-                .*gampdf(v_lambdaquad,mu_l_local,1/mu_l_local)))...
-                .*bounds_aux/2;
+            the_likes = (1-mHat)/R*sum((exp(g_aux)/normalization ...
+                ./v_lambda ...
+                .*gampdf(v_lambda,mu_l_local,1/mu_l_local)))/n_lambda;
             % toc
             
             % Add contribution from point mass
