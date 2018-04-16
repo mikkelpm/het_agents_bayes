@@ -99,14 +99,15 @@ parfor i_draw = 1:num_smooth_draws
             %                                                   .*gampdf(lam,mu_l_local,1/mu_l_local), ...
             %                                            0, bounds_aux(i_ix));
             %             end
-            v_lambda = linspace(0+1/n_lambda/2,1-1/n_lambda/2,n_lambda)'*bounds_aux;
-            g_aux = measureCoefficient(1)*((repmat(data_hh(it,ix,2),n_lambda,1)./v_lambda-c)/R-moment(1));
+            
+            v_lambda = gaminv(linspace(0+1/n_lambda/2,1-1/n_lambda/2,n_lambda)'*gamcdf(bounds_aux,mu_l_local,1/mu_l_local),mu_l_local,1/mu_l_local);
+            a_aux = (repmat(data_hh(it,ix,2),n_lambda,1)./v_lambda-c)/R;
+            g_aux = measureCoefficient(1)*(a_aux-moment(1));
             for i_Measure = 2:nMeasure_local
-                g_aux = g_aux+measureCoefficient(i_Measure)*(((repmat(data_hh(it,ix,2),n_lambda,1)./v_lambda-c)/R-moment(1)).^i_Measure-moment_aux(i_Measure));
+                g_aux = g_aux+measureCoefficient(i_Measure)*(a_aux.^i_Measure-moment_aux(i_Measure));
             end
-            the_likes = (1-mHat)/R*sum((exp(g_aux)/normalization ...
-                ./v_lambda ...
-                .*gampdf(v_lambda,mu_l_local,1/mu_l_local)))/n_lambda;
+            the_likes = (1-mHat)/R*mean((exp(g_aux)/normalization ...
+                ./v_lambda)).*gamcdf(bounds_aux,mu_l_local,1/mu_l_local);
             % toc
             
             % Add contribution from point mass
