@@ -31,7 +31,7 @@ fprintf('Macro likelihood/smoother time: %6.1f sec\n\n', toc(timer));
 
 T_hh = length(ts_hh);
 nobs = dataset_.nobs;
-n_lambda = 500;
+n_lambda = 100;
 
 % Make local versions of global variables so Matlab doesn't complain in the parfor loop
 aaBar_local = aaBar;
@@ -101,10 +101,10 @@ parfor i_draw = 1:num_smooth_draws
             %             end
             
             v_lambda = gaminv(linspace(0+1/n_lambda/2,1-1/n_lambda/2,n_lambda)'*gamcdf(bounds_aux,mu_l_local,1/mu_l_local),mu_l_local,1/mu_l_local);
-            a_aux = (repmat(data_hh(it,ix,2),n_lambda,1)./v_lambda-c)/R;
+            a_aux = (data_hh(it,ix,2)./v_lambda-c)/R;
             g_aux = measureCoefficient(1)*(a_aux-moment(1));
             for i_Measure = 2:nMeasure_local
-                g_aux = g_aux+measureCoefficient(i_Measure)*(a_aux.^i_Measure-moment_aux(i_Measure));
+                g_aux = g_aux+measureCoefficient(i_Measure)*((a_aux-moment(1)).^i_Measure-moment_aux(i_Measure));
             end
             the_likes = (1-mHat)/R*mean((exp(g_aux)/normalization ...
                 ./v_lambda)).*gamcdf(bounds_aux,mu_l_local,1/mu_l_local);
