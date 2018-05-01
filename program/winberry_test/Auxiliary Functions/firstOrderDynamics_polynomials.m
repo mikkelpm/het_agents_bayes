@@ -12,9 +12,9 @@ dseries('initialize');
 global M_ options_ oo_ estim_params_ bayestopt_ dataset_ dataset_info estimation_info ys0_ ex0_
 options_ = [];
 M_.fname = 'firstOrderDynamics_polynomials';
-M_.dynare_version = '4.5.3';
-oo_.dynare_version = '4.5.3';
-options_.dynare_version = '4.5.3';
+M_.dynare_version = '4.5.4';
+oo_.dynare_version = '4.5.4';
+options_.dynare_version = '4.5.4';
 %
 % Some global variables initialization
 %
@@ -3116,6 +3116,7 @@ erase_compiled_function('firstOrderDynamics_polynomials_dynamic');
 M_.orig_eq_nbr = 72;
 M_.eq_nbr = 72;
 M_.ramsey_eq_nbr = 0;
+M_.set_auxiliary_variables = exist(['./' M_.fname '_set_auxiliary_variables.m'], 'file') == 2;
 M_.lead_lag_incidence = [
  0 10 82;
  0 11 83;

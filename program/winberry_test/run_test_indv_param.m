@@ -9,7 +9,7 @@ is_data_gen = 0; % whether simulate data:
 is_profile = 0; % whether run profiler for execution time
 
 bbetas = linspace(0.93,0.99,3);     % beta values to loop over
-mu_ls = [1 2 3];           % params for dist of indv params
+mu_ls = [-.75 -.5 -.25];           % params for dist of indv params
 
 T = 200;                            % Number of periods of simulated macro data
 ts_hh = 20:20:200;                  % Time periods where we observe micro data
@@ -52,7 +52,7 @@ ssigmaTFP = .014;
 
 % Distribution of indv params log(lambda_i) ~ N(-1/2,1), 
 % so lambda_i > 0 and E(lambda_i) = 1
-mu_l = 2;
+mu_l = -.5;
 
 %% Set approximation parameters
 
@@ -139,7 +139,7 @@ loglikes = zeros(n_mul,n_beta);
 loglikes_macro = zeros(n_mul,n_beta);
 loglikes_hh = zeros(n_mul,n_beta);
 
-poolobj = parpool(4);
+poolobj = parpool(3);
 
 for i_beta=1:n_beta % For each param...
     

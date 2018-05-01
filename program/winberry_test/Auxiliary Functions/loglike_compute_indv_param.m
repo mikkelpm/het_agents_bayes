@@ -96,22 +96,22 @@ parfor i_draw = 1:num_smooth_draws
             %                 the_likes(i_ix) = (1-mHat)/R*...
             %                                   integral(@(lam) g_norm((data_hh(it,ix(i_ix),2)./lam-c)/R) ...
             %                                                   ./lam ...
-            %                                                   .*gampdf(lam,mu_l_local,1/mu_l_local), ...
+            %                                                   .*lognpdf(lam,mu_l_local,sqrt(-2*mu_l_local)), ...
             %                                            0, bounds_aux(i_ix));
             %             end
             
-            v_lambda = gaminv(linspace(0+1/n_lambda/2,1-1/n_lambda/2,n_lambda)'*gamcdf(bounds_aux,mu_l_local,1/mu_l_local),mu_l_local,1/mu_l_local);
+            v_lambda = logninv(linspace(0+1/n_lambda/2,1-1/n_lambda/2,n_lambda)'*logncdf(bounds_aux,mu_l_local,sqrt(-2*mu_l_local)),mu_l_local,sqrt(-2*mu_l_local));
             a_aux = (data_hh(it,ix,2)./v_lambda-c)/R;
             g_aux = measureCoefficient(1)*(a_aux-moment(1));
             for i_Measure = 2:nMeasure_local
                 g_aux = g_aux+measureCoefficient(i_Measure)*((a_aux-moment(1)).^i_Measure-moment_aux(i_Measure));
             end
             the_likes = (1-mHat)/R*mean((exp(g_aux)/normalization ...
-                ./v_lambda)).*gamcdf(bounds_aux,mu_l_local,1/mu_l_local);
+                ./v_lambda)).*logncdf(bounds_aux,mu_l_local,sqrt(-2*mu_l_local));
             % toc
             
             % Add contribution from point mass
-            the_likes = the_likes + mHat/(c+R*aaBar_local)*gampdf(bounds_aux,mu_l_local,1/mu_l_local);
+            the_likes = the_likes + mHat/(c+R*aaBar_local)*lognpdf(bounds_aux,mu_l_local,sqrt(-2*mu_l_local));
 
             the_loglikes_hh_draw_t(ix) = log(the_likes);
 

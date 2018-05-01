@@ -10,9 +10,9 @@ is_data_gen = 2; % whether simulate data:
 is_profile = 0; %whether run profiler for execution time
 
 % Model/data settings
-T = 100;                                % Number of periods of simulated macro data
-ts_hh = 25:25:100;                      % Time periods where we observe micro data
-N_hh = 50;                              % Number of households per non-missing time period
+T = 50;                                % Number of periods of simulated macro data
+ts_hh = 10:10:T;                      % Time periods where we observe micro data
+N_hh = 1000;                              % Number of households per non-missing time period
 
 % Prior
 prior_logdens_log = @(x) sum(x);    % Log prior density of log(beta)
@@ -63,7 +63,7 @@ ssigmaTFP = .014;
 
 % Distribution of indv params log(lambda_i) ~ N(-1/2,1), 
 % so lambda_i > 0 and E(lambda_i) = 1
-mu_l = 2;
+mu_l = -.5;
 
 
 %% Set approximation parameters
