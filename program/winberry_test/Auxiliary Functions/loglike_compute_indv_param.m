@@ -31,7 +31,7 @@ fprintf('Macro likelihood/smoother time: %6.1f sec\n\n', toc(timer));
 
 T_hh = length(ts_hh);
 nobs = dataset_.nobs;
-n_lambda = 100;
+n_lambda = 200;
 
 % Make local versions of global variables so Matlab doesn't complain in the parfor loop
 aaBar_local = aaBar;
@@ -109,11 +109,17 @@ parfor i_draw = 1:num_smooth_draws
             the_likes = (1-mHat)/R*mean((exp(g_aux)/normalization ...
                 ./v_lambda)).*logncdf(bounds_aux,mu_l_local,sqrt(-2*mu_l_local));
             % toc
+%             if sum(the_likes<0) ~= 0
+%                 error('complex number1!')
+%             end
             
             % Add contribution from point mass
-            the_likes = the_likes + mHat/(c+R*aaBar_local)*lognpdf(bounds_aux,mu_l_local,sqrt(-2*mu_l_local));
+            the_likes = max(the_likes + mHat/(c+R*aaBar_local)*lognpdf(bounds_aux,mu_l_local,sqrt(-2*mu_l_local)),1e-10);
 
             the_loglikes_hh_draw_t(ix) = log(the_likes);
+%             if sum(the_likes<0) ~= 0
+%                 error('complex number2!')
+%             end
 
         end
         
