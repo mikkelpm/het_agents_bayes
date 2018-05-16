@@ -251,7 +251,7 @@ for i_mcmc=1:mcmc_num_draws % For each MCMC step...
     % Update RWMH proposal var-cov matrix
     the_indx = find(mcmc_adapt_iter==i_mcmc,1); % Find current iteration index in list of adaptation iterations
     if ~isempty(the_indx) && the_indx>1 % If in list, but not first...
-        the_start = 1 + (the_indx>1)*mcmc_adapt_iter(max(the_indx-1,1)); % Start of current adaptation window
+        the_start = 1 + (the_indx>1)*mcmc_adapt_iter(the_indx-1); % Start of current adaptation window
         the_cov = cov(post_draws(the_start:i_mcmc,:)); % Var-cov matrix over current adaptation window
         the_cov = the_cov/(mean(sqrt(diag(the_cov)))^2); % Normalize average std deviation
         the_n = i_mcmc-the_start+1;

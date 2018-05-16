@@ -40,6 +40,10 @@ mmu_local = mmu;
 ttau_local = ttau;
 mu_l_local = mu_l;
 
+% Fix some warning messages during parallization
+options_new.dataset = [];
+options_new.initial_date = [];
+
 % Seeds for simulation smoother
 rand_seeds = randi(2^32,1,num_smooth_draws);
 
