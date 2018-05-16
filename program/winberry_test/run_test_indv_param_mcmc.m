@@ -11,21 +11,27 @@ is_profile = 0; %whether run profiler for execution time
 
 % Model/data settings
 T = 100;                                % Number of periods of simulated macro data
-ts_hh = 10:10:T;                      % Time periods where we observe micro data
-N_hh = 1000;                              % Number of households per non-missing time period
+ts_hh = 20:20:T;                      % Time periods where we observe micro data
+N_hh = 100;                              % Number of households per non-missing time period
+
+% Parameter transformation
+transf_to_param = @(x) [exp(x(1)) -exp(x(2))]; % Function mapping transformed parameters into parameters of interest
 
 % Prior
-prior_logdens_log = @(x) sum(x);    % Log prior density of log(beta)
+prior_logdens_transf = @(x) sum(x);    % Log prior density of transformed parameters
 % prior_logdens_log = @(x) sum(x)-2*log(1+exp(x(3)));    % Log prior density of log(beta)
-prior_init_log = @() [log(1) log(.5)];  % Distribution of initial log(beta) draw
+prior_init_transf = @() [log(1) log(.5)];  % Distribution of initial transformed parameter draw
 % prior_init_log = @() [log(1) log(1) log(.895)-log(1-.895) log(.014) log(.5)];  % Distribution of initial log(beta) draw
 
 % MCMC settings
-mcmc_num_draws = 500;                   % Number of MCMC steps (total, including initial phase)
+mcmc_num_draws = 500;                   % Number of MCMC steps (total)
+mcmc_stepsize_init = 1e-2;              % Initial MCMC step size
+mcmc_adapt_iter = [20 50 100];         % Iterations at which to update the variance/covariance matrix for RWMH proposal; first iteration in list is start of adaptation phase
+mcmc_adapt_diag = true;                    % =1: Adapt only to posterior std devs of parameters, 0=: adapt to full var/cov matrix
+mcmc_adapt_param = 10;                    % Shrinkage parameter for adapting to var/cov matrix (higher values: more shrinkage)
 % mcmc_num_adapt = 50;                    % Number of initial steps with larger (but gradually decreasing) step size
 % mcmc_stepsizes = [1e-3 1e-2];           % MCMC step size after initial phase
 % mcmc_stepsizes_init = 10*mcmc_stepsizes; % Initial MCMC steps size (gradually decreased during initial phase)
-mcmc_stepsize_init = 1e-2;              % Initial MCMC step size
 mcmc_smooth_draws = 500;                % Number of draws from the smoothing distribution (for unbiased likelihood estimate)
 mcmc_filename = 'mcmc.mat';      % File name of MCMC output
 
@@ -151,7 +157,7 @@ end
 
 %% MCMC
 
-curr_log = prior_init_log();        % Initial draw
+curr_draw = prior_init_transf();        % Initial draw
 post_draws = nan(mcmc_num_draws,2);
 accepts = zeros(mcmc_num_draws,1);
 
@@ -160,7 +166,9 @@ loglikes_prop = nan(mcmc_num_draws,1);
 loglikes_prop_macro = nan(mcmc_num_draws,1);
 loglikes_prop_hh = nan(mcmc_num_draws,1);
 
-the_stepsize = mcmc_stepsize_init;
+the_stepsize = mcmc_stepsize_init;      % Initial RWMH step size
+the_stepsize_iter = 1;
+the_chol = eye(length(curr_draw));      % Initial RWMH proposal var-cov matrix
 
 disp('MCMC...');
 timer_mcmc = tic;
@@ -170,17 +178,17 @@ poolobj = parpool;
 for i_mcmc=1:mcmc_num_draws % For each MCMC step...
 
     fprintf(['%s' repmat('%6.4f ',1,2),'%s\n'], 'current  [ssigma,mu_l] = [',...
-        [exp(curr_log(1)) -exp(curr_log(2))],']');
+        transf_to_param(curr_draw),']');
 %     fprintf(['%s' repmat('%6.4f',1,5),'%s\n'], 'current  [ssigma,uDuration,rrhoTFP,ssigmaTFP,mu_l] = [',...
 %         [exp(curr_log([1 2])) 1/(1+exp(-curr_log(3))) exp(curr_log(4)) -exp(curr_log(5))],']');
     
-    % Proposed log(beta) (modified to always start with initial draw)
+    % Proposed draw (modified to always start with initial draw)
 %     the_stepsizes = (i_mcmc>1)*(mcmc_stepsizes + max(1-(i_mcmc-2)/mcmc_num_adapt,0)*(mcmc_stepsizes_init-mcmc_stepsizes)); % Step size
-    prop_log = curr_log + the_stepsize*randn(size(curr_log)); % Proposal
+    prop_draw = curr_draw + (i_mcmc>1)*the_stepsize*randn(size(curr_draw))*the_chol; % Proposal
     
     % Set new parameters
-    ssigma = exp(prop_log(1));
-    mu_l = -exp(prop_log(2));
+    the_transf = num2cell(transf_to_param(prop_draw));
+    [ssigma,mu_l] = deal(the_transf{:});
 %     uDuration = exp(prop_log(2));
 %     rrhoTFP = 1/(1+exp(-prop_log(3)));
 %     ssigmaTFP = exp(prop_log(4));
@@ -192,46 +200,74 @@ for i_mcmc=1:mcmc_num_draws % For each MCMC step...
 %     fprintf(['%s' repmat('%6.4f',1,5),'%s\n'], 'poposed  [ssigma,uDuration,rrhoTFP,ssigmaTFP,mu_l] = [',...
 %         [ssigma,uDuration,rrhoTFP,ssigmaTFP,mu_l],']');
     
-    saveParameters;         % Save parameter values to files
-    setDynareParameters;    % Update Dynare parameters in model struct
-    compute_steady_state;   % Compute steady state once and for all
-
-    % Log likelihood of proposal
     success = true;
     try
+        
+        saveParameters;         % Save parameter values to files
+        setDynareParameters;    % Update Dynare parameters in model struct
+        compute_steady_state;   % Compute steady state once and for all
+
+        % Log likelihood of proposal
         [loglikes_prop(i_mcmc), loglikes_prop_macro(i_mcmc), loglikes_prop_hh(i_mcmc)] = ...
             loglike_compute_indv_param('simul.mat', simul_data_hh_indv_param, ts_hh, mcmc_smooth_draws, num_burnin_periods, M_, oo_, options_);
+        
     catch ME
+        
         success = false;
-        disp('Error encountered in likelihood evaluation. Message:');
+        disp('Error encountered. Message:');
         disp(ME.message);
+        
     end
     
     if success
+        
         % Log prior ratio
-        logratio_prior = prior_logdens_log(prop_log)-prior_logdens_log(curr_log);
+        logratio_prior = prior_logdens_transf(prop_draw)-prior_logdens_transf(curr_draw);
 
         log_ar = min(loglikes_prop(i_mcmc)-curr_loglike+logratio_prior,0);
         % Accept/reject
         if log_ar > log(rand())
             fprintf('%s\n', 'Accepted!');
-            curr_log = prop_log;
+            curr_draw = prop_draw;
             curr_loglike = loglikes_prop(i_mcmc);
             accepts(i_mcmc) = 1;
         end
         
-        the_stepsize = exp(log(the_stepsize)+i_mcmc^(-mcmc_c)*(exp(log_ar)-mcmc_ar_tg)); 
+        % Adaptive step size, cf. Atchade and Rosenthal (2005), Section 4.1
+        the_stepsize = exp(log(the_stepsize)+(i_mcmc>1)*the_stepsize_iter^(-mcmc_c)*(exp(log_ar)-mcmc_ar_tg)); 
         the_stepsize = min(max(the_stepsize,1e-10),1e10);
+        the_stepsize_iter = the_stepsize_iter + 1;
         fprintf('%s%8.6f\n', 'New step size: ', the_stepsize);
-        % Atchade and Rosenthal (2005), Section 4.1 
+        
     end
     
     % Store
-    post_draws(i_mcmc,:) = exp(curr_log);
+    post_draws(i_mcmc,:) = transf_to_param(curr_draw);
     
     % Print acceptance rate
     fprintf('%s%5.1f%s\n', 'Accept. rate last 100: ', 100*mean(accepts(max(i_mcmc-99,1):i_mcmc)), '%');
     fprintf('%s%6d%s%6d\n\n', 'Progress: ', i_mcmc, '/', mcmc_num_draws);
+    
+    % Update RWMH proposal var-cov matrix
+    the_indx = find(mcmc_adapt_iter==i_mcmc,1); % Find current iteration index in list of adaptation iterations
+    if ~isempty(the_indx) && the_indx>1 % If in list, but not first...
+        the_start = 1 + (the_indx>1)*mcmc_adapt_iter(max(the_indx-1,1)); % Start of current adaptation window
+        the_cov = cov(post_draws(the_start:i_mcmc,:)); % Var-cov matrix over current adaptation window
+        the_cov = the_cov/(mean(sqrt(diag(the_cov)))^2); % Normalize average std deviation
+        the_n = i_mcmc-the_start+1;
+        the_cov_shrink = (the_n*the_cov + mcmc_adapt_param*eye(length(curr_draw))) ...
+                         /(the_n+mcmc_adapt_param); % Shrink var-cov matrix toward identity
+        if mcmc_adapt_diag % If adapt only to std devs...
+            the_chol = diag(sqrt(diag(the_cov_shrink)));
+        else % If adapt full var-cov matrix...
+            the_chol = chol(the_cov_shrink);
+        end
+        disp('New RWMH proposal var-cov matrix:');
+        disp(the_chol'*the_chol);
+        disp('Square root of diagonal');
+        disp(sqrt(diag(the_chol'*the_chol)));
+        the_stepsize_iter = 1; % Reset stepsize adaptation
+    end
     
 end
 
