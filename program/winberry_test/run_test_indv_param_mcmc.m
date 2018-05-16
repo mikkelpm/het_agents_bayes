@@ -10,21 +10,24 @@ is_data_gen = 2; % whether simulate data:
 is_profile = 0; %whether run profiler for execution time
 
 % Model/data settings
-T = 50;                                % Number of periods of simulated macro data
-ts_hh = 10:5:T;                      % Time periods where we observe micro data
+T = 100;                                % Number of periods of simulated macro data
+ts_hh = 10:10:T;                      % Time periods where we observe micro data
 N_hh = 1000;                              % Number of households per non-missing time period
 
 % Prior
-prior_logdens_log = @(x) sum(x)-2*log(1+exp(x(3)));    % Log prior density of log(beta)
-prior_init_log = @() [log(1) log(1) log(.895)-log(1-.895) log(.014) log(.5)];  % Distribution of initial log(beta) draw
+prior_logdens_log = @(x) sum(x);    % Log prior density of log(beta)
+% prior_logdens_log = @(x) sum(x)-2*log(1+exp(x(3)));    % Log prior density of log(beta)
+prior_init_log = @() [log(1) log(.5)];  % Distribution of initial log(beta) draw
+% prior_init_log = @() [log(1) log(1) log(.895)-log(1-.895) log(.014) log(.5)];  % Distribution of initial log(beta) draw
 
 % MCMC settings
-mcmc_num_draws = 200;                   % Number of MCMC steps (total, including initial phase)
+mcmc_num_draws = 500;                   % Number of MCMC steps (total, including initial phase)
 % mcmc_num_adapt = 50;                    % Number of initial steps with larger (but gradually decreasing) step size
 % mcmc_stepsizes = [1e-3 1e-2];           % MCMC step size after initial phase
 % mcmc_stepsizes_init = 10*mcmc_stepsizes; % Initial MCMC steps size (gradually decreased during initial phase)
+mcmc_stepsize_init = 1e-2;              % Initial MCMC step size
 mcmc_smooth_draws = 500;                % Number of draws from the smoothing distribution (for unbiased likelihood estimate)
-mcmc_filename = 'output/mcmc.mat';      % File name of MCMC output
+mcmc_filename = 'mcmc.mat';      % File name of MCMC output
 
 % for adaptive RWMH
 mcmc_c = 0.55;
@@ -32,7 +35,7 @@ mcmc_ar_tg = 0.3;
 
 % Numerical settings
 num_burnin_periods = 100;               % Number of burn-in periods for simulations
-rng_seed = 20180329;                    % Random number generator seed for initial simulation
+rng_seed = 20180515;                    % Random number generator seed for initial simulation
 
 % Profiler save settings
 tag_date = datestr(now,'yyyymmdd');
@@ -157,7 +160,7 @@ loglikes_prop = nan(mcmc_num_draws,1);
 loglikes_prop_macro = nan(mcmc_num_draws,1);
 loglikes_prop_hh = nan(mcmc_num_draws,1);
 
-the_stepsizes = 1e-3;
+the_stepsize = mcmc_stepsize_init;
 
 disp('MCMC...');
 timer_mcmc = tic;
@@ -166,21 +169,28 @@ poolobj = parpool;
 
 for i_mcmc=1:mcmc_num_draws % For each MCMC step...
 
-    fprintf(['%s' repmat('%6.4f',1,5),'%s\n'], 'current  [ssigma,uDuration,rrhoTFP,ssigmaTFP,mu_l] = [',...
-        [exp(curr_log([1 2])) 1/(1+exp(-curr_log(3))) exp(curr_log(4)) -exp(curr_log(5))],']');
+    fprintf(['%s' repmat('%6.4f ',1,2),'%s\n'], 'current  [ssigma,mu_l] = [',...
+        [exp(curr_log(1)) -exp(curr_log(2))],']');
+%     fprintf(['%s' repmat('%6.4f',1,5),'%s\n'], 'current  [ssigma,uDuration,rrhoTFP,ssigmaTFP,mu_l] = [',...
+%         [exp(curr_log([1 2])) 1/(1+exp(-curr_log(3))) exp(curr_log(4)) -exp(curr_log(5))],']');
     
     % Proposed log(beta) (modified to always start with initial draw)
 %     the_stepsizes = (i_mcmc>1)*(mcmc_stepsizes + max(1-(i_mcmc-2)/mcmc_num_adapt,0)*(mcmc_stepsizes_init-mcmc_stepsizes)); % Step size
-    prop_log = curr_log + the_stepsizes*randn(size(curr_log)); % Proposal
+    prop_log = curr_log + the_stepsize*randn(size(curr_log)); % Proposal
     
     % Set new parameters
     ssigma = exp(prop_log(1));
-    uDuration = exp(prop_log(2));
-    rrhoTFP = 1/(1+exp(-prop_log(3)));
-    ssigmaTFP = exp(prop_log(4));
-    mu_l = -exp(prop_log(5));
-    fprintf(['%s' repmat('%6.4f',1,5),'%s\n'], 'poposed  [ssigma,uDuration,rrhoTFP,ssigmaTFP,mu_l] = [',...
-        [ssigma,uDuration,rrhoTFP,ssigmaTFP,mu_l],']');
+    mu_l = -exp(prop_log(2));
+%     uDuration = exp(prop_log(2));
+%     rrhoTFP = 1/(1+exp(-prop_log(3)));
+%     ssigmaTFP = exp(prop_log(4));
+%     mu_l = -exp(prop_log(5));
+
+    fprintf(['%s' repmat('%6.4f ',1,2),'%s\n'], 'proposed [ssigma,mu_l] = [',...
+        [ssigma,mu_l],']');
+
+%     fprintf(['%s' repmat('%6.4f',1,5),'%s\n'], 'poposed  [ssigma,uDuration,rrhoTFP,ssigmaTFP,mu_l] = [',...
+%         [ssigma,uDuration,rrhoTFP,ssigmaTFP,mu_l],']');
     
     saveParameters;         % Save parameter values to files
     setDynareParameters;    % Update Dynare parameters in model struct
@@ -210,8 +220,9 @@ for i_mcmc=1:mcmc_num_draws % For each MCMC step...
             accepts(i_mcmc) = 1;
         end
         
-        the_stepsizes = exp(log(the_stepsizes)+i_mcmc^(-mcmc_c)*(exp(log_ar)-mcmc_ar_tg)); 
-        the_stepsizes = min(max(the_stepsizes,1e-10),1e10);
+        the_stepsize = exp(log(the_stepsize)+i_mcmc^(-mcmc_c)*(exp(log_ar)-mcmc_ar_tg)); 
+        the_stepsize = min(max(the_stepsize,1e-10),1e10);
+        fprintf('%s%8.6f\n', 'New step size: ', the_stepsize);
         % Atchade and Rosenthal (2005), Section 4.1 
     end
     
@@ -220,7 +231,7 @@ for i_mcmc=1:mcmc_num_draws % For each MCMC step...
     
     % Print acceptance rate
     fprintf('%s%5.1f%s\n', 'Accept. rate last 100: ', 100*mean(accepts(max(i_mcmc-99,1):i_mcmc)), '%');
-    fprintf('%s%5.1f%s\n\n', 'Progress: ', 100*i_mcmc/mcmc_num_draws, '%');
+    fprintf('%s%6d%s%6d\n\n', 'Progress: ', i_mcmc, '/', mcmc_num_draws);
     
 end
 

@@ -7,3 +7,4 @@
 !*.mod
 !*.gitignore
 program/winberry_test/Auxiliary Functions/plot_integrand.m
+program/winberry_test/Auxiliary Functions/firstOrderDynamics_polynomials.m
