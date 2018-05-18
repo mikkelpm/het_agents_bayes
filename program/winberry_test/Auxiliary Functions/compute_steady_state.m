@@ -65,6 +65,7 @@ logAggregateInvestment = log(ddelta * aggregateCapital);
 logAggregateConsumption = log(exp(logAggregateOutput) - exp(logAggregateInvestment));
 logWage = log(w);
 logAggregateOutputObs = logAggregateOutput;
+logWageObs = logWage;
 
 % Save
 save_vars = [cellstr(M_.endo_names); {'M_'}];
