@@ -6,7 +6,6 @@
 !*.m
 !*.mod
 !*.gitignore
-program/winberry_test/Auxiliary Functions/plot_integrand.m
-program/winberry_test/Auxiliary Functions/firstOrderDynamics_polynomials*.*
-!program/winberry_test/Auxiliary Functions/firstOrderDynamics_polynomials.mod
-!program/winberry_test/Auxiliary Functions/firstOrderDynamics_polynomials_steadystate.m
+program/winberry_test/auxiliary_functions/dynare/firstOrderDynamics_polynomials*.*
+!program/winberry_test/auxiliary_functions/dynare/firstOrderDynamics_polynomials.mod
+!program/winberry_test/auxiliary_functions/dynare/firstOrderDynamics_polynomials_steadystate.m

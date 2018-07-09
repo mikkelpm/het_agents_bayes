@@ -9,6 +9,7 @@ function [ll, smooth_means, M_new, oo_new, options_new, dataset_, dataset_info, 
     options_.datafile = dat_file;                   % Data file
     options_.smoother = 1;                          % Return smoothed variables
     options_.noprint = 1;                           % Don't print output when solving model
+    options_.debug = 0;
     options_.mode_compute = 0;                      % Don't compute mode when "estimating"
     options_.selected_variables_only = 1;           % Smooth selected variables (suppresses a prompt)
     
@@ -30,5 +31,6 @@ function [ll, smooth_means, M_new, oo_new, options_new, dataset_, dataset_info, 
     disp('Mean smoother...');
     oo_smooth = mean_smoother(dataset_.data',xparam1,dataset_,dataset_info,M_new,oo_new,options_new,bayestopt_,estim_params_);
     smooth_means = oo_smooth.SmoothedVariables;
+
 
 end
