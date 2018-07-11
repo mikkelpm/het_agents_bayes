@@ -17,16 +17,14 @@ ts_hh = 20:20:T;                      % Time periods where we observe micro data
 N_hh = 1e3;                              % Number of households per non-missing time period
 
 % Parameter transformation
-transf_to_param = @(x) [exp(x(1)) exp(x(2)) -exp(x(3))]; % Function mapping transformed parameters into parameters of interest
+transf_to_param = @(x) [exp(x(1)) 1/(1+exp(-x(2))) exp(x(3)) -exp(x(4))]; % Function mapping transformed parameters into parameters of interest
 
 % Prior
-prior_logdens_transf = @(x) sum(x) + ((-1-1)*x(1)-4/exp(x(1)));    % Log prior density of transformed parameters
-% prior_logdens_log = @(x) sum(x)-2*log(1+exp(x(3)));    % Log prior density of log(beta)
-prior_init_transf = @() [log(1) log(1) log(.5)];  % Distribution of initial transformed parameter draw
-% prior_init_log = @() [log(1) log(1) log(.895)-log(1-.895) log(.014) log(.5)];  % Distribution of initial log(beta) draw
+prior_logdens_transf = @(x) sum(x) + ((-1-1)*x(1)-4/exp(x(1))) - 2*log(1+exp(x(2)));    % Log prior density of transformed parameters
+prior_init_transf = @() [log(1) log(.895)-log(1-.895) log(.014) log(.5)];  % Distribution of initial log(beta) draw
 
 % MCMC settings
-mcmc_num_draws = 500;                   % Number of MCMC steps (total)
+mcmc_num_draws = 1000;                   % Number of MCMC steps (total)
 mcmc_stepsize_init = 1e-2;              % Initial MCMC step size
 mcmc_adapt_iter = [20 50 100];         % Iterations at which to update the variance/covariance matrix for RWMH proposal; first iteration in list is start of adaptation phase
 mcmc_adapt_diag = true;                    % =true: Adapt only to posterior std devs of parameters, =false: adapt to full var/cov matrix
@@ -43,7 +41,7 @@ mcmc_ar_tg = 0.3;
 
 % Numerical settings
 num_burnin_periods = 100;               % Number of burn-in periods for simulations
-rng_seed = 20180709;                    % Random number generator seed for initial simulation
+rng_seed = 20180711;                    % Random number generator seed for initial simulation
 
 % Profiler save settings
 tag_date = datestr(now,'yyyymmdd');
@@ -120,7 +118,7 @@ saveParameters;
 %% Initial Dynare run
 
 rng(rng_seed);
-dynare firstOrderDynamics_polynomials noclearall;                   % Run Dynare once to process model file
+dynare firstOrderDynamics_polynomials noclearall nopathchange; % Run Dynare once to process model file
 
 
 %% Simulate data
@@ -179,22 +177,18 @@ poolobj = parpool;
 
 for i_mcmc=1:mcmc_num_draws % For each MCMC step...
 
-    fprintf(['%s' repmat('%6.4f ',1,length(curr_draw)),'%s\n'], 'current  [ssigma,uDuration,mu_l] = [',...
+    fprintf(['%s' repmat('%6.4f ',1,length(curr_draw)),'%s\n'], 'current  [ssigma,rrhoTFP,ssigmaTFP,mu_l] = [',...
         transf_to_param(curr_draw),']');
-%     fprintf(['%s' repmat('%6.4f',1,5),'%s\n'], 'current  [ssigma,uDuration,rrhoTFP,ssigmaTFP,mu_l] = [',...
-%         [exp(curr_log([1 2])) 1/(1+exp(-curr_log(3))) exp(curr_log(4)) -exp(curr_log(5))],']');
     
     % Proposed draw (modified to always start with initial draw)
     prop_draw = curr_draw + (i_mcmc>1)*the_stepsize*randn(size(curr_draw))*the_chol; % Proposal
     
     % Set new parameters
     the_transf = num2cell(transf_to_param(prop_draw));
-    [ssigma,uDuration,mu_l] = deal(the_transf{:});
+    [ssigma,rrhoTFP,ssigmaTFP,mu_l] = deal(the_transf{:});
 
-    fprintf(['%s' repmat('%6.4f ',1,length(curr_draw)),'%s\n'], 'proposed [ssigma,uDuration,mu_l] = [',...
-        [ssigma,uDuration,mu_l],']');
-%     fprintf(['%s' repmat('%6.4f',1,5),'%s\n'], 'poposed  [ssigma,uDuration,rrhoTFP,ssigmaTFP,mu_l] = [',...
-%         [ssigma,uDuration,rrhoTFP,ssigmaTFP,mu_l],']');
+    fprintf(['%s' repmat('%6.4f ',1,length(curr_draw)),'%s\n'], 'proposed [ssigma,rrhoTFP,ssigmaTFP,mu_l] = [',...
+        [ssigma,rrhoTFP,ssigmaTFP,mu_l],']');
     
     try
         

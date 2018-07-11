@@ -51,6 +51,7 @@ loglikes_hh = nan(1,num_smooth_draws);
 disp('Individual likelihood...');
 timer = tic;
 
+% for i_draw = 1:num_smooth_draws
 parfor i_draw = 1:num_smooth_draws
     
     dataset_fake = struct;
@@ -87,7 +88,14 @@ parfor i_draw = 1:num_smooth_draws
             moment_aux = moment;
             moment_aux(1) = 0;
             g = @(a) exp(measureCoefficient*((a-moment(1)).^((1:nMeasure_local)')-moment_aux'));
+            lastwarn('');
             normalization = integral(g, aaBar_local, Inf);
+            warnMsg = lastwarn;
+            if ~isempty(warnMsg)
+                disp(measureCoefficient);
+                error('Improper asset density');
+            end
+            
 %             g_norm = @(a) g(a)/normalization;
             
             c = the_smooth_draw.w(t)*((1-eepsilon)*mmu_local+eepsilon*(1-ttau_local));
