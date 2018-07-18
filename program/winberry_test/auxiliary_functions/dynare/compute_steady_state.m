@@ -68,7 +68,7 @@ logAggregateOutputObs = logAggregateOutput;
 logWageObs = logWage;
 
 % Save
-save_vars = [cellstr(M_.endo_names); {'M_'}];
-save('steady_vars.mat', save_vars{:});
+save_vars = cellstr(M_.endo_names);
+save('steady_vars.mat', save_vars{:}, 'save_vars');
 
 fprintf('... Done!  Elapsed time: %2.2f seconds \n\n',toc(tStart));

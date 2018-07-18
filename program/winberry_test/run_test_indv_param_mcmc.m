@@ -17,11 +17,11 @@ ts_hh = 20:20:T;                      % Time periods where we observe micro data
 N_hh = 1e3;                              % Number of households per non-missing time period
 
 % Parameter transformation
-transf_to_param = @(x) [exp(x(1)) 1/(1+exp(-x(2))) exp(x(3)) -exp(x(4))]; % Function mapping transformed parameters into parameters of interest
+transf_to_param = @(x) [1/(1+exp(-x(1))) exp(x(2)) -exp(x(3))]; % Function mapping transformed parameters into parameters of interest
 
 % Prior
-prior_logdens_transf = @(x) sum(x) + ((-1-1)*x(1)-4/exp(x(1))) - 2*log(1+exp(x(2)));    % Log prior density of transformed parameters
-prior_init_transf = @() [log(1) log(.895)-log(1-.895) log(.014) log(.5)];  % Distribution of initial log(beta) draw
+prior_logdens_transf = @(x) sum(x) - 2*log(1+exp(x(1)));    % Log prior density of transformed parameters
+prior_init_transf = @() [log(.895)-log(1-.895) log(.014) log(.5)];  % Distribution of initial log(beta) draw
 
 % MCMC settings
 mcmc_num_draws = 1000;                   % Number of MCMC steps (total)
@@ -41,7 +41,7 @@ mcmc_ar_tg = 0.3;
 
 % Numerical settings
 num_burnin_periods = 100;               % Number of burn-in periods for simulations
-rng_seed = 20180711;                    % Random number generator seed for initial simulation
+rng_seed = 20180717;                    % Random number generator seed for initial simulation
 
 % Profiler save settings
 tag_date = datestr(now,'yyyymmdd');
@@ -177,7 +177,7 @@ poolobj = parpool;
 
 for i_mcmc=1:mcmc_num_draws % For each MCMC step...
 
-    fprintf(['%s' repmat('%6.4f ',1,length(curr_draw)),'%s\n'], 'current  [ssigma,rrhoTFP,ssigmaTFP,mu_l] = [',...
+    fprintf(['%s' repmat('%6.4f ',1,length(curr_draw)),'%s\n'], 'current  [rrhoTFP,ssigmaTFP,mu_l] = [',...
         transf_to_param(curr_draw),']');
     
     % Proposed draw (modified to always start with initial draw)
@@ -185,16 +185,16 @@ for i_mcmc=1:mcmc_num_draws % For each MCMC step...
     
     % Set new parameters
     the_transf = num2cell(transf_to_param(prop_draw));
-    [ssigma,rrhoTFP,ssigmaTFP,mu_l] = deal(the_transf{:});
+    [rrhoTFP,ssigmaTFP,mu_l] = deal(the_transf{:});
 
-    fprintf(['%s' repmat('%6.4f ',1,length(curr_draw)),'%s\n'], 'proposed [ssigma,rrhoTFP,ssigmaTFP,mu_l] = [',...
-        [ssigma,rrhoTFP,ssigmaTFP,mu_l],']');
+    fprintf(['%s' repmat('%6.4f ',1,length(curr_draw)),'%s\n'], 'proposed [rrhoTFP,ssigmaTFP,mu_l] = [',...
+        [rrhoTFP,ssigmaTFP,mu_l],']');
     
     try
         
         saveParameters;         % Save parameter values to files
         setDynareParameters;    % Update Dynare parameters in model struct
-        compute_steady_state;   % Compute steady state once and for all
+%         compute_steady_state;   % Compute steady state once and for all
         
         % Log likelihood of proposal
         [loglikes_prop(i_mcmc), loglikes_prop_macro(i_mcmc), loglikes_prop_hh(i_mcmc)] = ...

@@ -1,32 +1,40 @@
 clear all;
+addpath('auxiliary_functions/dynare', 'auxiliary_functions/likelihood', 'auxiliary_functions/sim');
+
 
 %% Settings
 
-is_data_gen = 0; % whether simulate data:  
+% Decide what to do
+is_data_gen = 2; % whether simulate data:  
                  % 0: no simulation; 
                  % 1: simulation (with indv params, based on simulation without indv params)
                  % 2: simulation (with indv params, start from scratch)
-is_profile = 0; % whether run profiler for execution time
+is_profile = 0; %whether run profiler for execution time
 
-bbetas = linspace(0.93,0.99,3);     % beta values to loop over
-mu_ls = [-.75 -.5 -.25];           % params for dist of indv params
+% Model/data settings
+T = 200;                                % Number of periods of simulated macro data
+ts_hh = 20:20:T;                        % Time periods where we observe micro data
+N_hh = 1e3;                             % Number of households per non-missing time period
 
-T = 200;                            % Number of periods of simulated macro data
-ts_hh = 20:20:200;                  % Time periods where we observe micro data
-N_hh = 1e2;                         % Number of households per non-missing time period
+% Parameter values to check
+param1_vals = 0.859*[1/2 1 1.1];
+param2_vals = 0.014*[1/2 1 2];
 
-num_burnin_periods = 100;           % Number of burn-in periods for simulations
-num_smooth_draws = 500;              % Number of draws from the smoothing distribution (for each beta)
+% Likelihood settings
+num_smooth_draws = 500;                % Number of draws from the smoothing distribution (for unbiased likelihood estimate)
 
-rng_seed = 20180329;                % Random number generator seed for initial simulation
+% Numerical settings
+num_burnin_periods = 100;               % Number of burn-in periods for simulations
+rng_seed = 20180717;                    % Random number generator seed for initial simulation
 
+% Profiler save settings
 tag_date = datestr(now,'yyyymmdd');
 
 
 %% Set economic parameters 
 
 global bbeta ssigma aaBar aalpha ddelta vEpsilonGrid aggEmployment uDuration ...
-	mmu ttau rrhoTFP ssigmaTFP mu_l;
+	mmu rrhoTFP ssigmaTFP ttau mu_l;
 	
 % Preferences
 bbeta = .96;										% discount factor (annual calibration)
@@ -52,7 +60,8 @@ ssigmaTFP = .014;
 
 % Distribution of indv params log(lambda_i) ~ N(-1/2,1), 
 % so lambda_i > 0 and E(lambda_i) = 1
-mu_l = -.5;
+mu_l = 0; %-.5;
+
 
 %% Set approximation parameters
 
@@ -85,14 +94,15 @@ dampening = .95;
 
 %% Save parameters
 
-cd('./Auxiliary Functions');
+cd('./auxiliary_functions/dynare');
 delete steady_vars.mat;
 saveParameters;
 
 
 %% Initial Dynare run
 
-dynare firstOrderDynamics_polynomials noclearall;                   % Run Dynare once to process model file
+rng(rng_seed);
+dynare firstOrderDynamics_polynomials noclearall nopathchange; % Run Dynare once to process model file
 
 
 %% Simulate data
@@ -129,39 +139,47 @@ else
 end
 
 
-%% Smoothing and likelihood
+%% Compute likelihood
 
-n_beta = length(bbetas);
-n_mul = length(mu_ls);
+loglikes = nan(length(param1_vals),length(param2_vals));
+loglikes_macro = nan(length(param1_vals),length(param2_vals));
+loglikes_hh = nan(length(param1_vals),length(param2_vals));
 
-% Loop over beta values
-loglikes = zeros(n_mul,n_beta);
-loglikes_macro = zeros(n_mul,n_beta);
-loglikes_hh = zeros(n_mul,n_beta);
+disp('Computing likelihood...');
+timer_likelihood = tic;
 
-poolobj = parpool(3);
+poolobj = parpool;
 
-for i_beta=1:n_beta % For each param...
+for iter_i=1:length(param1_vals) % For each macro parameter...
     
-    bbeta = bbetas(i_beta); % Set beta
-    saveParameters;         % Save parameter values to files
-    setDynareParameters;    % Update Dynare parameters in model struct
-    compute_steady_state;   % Compute steady state once and for all
-    
-    for i_mul = 1:n_mul
-        mu_l = mu_ls(i_mul);
-        fprintf([repmat('%s%6.4f',1,2) '\n'], 'beta=', bbeta, ', mu_l=', mu_l);
+    for iter_j=1:length(param2_vals) % For each macro parameter...
         
-        [loglikes(i_mul,i_beta), loglikes_macro(i_mul,i_beta), loglikes_hh(i_mul,i_beta)] = ...
+        % Set new parameters
+        rrhoTFP = param1_vals(iter_i);
+        ssigmaTFP = param2_vals(iter_j);
+%         mu_l = param2_vals(iter_j);
+
+        fprintf(['%s' repmat('%6.4f ',1,2),'%s\n'], '[rrhoTFP,ssigmaTFP] = [',...
+            rrhoTFP,ssigmaTFP,']');
+
+        saveParameters;         % Save parameter values to files
+        setDynareParameters;    % Update Dynare parameters in model struct
+%         compute_steady_state;   % Compute steady state
+
+        % Log likelihood of proposal
+        [loglikes(iter_i,iter_j), loglikes_macro(iter_i,iter_j), loglikes_hh(iter_i,iter_j)] = ...
             loglike_compute_indv_param('simul.mat', simul_data_hh_indv_param, ts_hh, num_smooth_draws, num_burnin_periods, M_, oo_, options_);
+    
     end
     
 end
 
 delete(poolobj);
 
-%%
-cd('../');
+likelihood_elapsed = toc(timer_likelihood);
+fprintf('%s%8.2f\n', 'Done. Elapsed minutes: ', likelihood_elapsed/60);
+
+cd('../../');
 
 if is_profile
     profsave(profile('info'),['profile_results_' tag_date]);

@@ -5,7 +5,6 @@ function [ys,check] = firstOrderDynamics_polynomials_steadystate(ys,exo)
 %
 % Thomas Winberry, July 26th, 2016
 
-
 % Load steady state
 try
     load('steady_vars.mat');
@@ -15,8 +14,8 @@ catch
 end
 
 % Save endogenous variables back into ys
-for ii = 1 : M_.orig_endo_nbr
-  varname = deblank(M_.endo_names(ii,:));
+for ii = 1 : length(save_vars) % M_.orig_endo_nbr
+  varname = deblank(save_vars{ii}); % %M_.endo_names(ii,:));
   eval(['ys(' int2str(ii) ') = ' varname ';']); 
 end
 

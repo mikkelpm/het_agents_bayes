@@ -156,6 +156,9 @@ fprintf('Individual likelihood time: %6.1f sec\n\n', toc(timer));
 
 log_max = max(loglikes_hh);
 loglike_hh = log_max + log(mean(exp(loglikes_hh-log_max))); % Formula deals with underflow
+if isempty(loglike_hh)
+    loglike_hh = 0;
+end
 
 loglike = loglike_macro + loglike_hh;
 
