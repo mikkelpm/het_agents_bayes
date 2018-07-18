@@ -17,8 +17,8 @@ ts_hh = 20:20:T;                        % Time periods where we observe micro da
 N_hh = 1e3;                             % Number of households per non-missing time period
 
 % Parameter values to check
-param1_vals = 0.859*[1/2 1 1.1];
-param2_vals = 0.014*[1/2 1 2];
+param1_vals = [0.93 0.96 0.99];
+param2_vals = [-1 -0.5 -0.1];
 
 % Likelihood settings
 num_smooth_draws = 500;                % Number of draws from the smoothing distribution (for unbiased likelihood estimate)
@@ -60,7 +60,7 @@ ssigmaTFP = .014;
 
 % Distribution of indv params log(lambda_i) ~ N(-1/2,1), 
 % so lambda_i > 0 and E(lambda_i) = 1
-mu_l = 0; %-.5;
+mu_l = -.5;
 
 
 %% Set approximation parameters
@@ -155,16 +155,15 @@ for iter_i=1:length(param1_vals) % For each macro parameter...
     for iter_j=1:length(param2_vals) % For each macro parameter...
         
         % Set new parameters
-        rrhoTFP = param1_vals(iter_i);
-        ssigmaTFP = param2_vals(iter_j);
-%         mu_l = param2_vals(iter_j);
+        bbeta = param1_vals(iter_i);
+        mu_l = param2_vals(iter_j);
 
-        fprintf(['%s' repmat('%6.4f ',1,2),'%s\n'], '[rrhoTFP,ssigmaTFP] = [',...
-            rrhoTFP,ssigmaTFP,']');
+        fprintf(['%s' repmat('%6.4f ',1,2),'%s\n'], '[bbeta,mu_l] = [',...
+            bbeta,mu_l,']');
 
         saveParameters;         % Save parameter values to files
         setDynareParameters;    % Update Dynare parameters in model struct
-%         compute_steady_state;   % Compute steady state
+        compute_steady_state;   % Compute steady state
 
         % Log likelihood of proposal
         [loglikes(iter_i,iter_j), loglikes_macro(iter_i,iter_j), loglikes_hh(iter_i,iter_j)] = ...
