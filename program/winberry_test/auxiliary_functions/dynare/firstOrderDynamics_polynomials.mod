@@ -15,8 +15,9 @@
 //----------------------------------------------------------------
 
 @#include "variables_polynomials.mod"
-var logAggregateOutputObs logWageObs;
-varexo measErr measErr_wage;
+// MPM: include observation with measurement error
+var logAggregateOutputObs;
+varexo measErr;
 
 //----------------------------------------------------------------
 // Model equations
@@ -25,8 +26,7 @@ varexo measErr measErr_wage;
 model;
 
 @#include "equations_polynomials.mod"
-logAggregateOutputObs = logAggregateOutput + measErr;
-logWageObs = logWage + measErr_wage;
+logAggregateOutputObs = logAggregateOutput + ssigmaMeas*measErr; // MPM: measurement error
 
 end;
 
@@ -34,8 +34,7 @@ end;
 // MPM: Observables
 //----------------------------------------------------------------
 
-//varobs logAggregateOutputObs;
-varobs logAggregateOutputObs logWageObs;
+varobs logAggregateOutputObs;
 
 //----------------------------------------------------------------
 // 4. Computation
@@ -45,8 +44,8 @@ varobs logAggregateOutputObs logWageObs;
 
 shocks;
     var aggregateTFPShock = 1;
-    var measErr = 0.03^2;
-    var measErr_wage = 0.03^2;
+    // MPM: Measurement error
+    var measErr = 1;
 end;
 
 options_.steadystate.nocheck = 1;

@@ -9,7 +9,7 @@ polynomials = load('polynomials');
 
 %% Economic parameters
 
-nEconomicParameters = 10;
+nEconomicParameters = 11; % MPM: account for ssigmaMeas
 
 for iParam = 1 : nEconomicParameters
 	parameterName = deblank(M_.param_names(iParam,:));

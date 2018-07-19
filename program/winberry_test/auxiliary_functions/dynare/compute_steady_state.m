@@ -64,8 +64,7 @@ logAggregateOutput = log(exp(aggregateTFP) * (aggregateCapital ^ aalpha) * (aggE
 logAggregateInvestment = log(ddelta * aggregateCapital);
 logAggregateConsumption = log(exp(logAggregateOutput) - exp(logAggregateInvestment));
 logWage = log(w);
-logAggregateOutputObs = logAggregateOutput;
-logWageObs = logWage;
+logAggregateOutputObs = logAggregateOutput; % MPM: observable with measurement error
 
 % Save
 save_vars = cellstr(M_.endo_names);

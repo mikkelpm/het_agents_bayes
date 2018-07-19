@@ -13,10 +13,12 @@ grids = load('grids');
 polynomials = load('polynomials');
 
 // Define economic parameters
+// MPM: Add ssigmaMeas
 parameters bbeta ssigma aaBar aalpha ddelta aggEmployment
-	mmu ttau rrhoTFP ssigmaTFP;
+	mmu ttau rrhoTFP ssigmaTFP ssigmaMeas;
 //Load in their values
-@#define nEconomicParameters = 10
+// MPM: Account for ssigmaMeas
+@#define nEconomicParameters = 11
 for iParam = 1 : @{nEconomicParameters}
 	parameterName = deblank(M_.param_names(iParam,:));
 	if isfield(economicParameters,parameterName)

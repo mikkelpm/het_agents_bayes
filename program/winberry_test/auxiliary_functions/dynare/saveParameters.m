@@ -13,7 +13,7 @@ if splineOpt == 0	% if using polynomials to approximate individual decisions
 
 	% Economic parameters
 	save economicParameters.mat bbeta ssigma aaBar aalpha ddelta vEpsilonGrid aggEmployment ...
-		mmu ttau rrhoTFP ssigmaTFP mEpsilonTransition
+		mmu ttau rrhoTFP ssigmaTFP ssigmaMeas mEpsilonTransition
 		
 	% Approximation parameters
 	save approximationParameters.mat nEpsilon nAssets nState assetsMin assetsMax nAssetsFine nStateFine nAssetsQuadrature nStateQuadrature ...

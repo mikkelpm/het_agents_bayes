@@ -12,20 +12,20 @@ is_data_gen = 2; % whether simulate data:
 is_profile = 0; %whether run profiler for execution time
 
 % Model/data settings
-T = 200;                                % Number of periods of simulated macro data
-ts_hh = 20:20:T;                        % Time periods where we observe micro data
+T = 100;                                % Number of periods of simulated macro data
+ts_hh = 10:10:T;                        % Time periods where we observe micro data
 N_hh = 1e3;                             % Number of households per non-missing time period
 
 % Parameter values to check
 param1_vals = [0.93 0.96 0.99];
-param2_vals = [-1 -0.5 -0.1];
+param2_vals = [0.01 0.03 0.05];
 
 % Likelihood settings
 num_smooth_draws = 500;                % Number of draws from the smoothing distribution (for unbiased likelihood estimate)
 
 % Numerical settings
 num_burnin_periods = 100;               % Number of burn-in periods for simulations
-rng_seed = 20180717;                    % Random number generator seed for initial simulation
+rng_seed = 20180719;                    % Random number generator seed for initial simulation
 
 % Profiler save settings
 tag_date = datestr(now,'yyyymmdd');
@@ -34,7 +34,7 @@ tag_date = datestr(now,'yyyymmdd');
 %% Set economic parameters 
 
 global bbeta ssigma aaBar aalpha ddelta vEpsilonGrid aggEmployment uDuration ...
-	mmu rrhoTFP ssigmaTFP ttau mu_l;
+	mmu rrhoTFP ssigmaTFP ttau mu_l ssigmaMeas;
 	
 % Preferences
 bbeta = .96;										% discount factor (annual calibration)
@@ -58,9 +58,12 @@ ttau = mmu*(1-aggEmployment)/aggEmployment;
 rrhoTFP = .859;										
 ssigmaTFP = .014;
 
-% Distribution of indv params log(lambda_i) ~ N(-1/2,1), 
+% Distribution of indv params log(lambda_i) ~ N(mu_l,-2*mu_l), 
 % so lambda_i > 0 and E(lambda_i) = 1
 mu_l = -.5;
+
+% Measurement error std. dev. of observed log output
+ssigmaMeas = 0.03;
 
 
 %% Set approximation parameters
@@ -156,10 +159,11 @@ for iter_i=1:length(param1_vals) % For each macro parameter...
         
         % Set new parameters
         bbeta = param1_vals(iter_i);
-        mu_l = param2_vals(iter_j);
+        ssigmaMeas = param2_vals(iter_j);
+%         mu_l = param2_vals(iter_j);
 
-        fprintf(['%s' repmat('%6.4f ',1,2),'%s\n'], '[bbeta,mu_l] = [',...
-            bbeta,mu_l,']');
+        fprintf(['%s' repmat('%6.4f ',1,2),'%s\n'], '[bbeta,ssigmaMeas] = [',...
+            bbeta,ssigmaMeas,']');
 
         saveParameters;         % Save parameter values to files
         setDynareParameters;    % Update Dynare parameters in model struct

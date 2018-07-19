@@ -4,7 +4,7 @@
 
 
 global bbeta ssigma aaBar aalpha ddelta vEpsilonGrid aggEmployment uDuration ...
-	mmu rrhoTFP ssigmaTFP;
+	mmu rrhoTFP ssigmaTFP ssigmaMeas;
 
 global nEpsilon nAssets nAssetsFine nAssetsQuadrature ...
 	nMeasure maxIterations tolerance dampening splineOpt displayOpt;
