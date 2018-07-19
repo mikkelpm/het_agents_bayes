@@ -52,7 +52,8 @@ for it=1:T_hh
         end
         asset_aux(ix1) = aa;
 
-        simul_data_hh(it,ix,2) = sim_struct.w(t)*((1-eepsilon)*mmu+eepsilon*(1-ttau))+(1+sim_struct.r(t))*asset_aux;
+        R = sim_struct.r(t);
+        simul_data_hh(it,ix,2) = sim_struct.w(t)*((1-eepsilon)*mmu+eepsilon*(1-ttau))+R*asset_aux;
     end
 end
 

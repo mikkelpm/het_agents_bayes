@@ -85,6 +85,7 @@ parfor i_draw = 1:num_smooth_draws
                 measureCoefficient(i_Measure) = the_smooth_draw.(['measureCoefficient_' num2str(eepsilon+1) '_' num2str(i_Measure)])(t);
             end
 
+            % Compute normalization constant
             moment_aux = moment;
             moment_aux(1) = 0;
             g = @(a) exp(measureCoefficient*((a-moment(1)).^((1:nMeasure_local)')-moment_aux'));
@@ -96,13 +97,15 @@ parfor i_draw = 1:num_smooth_draws
                 error('Improper asset density');
             end
             
-%             g_norm = @(a) g(a)/normalization;
-            
+            % Continuous part
             c = the_smooth_draw.w(t)*((1-eepsilon)*mmu_local+eepsilon*(1-ttau_local));
-            R = 1+the_smooth_draw.r(t);
+            R = the_smooth_draw.r(t);
+            if R<=0
+                warning('%s%8.4f', 'R=', R);
+            end
             bounds_aux = data_hh(it,ix,2)/(c+R*aaBar_local);
             
-            % Continuous part
+            %             g_norm = @(a) g(a)/normalization;
             % tic
             %             for i_ix = 1:n_ix
             %                 the_likes(i_ix) = (1-mHat)/R*...
@@ -120,18 +123,11 @@ parfor i_draw = 1:num_smooth_draws
             end
             the_likes = (1-mHat)/R*mean((exp(g_aux)/normalization ...
                 ./v_lambda)).*logncdf(bounds_aux,mu_l_local,sqrt(-2*mu_l_local));
-            % toc
-%             if sum(the_likes<0) ~= 0
-%                 error('complex number1!')
-%             end
             
-            % Add contribution from point mass
-            the_likes = max(the_likes + mHat/(c+R*aaBar_local)*lognpdf(bounds_aux,mu_l_local,sqrt(-2*mu_l_local)),1e-10);
-
+            % Point mass
+            the_likes = max(the_likes + mHat/(c+R*aaBar_local)*lognpdf(bounds_aux,mu_l_local,sqrt(-2*mu_l_local)),eps);
+            
             the_loglikes_hh_draw_t(ix) = log(the_likes);
-%             if sum(the_likes<0) ~= 0
-%                 error('complex number2!')
-%             end
 
         end
         

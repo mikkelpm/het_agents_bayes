@@ -18,14 +18,14 @@ N_hh = 1e3;                             % Number of households per non-missing t
 
 % Parameter values to check
 param1_vals = [0.93 0.96 0.99];
-param2_vals = [0.01 0.03 0.05];
+param2_vals = -0.25; %[-0.5 -0.25 -0.1]; %[0.01 0.02 0.03];
 
 % Likelihood settings
 num_smooth_draws = 500;                % Number of draws from the smoothing distribution (for unbiased likelihood estimate)
 
 % Numerical settings
 num_burnin_periods = 100;               % Number of burn-in periods for simulations
-rng_seed = 20180719;                    % Random number generator seed for initial simulation
+rng_seed = 201807192;                    % Random number generator seed for initial simulation
 
 % Profiler save settings
 tag_date = datestr(now,'yyyymmdd');
@@ -60,10 +60,10 @@ ssigmaTFP = .014;
 
 % Distribution of indv params log(lambda_i) ~ N(mu_l,-2*mu_l), 
 % so lambda_i > 0 and E(lambda_i) = 1
-mu_l = -.5;
+mu_l = -.25; % Roughly calibrated to Piketty, Saez & Zucman (QJE 2018) Table I, log of P90-P20 ratio, post-tax
 
 % Measurement error std. dev. of observed log output
-ssigmaMeas = 0.03;
+ssigmaMeas = 0.02;
 
 
 %% Set approximation parameters
@@ -159,11 +159,13 @@ for iter_i=1:length(param1_vals) % For each macro parameter...
         
         % Set new parameters
         bbeta = param1_vals(iter_i);
-        ssigmaMeas = param2_vals(iter_j);
-%         mu_l = param2_vals(iter_j);
+%         ssigmaMeas = param2_vals(iter_j);
+        mu_l = param2_vals(iter_j);
 
-        fprintf(['%s' repmat('%6.4f ',1,2),'%s\n'], '[bbeta,ssigmaMeas] = [',...
-            bbeta,ssigmaMeas,']');
+%         fprintf(['%s' repmat('%6.4f ',1,2),'%s\n'], '[bbeta,ssigmaMeas] = [',...
+%             bbeta,ssigmaMeas,']');
+        fprintf(['%s' repmat('%6.4f ',1,2),'%s\n'], '[bbeta,mu_l] = [',...
+            bbeta,mu_l,']');
 
         saveParameters;         % Save parameter values to files
         setDynareParameters;    % Update Dynare parameters in model struct
