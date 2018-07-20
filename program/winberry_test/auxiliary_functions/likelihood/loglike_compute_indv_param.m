@@ -4,7 +4,7 @@ function [loglike, loglike_macro, loglike_hh]...
 
 % Compute likelihood for Krusell-Smith model
 
-global aaBar nEpsilon nMeasure mmu ttau mu_l;
+global aaBar nEpsilon nMeasure mmu ttau mu_l bbeta;
 
 
 %% Macro likelihood and simulation smoother
@@ -50,9 +50,10 @@ rand_seeds = randi(2^32,1,num_smooth_draws);
 loglikes_hh = nan(1,num_smooth_draws);
 disp('Individual likelihood...');
 timer = tic;
+all_loglikes = nan(T_hh,10^3,num_smooth_draws);
 
-% for i_draw = 1:num_smooth_draws
-parfor i_draw = 1:num_smooth_draws
+for i_draw = 1:num_smooth_draws
+% parfor i_draw = 1:num_smooth_draws
     
     dataset_fake = struct;
     dataset_fake.nobs = nobs;
@@ -132,6 +133,7 @@ parfor i_draw = 1:num_smooth_draws
         end
         
         the_loglikes_hh_draw(it) = sum(the_loglikes_hh_draw_t);
+        all_loglikes(it,:,i_draw) = the_loglikes_hh_draw_t;
 
     end
     
@@ -157,5 +159,7 @@ if isempty(loglike_hh)
 end
 
 loglike = loglike_macro + loglike_hh;
+
+save(['loglike_space_' num2str(bbeta*100) '.mat'])
 
 end
