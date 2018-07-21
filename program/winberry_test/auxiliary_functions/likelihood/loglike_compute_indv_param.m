@@ -50,7 +50,7 @@ rand_seeds = randi(2^32,1,num_smooth_draws);
 loglikes_hh = nan(1,num_smooth_draws);
 disp('Individual likelihood...');
 timer = tic;
-all_loglikes = nan(T_hh,10^3,num_smooth_draws);
+all_loglikes = nan(T_hh,length(data_hh(1,:,1)),num_smooth_draws);
 
 for i_draw = 1:num_smooth_draws
 % parfor i_draw = 1:num_smooth_draws

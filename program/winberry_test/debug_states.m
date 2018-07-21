@@ -3,7 +3,8 @@ close all
 clc
 
 addpath('auxiliary_functions/dynare', 'auxiliary_functions/likelihood', 'auxiliary_functions/sim');
-load('auxiliary_functions/loglike_space_960.mat');
+debug_folder = 'auxiliary_functions\debug_netinc\';
+load([debug_folder 'loglike_space_96.mat']);
 
 n_smooth_vars = size(smooth_vars,1);
 
@@ -68,7 +69,7 @@ for i_draw = 1:num_smooth_draws
 end
 
 %% true states
-benchmark = load(data_macro);
+benchmark = load([debug_folder 'simul.mat']);
 benchmark_states = nan(T_hh, n_smooth_vars);
 benchmark_fplot = nan(n_aplot,2,T_hh);
 
@@ -166,7 +167,7 @@ for iter_j=1:n_smooth_vars
         title(['t=' num2str(ts_hh(it))])
         set(gca,'FontSize',SFont,'FontWeight','bold')
     end
-    print(h1,['auxiliary_functions/state_' the_var],'-dpng');
+    print(h1,[debug_folder 'state_' the_var],'-dpng');
 end
 
 %% plot state
@@ -187,7 +188,7 @@ for it = 1:T_hh
         hold off
         xlim(v_aplot(eepsilon+1,[1 end]))
         set(gca,'FontSize',SFont,'FontWeight','bold')
-        print(h1,['auxiliary_functions/t' num2str(ts_hh(it)) 'e' num2str(eepsilon)],'-dpng');
+        print(h1,[debug_folder 't' num2str(ts_hh(it)) 'e' num2str(eepsilon)],'-dpng');
 
     end
 end
