@@ -13,7 +13,7 @@ is_profile = 0; %whether run profiler for execution time
 
 % Model/data settings
 T = 100;                                % Number of periods of simulated macro data
-ts_hh = 10:40:T;                        % Time periods where we observe micro data
+ts_hh = 20:20:T;                        % Time periods where we observe micro data
 N_hh = 1e3;                             % Number of households per non-missing time period
 
 % Parameter values to check
@@ -25,7 +25,7 @@ num_smooth_draws = 500;                % Number of draws from the smoothing dist
 
 % Numerical settings
 num_burnin_periods = 100;               % Number of burn-in periods for simulations
-rng_seed = 201807192;                    % Random number generator seed for initial simulation
+rng_seed = 20180724;                    % Random number generator seed for initial simulation
 
 % Profiler save settings
 tag_date = datestr(now,'yyyymmdd');
@@ -151,7 +151,7 @@ loglikes_hh = nan(length(param1_vals),length(param2_vals));
 disp('Computing likelihood...');
 timer_likelihood = tic;
 
-% poolobj = parpool(2);
+poolobj = parpool;
 
 for iter_i=1:length(param1_vals) % For each macro parameter...
     
@@ -179,7 +179,7 @@ for iter_i=1:length(param1_vals) % For each macro parameter...
     
 end
 
-% delete(poolobj);
+delete(poolobj);
 
 likelihood_elapsed = toc(timer_likelihood);
 fprintf('%s%8.2f\n', 'Done. Elapsed minutes: ', likelihood_elapsed/60);

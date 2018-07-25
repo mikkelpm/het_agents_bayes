@@ -5,7 +5,8 @@ function simul_data_hh = simulate_hh(sim_struct, ts_hh, N_hh)
 global nMeasure aggEmployment aaBar mmu ttau;
 
 T_hh = length(ts_hh);
-simul_data_hh = nan(T_hh,N_hh,3);
+simul_data_hh = nan(T_hh,N_hh,2);
+% simul_data_hh = nan(T_hh,N_hh,3);
 
 disp('Simulating household data...');
 
@@ -54,7 +55,7 @@ for it=1:T_hh
 
         R = sim_struct.r(t);
         simul_data_hh(it,ix,2) = sim_struct.w(t)*((1-eepsilon)*mmu+eepsilon*(1-ttau))+R*asset_aux;
-        simul_data_hh(it,ix,3) = asset_aux;
+%         simul_data_hh(it,ix,3) = asset_aux;
     end
 end
 

@@ -4,7 +4,7 @@ function [loglike, loglike_macro, loglike_hh]...
 
 % Compute likelihood for Krusell-Smith model
 
-global aaBar nEpsilon nMeasure mmu ttau mu_l bbeta;
+global aaBar nEpsilon nMeasure mmu ttau mu_l;
 
 
 %% Macro likelihood and simulation smoother
@@ -31,7 +31,7 @@ fprintf('Macro likelihood/smoother time: %6.1f sec\n\n', toc(timer));
 
 T_hh = length(ts_hh);
 nobs = dataset_.nobs;
-n_lambda = 200;
+% n_lambda = 200;
 
 % Make local versions of global variables so Matlab doesn't complain in the parfor loop
 aaBar_local = aaBar;
@@ -50,10 +50,10 @@ rand_seeds = randi(2^32,1,num_smooth_draws);
 loglikes_hh = nan(1,num_smooth_draws);
 disp('Individual likelihood...');
 timer = tic;
-all_loglikes = nan(T_hh,length(data_hh(1,:,1)),num_smooth_draws);
+% all_loglikes = nan(T_hh,length(data_hh(1,:,1)),num_smooth_draws);
 
-for i_draw = 1:num_smooth_draws
-% parfor i_draw = 1:num_smooth_draws
+% for i_draw = 1:num_smooth_draws
+parfor i_draw = 1:num_smooth_draws
     
     dataset_fake = struct;
     dataset_fake.nobs = nobs;
@@ -73,8 +73,8 @@ for i_draw = 1:num_smooth_draws
         for eepsilon = 0:1
 
             ix = find(data_hh(it,:,1)==eepsilon);
-%             n_ix = length(ix);
-%             the_likes = nan(1,n_ix);
+            n_ix = length(ix);
+            the_likes = nan(1,n_ix);
 
             % probability
             % prepare the parameters
@@ -106,24 +106,22 @@ for i_draw = 1:num_smooth_draws
             end
             bounds_aux = data_hh(it,ix,2)/(c+R*aaBar_local);
             
-            %             g_norm = @(a) g(a)/normalization;
-            % tic
-            %             for i_ix = 1:n_ix
-            %                 the_likes(i_ix) = (1-mHat)/R*...
-            %                                   integral(@(lam) g_norm((data_hh(it,ix(i_ix),2)./lam-c)/R) ...
-            %                                                   ./lam ...
-            %                                                   .*lognpdf(lam,mu_l_local,sqrt(-2*mu_l_local)), ...
-            %                                            0, bounds_aux(i_ix));
-            %             end
-            
-            v_lambda = logninv(linspace(0+1/n_lambda/2,1-1/n_lambda/2,n_lambda)'*logncdf(bounds_aux,mu_l_local,sqrt(-2*mu_l_local)),mu_l_local,sqrt(-2*mu_l_local));
-            a_aux = (data_hh(it,ix,2)./v_lambda-c)/R;
-            g_aux = measureCoefficient(1)*(a_aux-moment(1));
-            for i_Measure = 2:nMeasure_local
-                g_aux = g_aux+measureCoefficient(i_Measure)*((a_aux-moment(1)).^i_Measure-moment_aux(i_Measure));
+            for i_ix = 1:n_ix
+                the_likes(i_ix) = (1-mHat)/(R*normalization)*...
+                                  integral(@(lam) g((data_hh(it,ix(i_ix),2)./lam-c)/R) ...
+                                                  ./lam ...
+                                                  .*lognpdf(lam,mu_l_local,sqrt(-2*mu_l_local)), ...
+                                           0, bounds_aux(i_ix));
             end
-            the_likes = (1-mHat)/R*mean((exp(g_aux)/normalization ...
-                ./v_lambda)).*logncdf(bounds_aux,mu_l_local,sqrt(-2*mu_l_local));
+            
+%             v_lambda = logninv(linspace(0+1/n_lambda/2,1-1/n_lambda/2,n_lambda)'*logncdf(bounds_aux,mu_l_local,sqrt(-2*mu_l_local)),mu_l_local,sqrt(-2*mu_l_local));
+%             a_aux = (data_hh(it,ix,2)./v_lambda-c)/R;
+%             g_aux = measureCoefficient(1)*(a_aux-moment(1));
+%             for i_Measure = 2:nMeasure_local
+%                 g_aux = g_aux+measureCoefficient(i_Measure)*((a_aux-moment(1)).^i_Measure-moment_aux(i_Measure));
+%             end
+%             the_likes = (1-mHat)/R*mean((exp(g_aux)/normalization ...
+%                 ./v_lambda)).*logncdf(bounds_aux,mu_l_local,sqrt(-2*mu_l_local));
             
             % Point mass
             the_likes = max(the_likes + mHat/(c+R*aaBar_local)*lognpdf(bounds_aux,mu_l_local,sqrt(-2*mu_l_local)),eps);
@@ -133,7 +131,7 @@ for i_draw = 1:num_smooth_draws
         end
         
         the_loglikes_hh_draw(it) = sum(the_loglikes_hh_draw_t);
-        all_loglikes(it,:,i_draw) = the_loglikes_hh_draw_t;
+%         all_loglikes(it,:,i_draw) = the_loglikes_hh_draw_t;
 
     end
     
@@ -160,6 +158,6 @@ end
 
 loglike = loglike_macro + loglike_hh;
 
-save(['loglike_space_' num2str(bbeta*100) '.mat'])
+% save(['loglike_space_' num2str(bbeta*100) '.mat'])
 
 end
