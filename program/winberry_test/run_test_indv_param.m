@@ -13,11 +13,11 @@ is_profile = 0; %whether run profiler for execution time
 
 % Model/data settings
 T = 100;                                % Number of periods of simulated macro data
-ts_hh = 20:20:T;                        % Time periods where we observe micro data
+ts_hh = 10:10:T;                        % Time periods where we observe micro data
 N_hh = 1e3;                             % Number of households per non-missing time period
 
 % Parameter values to check
-param1_vals = [0.93 0.96 0.99];
+param1_vals = 0.93:0.01:0.99;
 param2_vals = -0.25; %[-0.5 -0.25 -0.1]; %[0.01 0.02 0.03];
 
 % Likelihood settings

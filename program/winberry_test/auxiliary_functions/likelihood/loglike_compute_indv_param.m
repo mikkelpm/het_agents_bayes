@@ -32,6 +32,7 @@ fprintf('Macro likelihood/smoother time: %6.1f sec\n\n', toc(timer));
 T_hh = length(ts_hh);
 nobs = dataset_.nobs;
 % n_lambda = 200;
+n_inter = 100;
 
 % Make local versions of global variables so Matlab doesn't complain in the parfor loop
 aaBar_local = aaBar;
@@ -74,7 +75,7 @@ parfor i_draw = 1:num_smooth_draws
 
             ix = find(data_hh(it,:,1)==eepsilon);
             n_ix = length(ix);
-            the_likes = nan(1,n_ix);
+%             the_likes = nan(1,n_ix);
 
             % probability
             % prepare the parameters
@@ -85,13 +86,13 @@ parfor i_draw = 1:num_smooth_draws
                 moment(i_Measure) = the_smooth_draw.(['moment_' num2str(eepsilon+1) '_' num2str(i_Measure)])(t);
                 measureCoefficient(i_Measure) = the_smooth_draw.(['measureCoefficient_' num2str(eepsilon+1) '_' num2str(i_Measure)])(t);
             end
-
+            
             % Compute normalization constant
             moment_aux = moment;
             moment_aux(1) = 0;
-            g = @(a) exp(measureCoefficient*((a-moment(1)).^((1:nMeasure_local)')-moment_aux'));
+            g_log = @(a) measureCoefficient*((a-moment(1)).^((1:nMeasure_local)')-moment_aux');
             lastwarn('');
-            normalization = integral(g, aaBar_local, Inf);
+            normalization = integral(@(a) exp(g_log(a)), aaBar_local, Inf);
             warnMsg = lastwarn;
             if ~isempty(warnMsg)
                 disp(measureCoefficient);
@@ -104,15 +105,47 @@ parfor i_draw = 1:num_smooth_draws
             if R<=0
                 warning('%s%8.4f', 'R=', R);
             end
-            bounds_aux = data_hh(it,ix,2)/(c+R*aaBar_local);
             
-            for i_ix = 1:n_ix
-                the_likes(i_ix) = (1-mHat)/(R*normalization)*...
-                                  integral(@(lam) g((data_hh(it,ix(i_ix),2)./lam-c)/R) ...
-                                                  ./lam ...
-                                                  .*lognpdf(lam,mu_l_local,sqrt(-2*mu_l_local)), ...
-                                           0, bounds_aux(i_ix));
+            the_sigma2 = -2*mu_l_local;
+            
+            the_vals = linspace(min(log(data_hh(it,ix,2))),max(log(data_hh(it,ix,2))),n_inter); % Compute integral at these grid points for log income
+            the_ints = zeros(size(the_vals));
+            for i_in=1:length(the_vals)
+                the_ints(i_in) = integral(@(a) exp(g_log(a) ...
+                                                   -(0.5/the_sigma2)*((the_vals(i_in)-mu_l_local)-log(c+R*a)).^2 ...
+                                                   ), ...
+                                          aaBar_local, Inf); % Compute integral at given grid point
             end
+            the_likes = interp1(the_vals,the_ints,log(data_hh(it,ix,2)),'pchip'); % Cubic interpolation of integral between grid points
+            the_likes = (the_likes./data_hh(it,ix,2)) * ((1-mHat)/(normalization*sqrt(2*pi*the_sigma2))); % Likelihood for continuous part
+
+%             % Compute normalization constant
+%             moment_aux = moment;
+%             moment_aux(1) = 0;
+%             g = @(a) exp(measureCoefficient*((a-moment(1)).^((1:nMeasure_local)')-moment_aux'));
+%             lastwarn('');
+%             normalization = integral(g, aaBar_local, Inf);
+%             warnMsg = lastwarn;
+%             if ~isempty(warnMsg)
+%                 disp(measureCoefficient);
+%                 error('Improper asset density');
+%             end
+%             
+%             % Continuous part
+%             c = the_smooth_draw.w(t)*((1-eepsilon)*mmu_local+eepsilon*(1-ttau_local));
+%             R = the_smooth_draw.r(t);
+%             if R<=0
+%                 warning('%s%8.4f', 'R=', R);
+%             end
+%             bounds_aux = data_hh(it,ix,2)/(c+R*aaBar_local);
+%             
+%             for i_ix = 1:n_ix
+%                 the_likes(i_ix) = (1-mHat)/(R*normalization)*...
+%                                   integral(@(lam) g((data_hh(it,ix(i_ix),2)./lam-c)/R) ...
+%                                                   ./lam ...
+%                                                   .*lognpdf(lam,mu_l_local,sqrt(-2*mu_l_local)), ...
+%                                            0, bounds_aux(i_ix));
+%             end
             
 %             v_lambda = logninv(linspace(0+1/n_lambda/2,1-1/n_lambda/2,n_lambda)'*logncdf(bounds_aux,mu_l_local,sqrt(-2*mu_l_local)),mu_l_local,sqrt(-2*mu_l_local));
 %             a_aux = (data_hh(it,ix,2)./v_lambda-c)/R;
@@ -124,7 +157,10 @@ parfor i_draw = 1:num_smooth_draws
 %                 ./v_lambda)).*logncdf(bounds_aux,mu_l_local,sqrt(-2*mu_l_local));
             
             % Point mass
-            the_likes = max(the_likes + mHat/(c+R*aaBar_local)*lognpdf(bounds_aux,mu_l_local,sqrt(-2*mu_l_local)),eps);
+%             the_likes = max(the_likes + mHat/(c+R*aaBar_local)*lognpdf(bounds_aux,mu_l_local,sqrt(-2*mu_l_local)),eps);
+            the_likes = max(the_likes ...
+                            + (mHat/sqrt(2*pi*the_sigma2))*exp(-0.5/the_sigma2*(log(data_hh(it,ix,2))-log(c+R*aaBar_local)-mu_l_local).^2)./data_hh(it,ix,2), ...
+                            eps);
             
             the_loglikes_hh_draw_t(ix) = log(the_likes);
 
