@@ -118,6 +118,6 @@ end
 % Compute other objects from steady state
 %----------------------------------------------------------------
 
-[~,mCoefficients,mParameters,mMoments,aGridMoments,mHat] = f(aggregateCapital);
+[~,mCoefficients,mParameters,mMoments,mHat] = f(aggregateCapital);
 
 

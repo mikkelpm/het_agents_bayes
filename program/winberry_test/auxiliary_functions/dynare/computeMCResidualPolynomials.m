@@ -1,4 +1,4 @@
-function [residual,mCoefficientsOptional,mParametersOptional,mMomentsOptional,aGridMomentsOptional,mHatOptional] = ...
+function [residual,mCoefficientsOptional,mParametersOptional,mMomentsOptional,mHatOptional] = ...
 	computeMCResidualPolynomials(capital,mMoments,aGridMoments,mHat)
 
 % Computes residual of market-clearing condition, parametric family to approximate distribution
@@ -261,7 +261,6 @@ if nargout > 2
 
     mParametersOptional = mParameters;
     mMomentsOptional = mMoments;
-    aGridMomentsOptional = aGridMoments;
 	mHatOptional = mHat;
 	
 end
