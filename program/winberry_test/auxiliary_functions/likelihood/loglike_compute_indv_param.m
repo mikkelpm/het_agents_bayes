@@ -73,12 +73,12 @@ parfor i_draw = 1:num_smooth_draws
             ix = find(data_hh(it,:,1)==eepsilon);
 
             % Prepare smoothed draws
-            mHat = the_smooth_draw.(['mHat_' num2str(eepsilon+1)])(t);
+            mHat = the_smooth_draw.(['mHat_' num2str(eepsilon+1)])(t-1);
             moment = nan(1,nMeasure_local);
             measureCoefficient = nan(1,nMeasure_local);
             for i_Measure = 1:nMeasure_local
-                moment(i_Measure) = the_smooth_draw.(['moment_' num2str(eepsilon+1) '_' num2str(i_Measure)])(t);
-                measureCoefficient(i_Measure) = the_smooth_draw.(['measureCoefficient_' num2str(eepsilon+1) '_' num2str(i_Measure)])(t);
+                moment(i_Measure) = the_smooth_draw.(['moment_' num2str(eepsilon+1) '_' num2str(i_Measure)])(t-1);
+                measureCoefficient(i_Measure) = the_smooth_draw.(['measureCoefficient_' num2str(eepsilon+1) '_' num2str(i_Measure)])(t-1);
             end
             
             % Compute normalization constant

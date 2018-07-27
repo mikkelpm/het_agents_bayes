@@ -6,7 +6,6 @@ global nMeasure aggEmployment aaBar mmu ttau;
 
 T_hh = length(ts_hh);
 simul_data_hh = nan(T_hh,N_hh,2);
-% simul_data_hh = nan(T_hh,N_hh,3);
 
 disp('Simulating household data...');
 
@@ -21,12 +20,12 @@ for it=1:T_hh
         ix = simul_data_hh(it,:,1)==eepsilon;
 
         % prepare the parameters
-        mHat = sim_struct.(['mHat_' num2str(eepsilon+1)])(t);
+        mHat = sim_struct.(['mHat_' num2str(eepsilon+1)])(t-1);
         moment = nan(1,nMeasure);
         measureCoefficient = nan(1,nMeasure);
         for i_Measure = 1:nMeasure
-            moment(i_Measure) = sim_struct.(['moment_' num2str(eepsilon+1) '_' num2str(i_Measure)])(t);
-            measureCoefficient(i_Measure) = sim_struct.(['measureCoefficient_' num2str(eepsilon+1) '_' num2str(i_Measure)])(t);
+            moment(i_Measure) = sim_struct.(['moment_' num2str(eepsilon+1) '_' num2str(i_Measure)])(t-1);
+            measureCoefficient(i_Measure) = sim_struct.(['measureCoefficient_' num2str(eepsilon+1) '_' num2str(i_Measure)])(t-1);
         end
 
         % draw asset
@@ -55,7 +54,6 @@ for it=1:T_hh
 
         R = sim_struct.r(t);
         simul_data_hh(it,ix,2) = sim_struct.w(t)*((1-eepsilon)*mmu+eepsilon*(1-ttau))+R*asset_aux;
-%         simul_data_hh(it,ix,3) = asset_aux;
     end
 end
 
