@@ -24,15 +24,18 @@ for it=1:T_micro
     end
     
     % draw prod and logk      
-    g = @(prod,logk) exp(g_kernel(prod,logk,moment,measureCoefficient));
+    g = @(prod,logk) exp(g_kernel(prod,logk,moment,measureCoefficient,nMeasure));
     normalization = integral2(g,-Inf,Inf,-Inf,Inf);
     
-    ccdf_prod = @(p) integral2(@(prod,logk) g(prod,logk)/normalization, -Inf, p -Inf, Inf);
+    ccdf_prod = @(p) integral2(@(prod,logk) g(prod,logk)/normalization, -Inf, p, -Inf, Inf);
     
     v_prod = nan(1,N_micro);
     v_logk = nan(1,N_micro);
     uu = rand(2,N_micro);
-    for i_micro = 1:n_micro
+    for i_micro = 1:N_micro
+        if mod(i_micro,10) == 0
+            fprintf('i_micro = %4d\n', i_micro);
+        end
         v_prod(i_micro) = fzero(@(p) ccdf_prod(p)-uu(1,i_micro),moment(1));
         ccdf_logk = @(lk) integral(@(logk) g(v_prod(i_micro),logk)/normalization, -Inf, lk) ...
             /integral(@(logk) g(v_prod(i_micro),logk)/normalization, -Inf, Inf);

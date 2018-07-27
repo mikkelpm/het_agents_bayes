@@ -41,7 +41,7 @@ end
 // Have to impose the parameters used as counters below exogenously
 @#define nProd 						= 3
 @#define nCapital 					= 5
-//@#define nMeasure 				= 2
+@#define nMeasure 				= 2
 @#define nShocks 					= 3
 @#define nProdQuadrature 		= 8
 @#define nCapitalQuadrature 	= 10

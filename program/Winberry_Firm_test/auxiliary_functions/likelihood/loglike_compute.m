@@ -67,7 +67,6 @@ parfor i_draw = 1:num_smooth_draws
         the_loglikes_micro_draw_t = nan(1,n_micro);
         
         % Prepare smoothed draws
-        mHat = the_smooth_draw.(['mHat_' num2str(eepsilon+1)])(t);
         moment = nan(1,nMeasure_all);
         measureCoefficient = nan(1,nMeasure_all);
         for i_Measure = 1:nMeasure_all
@@ -76,7 +75,7 @@ parfor i_draw = 1:num_smooth_draws
         end
         
         % Compute normalization constant
-        g = @(prod,logk) exp(g_kernel(prod,logk,moment,measureCoefficient));
+        g = @(prod,logk) exp(g_kernel(prod,logk,moment,measureCoefficient,nMeasure_local));
         lastwarn('');
         normalization = integral2(g,-Inf,Inf,-Inf,Inf);
         warnMsg = lastwarn;
@@ -96,7 +95,7 @@ parfor i_draw = 1:num_smooth_draws
         end
         
         % Log likelihood
-        the_loglikes_micro_draw_t(ix) = log(the_likes);
+        the_loglikes_micro_draw_t = log(the_likes);
         the_loglikes_micro_draw(it) = sum(the_loglikes_micro_draw_t);
 
     end

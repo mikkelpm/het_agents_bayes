@@ -12,8 +12,8 @@ is_profile = 0; %whether run profiler for execution time
 
 % Model/data settings
 T = 100;                                % Number of periods of simulated macro data
-ts_micro = 20:20:T;                        % Time periods where we observe micro data
-N_micro = 1e3;                             % Number of households per non-missing time period
+ts_micro = 20:50:T;                        % Time periods where we observe micro data
+N_micro = 1e2;                             % Number of households per non-missing time period
 
 % Parameter values to check (TFP dynamics)
 param1_vals = [0.8 0.859 0.9];

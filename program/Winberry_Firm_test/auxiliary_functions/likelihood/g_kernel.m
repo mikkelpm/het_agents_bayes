@@ -1,18 +1,19 @@
-function gg = g_kernel(prod,logk,moment,measureCoefficient)
+function gg = g_kernel(prod,logk,moment,measureCoefficient,nMeasure)
     
     moment_aux = moment;
     moment_aux(1:2) = 0;
     prod_demean = prod-moment(1);
     logk_demean = logk-moment(2);
     
-    nMeasure_all = length(moments);
-    aux = nan(1,nMeasure_all);
+    gg = zeros(size(prod));
     counter = 0;
-    for i_Measure = 1:nMeasure_all
-        aux(counter+(1:(i_Measure+1))) = (prod_demean.^((nMeasure:-1:0)')) ...
-            .*(logk_demean.^((0:nMeasure)'));
+    for i_Measure = 1:nMeasure
+        for j_Measure = 1:(i_Measure+1)
+            gg = gg+measureCoefficient(counter+j_Measure)...
+                *((prod_demean.^(i_Measure-j_Measure+1)) ...
+                .*(logk_demean.^(j_Measure-1))-moment_aux(counter+j_Measure));
+        end
         counter = counter+i_Measure+1;
     end
-    gg = measureCoefficient*(aux-moment_aux');
     
 end
