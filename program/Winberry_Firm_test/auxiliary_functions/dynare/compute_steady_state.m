@@ -23,7 +23,6 @@ end
 % Solve for steady state wage
 %----------------------------------------------------------------
 
-setParameters;
 coreSteadyState;
 if check
     return;
