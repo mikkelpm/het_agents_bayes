@@ -8,7 +8,6 @@ addpath('auxiliary_functions/dynare', 'auxiliary_functions/likelihood', 'auxilia
 is_data_gen = 1; % whether simulate data:  
                  % 0: no simulation
                  % 1: simulation
-is_profile = 0; %whether run profiler for execution time
 
 % Model/data settings
 T = 100;                                % Number of periods of simulated macro data
@@ -231,7 +230,3 @@ fprintf('%s%8.2f\n', 'MCMC done. Elapsed minutes: ', mcmc_elapsed/60);
 cd('../../');
 
 save(mcmc_filename);
-
-if is_profile
-    profsave(profile('info'),['profile_results_' tag_date]);
-end

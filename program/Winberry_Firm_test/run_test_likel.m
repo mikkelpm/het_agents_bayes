@@ -5,10 +5,9 @@ addpath('auxiliary_functions/dynare', 'auxiliary_functions/likelihood', 'auxilia
 %% Settings
 
 % Decide what to do
-is_data_gen = 1; % whether simulate data:  
+is_data_gen = 0; % whether simulate data:  
                  % 0: no simulation
                  % 1: simulation
-is_profile = 0; %whether run profiler for execution time
 
 % Model/data settings
 T = 100;                                % Number of periods of simulated macro data
@@ -26,10 +25,6 @@ num_interp = 100;                       % Number of interpolation grid points fo
 % Numerical settings
 num_burnin_periods = 100;               % Number of burn-in periods for simulations
 rng_seed = 20180726;                    % Random number generator seed for initial simulation
-
-% Profiler save settings
-tag_date = datestr(now,'yyyymmdd');
-
 
 %% Set economic parameters 
 
@@ -194,7 +189,3 @@ likelihood_elapsed = toc(timer_likelihood);
 fprintf('%s%8.2f\n', 'Done. Elapsed minutes: ', likelihood_elapsed/60);
 
 cd('../../');
-
-if is_profile
-    profsave(profile('info'),['profile_results_' tag_date]);
-end
