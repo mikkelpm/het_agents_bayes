@@ -63,8 +63,8 @@ parfor i_draw = 1:num_smooth_draws
     
         t = ts_micro(it);
 
-        n_micro = length(data_micro(it,:));
-        the_loglikes_micro_draw_t = nan(1,n_micro);
+        N_micro = length(data_micro(it,:));
+        the_loglikes_micro_draw_t = nan(1,N_micro);
         
         % Prepare smoothed draws
         moment = nan(1,nMeasure_all);
@@ -88,10 +88,10 @@ parfor i_draw = 1:num_smooth_draws
         data_aux = (1-nnu_local)*data_micro(it,:)...
             -nnu_local*(log(nnu_local)-log(the_smooth_draw.wage(t)))....
             -the_smooth_draw.aggregateTFP(t);
-        the_likes = zeros(1,n_micro);
-        for i_micro=1:n_micro
+        the_likes = zeros(1,N_micro);
+        for i_micro=1:N_micro
             the_likes(i_micro) = integral(@(prod) g(prod,(data_aux(i_micro)-prod)/ttheta_local)/normalization, ...
-                -inf, Inf); 
+                -Inf, Inf); 
         end
         
         % Log likelihood
