@@ -81,18 +81,20 @@ parfor i_draw = 1:num_smooth_draws
         warnMsg = lastwarn;
         if ~isempty(warnMsg)
             disp(measureCoefficient);
-            error('Improper asset density');
+            error('Improper micro density');
         end
         
         % Convolution
         data_aux = (1-nnu_local)*data_micro(it,:)...
             -nnu_local*(log(nnu_local)-log(the_smooth_draw.wage(t)))....
             -the_smooth_draw.aggregateTFP(t);
-        the_likes = zeros(1,N_micro);
-        for i_micro=1:N_micro
-            the_likes(i_micro) = integral(@(prod) g(prod,(data_aux(i_micro)-prod)/ttheta_local)/normalization, ...
+        the_vals = linspace(min(data_aux),max(data_aux),num_interp); % Compute integral at these grid points for log ouput
+        the_ints = zeros(1,num_interp);
+        for i_in=1:num_interp
+            the_ints(i_in) = integral(@(prod) g(prod,(the_vals(i_in)-prod)/ttheta_local)/normalization, ...
                 -Inf, Inf); 
         end
+        the_likes = interp1(the_vals,the_ints,data_aux,'pchip'); % Cubic interpolation of integral between grid points
         
         % Log likelihood
         the_loglikes_micro_draw_t = log(the_likes);

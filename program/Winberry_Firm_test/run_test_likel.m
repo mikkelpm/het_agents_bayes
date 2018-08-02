@@ -5,13 +5,13 @@ addpath('auxiliary_functions/dynare', 'auxiliary_functions/likelihood', 'auxilia
 %% Settings
 
 % Decide what to do
-is_data_gen = 0; % whether simulate data:  
+is_data_gen = 1; % whether simulate data:  
                  % 0: no simulation
                  % 1: simulation
 
 % Model/data settings
 T = 100;                                % Number of periods of simulated macro data
-ts_micro = 20:50:T;                        % Time periods where we observe micro data
+ts_micro = 20;%:50:T;                        % Time periods where we observe micro data
 N_micro = 1e2;                             % Number of households per non-missing time period
 
 % Parameter values to check (TFP dynamics)
@@ -136,7 +136,7 @@ else
     save('simul.mat', '-struct', 'sim_struct');                         % Save simulated data
     
     % draw micro data
-    simul_data_micro = simulate_micro(sim_struct, ts_micro, N_micro);
+    simul_data_micro = simulate_micro(sim_struct, ts_micro, N_micro, num_interp);
     save('simul_data_micro.mat','simul_data_micro');
     
 %     % draw individual productivities and incomes
