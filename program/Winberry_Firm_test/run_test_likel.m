@@ -11,12 +11,12 @@ is_data_gen = 1; % whether simulate data:
 
 % Model/data settings
 T = 100;                                % Number of periods of simulated macro data
-ts_micro = 20;%:50:T;                        % Time periods where we observe micro data
-N_micro = 1e2;                             % Number of households per non-missing time period
+ts_micro = 20:50:T;                        % Time periods where we observe micro data
+N_micro = 1e3;                             % Number of households per non-missing time period
 
-% Parameter values to check (TFP dynamics)
-param1_vals = [0.8 0.859 0.9];
-param2_vals = .014;%[0.01 0.02 0.03]; %[-0.5 -0.25 -0.1];
+% Parameter values to check (prod dynamics)
+param1_vals = [.83 .859 .89];
+param2_vals = .022;
 
 % Likelihood settings
 num_smooth_draws = 500;                 % Number of draws from the smoothing distribution (for unbiased likelihood estimate)
@@ -71,12 +71,6 @@ nProd 			= 3;										% order of polynomials in productivity
 nCapital 		= 5;										% order of polynomials in capital
 nState 			= nProd * nCapital;					% total number of coefficients
 
-% Bounds on grid space
-prodMin 		= -3 * ssigmaProd / sqrt(1 - rrhoProd ^ 2);
-prodMax 		= 3 * ssigmaProd / sqrt(1 - rrhoProd ^ 2);
-capitalMin 		= .1 * (exp(prodMin) ^ (1 / (1 - ttheta))) * kRepSS;
-capitalMax 		= 2.5 * (exp(prodMax) ^ (1 / (1 - ttheta))) * kRepSS;
-
 % Shocks 
 nShocks 		= 3;										% order of Gauss-Hermite quadrature over idiosyncratic shocks
 
@@ -97,14 +91,6 @@ nProdQuadrature 		= 8; 							% number of quadrature points in productivity dime
 nCapitalQuadrature 	= 10;						% number of quadrature points in capital dimension
 nStateQuadrature 		= nProdQuadrature * nCapitalQuadrature;
 nMeasureCoefficients 	= (nMeasure * (nMeasure + 1)) / 2 + nMeasure;
-
-%% Compute approximation tools
-
-% Grids
-computeGrids;
-
-% Polynomials over grids 
-computePolynomials;
 
 %% Save parameters
 
@@ -162,16 +148,16 @@ for iter_i=1:length(param1_vals) % For each parameter...
     for iter_j=1:length(param2_vals) % For each parameter...
         
         % Set new parameters
-        rrhoTFP = param1_vals(iter_i);
-        ssigmaTFP = param2_vals(iter_j);
+        rrhoProd = param1_vals(iter_i);
+        ssigmaProd = param2_vals(iter_j);
 %         mu_l = param2_vals(iter_j);
 
-        fprintf(['%s' repmat('%6.4f ',1,2),'%s\n'], '[rrhoTFP,ssigmaTFP] = [',...
-            rrhoTFP,ssigmaTFP,']');
+        fprintf(['%s' repmat('%6.4f ',1,2),'%s\n'], '[rrhoProd,ssigmaProd] = [',...
+            rrhoProd,ssigmaProd,']');
 
         saveParameters;         % Save parameter values to files
         setDynareParameters;    % Update Dynare parameters in model struct
-%         compute_steady_state;   % Compute steady state, no need for parameters of agg dynamics
+        compute_steady_state;   % Compute steady state, no need for parameters of agg dynamics
 
         % Log likelihood of proposal
         [loglikes(iter_i,iter_j), loglikes_macro(iter_i,iter_j), loglikes_micro(iter_i,iter_j)] = ...
