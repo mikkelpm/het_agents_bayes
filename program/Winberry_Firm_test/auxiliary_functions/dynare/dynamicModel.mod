@@ -61,6 +61,3 @@ options_.steadystate.nocheck = 1;
 
 // Simulate
 stoch_simul(irf=0, order=1);
-
-// Change directory
-cd('../../')

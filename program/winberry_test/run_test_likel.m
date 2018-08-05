@@ -171,3 +171,4 @@ likelihood_elapsed = toc(timer_likelihood);
 fprintf('%s%8.2f\n', 'Done. Elapsed minutes: ', likelihood_elapsed/60);
 
 cd('../../');
+rmpath('auxiliary_functions/dynare', 'auxiliary_functions/likelihood', 'auxiliary_functions/sim');

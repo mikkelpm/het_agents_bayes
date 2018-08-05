@@ -15,7 +15,7 @@ ts_micro = 20:50:T;                        % Time periods where we observe micro
 N_micro = 1e3;                             % Number of households per non-missing time period
 
 % Parameter values to check (prod dynamics)
-param1_vals = [.83 .859 .89];
+param1_vals = [.83 .859 .86];
 param2_vals = .022;
 
 % Likelihood settings
@@ -39,8 +39,8 @@ rrhoProd 		= .859; 								% persistence of idiosyncratic shocks (annual)
 ssigmaProd 	= .022;								% SD innovations of idiosycnratic shocks (annual)
 aaUpper 		= .011; 								% no fixed cost region upper bound
 aaLower 		= -.011;								% no fixed cost region lower bound
-%ppsiCapital 	= .0083;							% upper bound on fixed adjustment cost draws
-ppsiCapital     = 1e-5; 
+ppsiCapital 	= .0083;							% upper bound on fixed adjustment cost draws
+% ppsiCapital     = 1e-5; 
 
 % Preferences
 bbeta 			= .961;								% discount factor (annual)
@@ -175,3 +175,4 @@ likelihood_elapsed = toc(timer_likelihood);
 fprintf('%s%8.2f\n', 'Done. Elapsed minutes: ', likelihood_elapsed/60);
 
 cd('../../');
+rmpath('auxiliary_functions/dynare', 'auxiliary_functions/likelihood', 'auxiliary_functions/sim');
