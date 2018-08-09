@@ -30,7 +30,8 @@ model;
 
 end;
 
-varobs logAggregateOutputObs logAggregateInvestmentObs;
+varobs logAggregateOutput logAggregateInvestment;
+//varobs logAggregateOutputObs logAggregateInvestmentObs;
 
 //----------------------------------------------------------------
 // Set options

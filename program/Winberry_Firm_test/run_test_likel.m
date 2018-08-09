@@ -11,12 +11,12 @@ is_data_gen = 1; % whether simulate data:
 
 % Model/data settings
 T = 100;                                % Number of periods of simulated macro data
-ts_micro = 20:50:T;                        % Time periods where we observe micro data
-N_micro = 1e3;                             % Number of households per non-missing time period
+ts_micro = 20:20:T;                        % Time periods where we observe micro data
+N_micro = 1e4;                             % Number of households per non-missing time period
 
 % Parameter values to check (prod dynamics)
-param1_vals = [.83 .859 .86];
-param2_vals = .022;
+param1_vals = 0.011*[0.5 1 2];
+param2_vals = 0.0083*[0.5 1 2];
 
 % Likelihood settings
 num_smooth_draws = 500;                 % Number of draws from the smoothing distribution (for unbiased likelihood estimate)
@@ -24,7 +24,7 @@ num_interp = 100;                       % Number of interpolation grid points fo
 
 % Numerical settings
 num_burnin_periods = 100;               % Number of burn-in periods for simulations
-rng_seed = 20180726;                    % Random number generator seed for initial simulation
+rng_seed = 20180809;                    % Random number generator seed for initial simulation
 
 %% Set economic parameters 
 
@@ -61,10 +61,6 @@ corrTFPQ		= 0;									% loading on TFP shock in evolution of investment-specifi
 global nProd nCapital nState prodMin prodMax capitalMin capitalMax nShocks nProdFine nCapitalFine nStateFine ...
 	maxIterations tolerance acc dampening nMeasure nStateQuadrature nMeasureCoefficients nProdQuadrature ...
 	nCapitalQuadrature kRepSS wRepSS
-
-% Compute representative agent steady state (used in constructing the grids)
-kRepSS 			= ((ttheta * (nSS ^ nnu)) / ((1 / bbeta) - (1 - ddelta))) ^ (1 / (1 - ttheta));
-wRepSS 		= (kRepSS .^ ttheta) * nnu * (nSS ^ (nnu - 1));
 
 % Order of approximation of value function
 nProd 			= 3;										% order of polynomials in productivity
@@ -141,19 +137,18 @@ loglikes_micro = nan(length(param1_vals),length(param2_vals));
 disp('Computing likelihood...');
 timer_likelihood = tic;
 
-poolobj = parpool(2);
+poolobj = parpool;
 
 for iter_i=1:length(param1_vals) % For each parameter...
     
     for iter_j=1:length(param2_vals) % For each parameter...
         
         % Set new parameters
-        rrhoProd = param1_vals(iter_i);
-        ssigmaProd = param2_vals(iter_j);
-%         mu_l = param2_vals(iter_j);
+        aaUpper = param1_vals(iter_i);
+        ppsiCapital = param2_vals(iter_j);
+        aaLower = -aaUpper;
 
-        fprintf(['%s' repmat('%6.4f ',1,2),'%s\n'], '[rrhoProd,ssigmaProd] = [',...
-            rrhoProd,ssigmaProd,']');
+        fprintf(['%s' repmat('%6.4f ',1,2),'%s\n'], '[aaUpper,ppsiCapital] = [',aaUpper,ppsiCapital,']');
 
         saveParameters;         % Save parameter values to files
         setDynareParameters;    % Update Dynare parameters in model struct

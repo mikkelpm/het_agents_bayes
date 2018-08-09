@@ -33,6 +33,10 @@ global nProd nCapital nState prodMin prodMax capitalMin capitalMax nShocks nProd
 	maxIterations tolerance acc dampening nMeasure nStateQuadrature nMeasureCoefficients nProdQuadrature ...
 	nCapitalQuadrature kRepSS wRepSS
 
+% Compute representative agent steady state (used in constructing the grids)
+kRepSS 			= ((ttheta * (nSS ^ nnu)) / ((1 / bbeta) - (1 - ddelta))) ^ (1 / (1 - ttheta));
+wRepSS 		= (kRepSS .^ ttheta) * nnu * (nSS ^ (nnu - 1));
+
 % Bounds on grid space
 prodMin 		= -3 * ssigmaProd / sqrt(1 - rrhoProd ^ 2);
 prodMax 		= 3 * ssigmaProd / sqrt(1 - rrhoProd ^ 2);

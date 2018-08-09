@@ -2,7 +2,7 @@ function [loglike, loglike_macro, loglike_micro]...
     = loglike_compute(data_macro, data_micro,...
       ts_micro, num_smooth_draws, num_interp, num_burnin_periods, M_, oo_, options_)
 
-% Compute likelihood for Krusell-Smith model
+% Compute likelihood for firm model
 
 global nMeasure ttheta nnu;
 
@@ -91,8 +91,8 @@ parfor i_draw = 1:num_smooth_draws
         the_vals = linspace(min(data_aux),max(data_aux),num_interp); % Compute integral at these grid points for log ouput
         the_ints = zeros(1,num_interp);
         for i_in=1:num_interp
-            the_ints(i_in) = integral(@(prod) g(prod,(the_vals(i_in)-prod)/ttheta_local)/normalization, ...
-                -Inf, Inf); 
+            the_ints(i_in) = integral(@(prod) g(prod,(the_vals(i_in)-prod)/ttheta_local), ...
+                -Inf, Inf)/(ttheta_local*normalization); 
         end
         the_likes = interp1(the_vals,the_ints,data_aux,'pchip'); % Cubic interpolation of integral between grid points
         

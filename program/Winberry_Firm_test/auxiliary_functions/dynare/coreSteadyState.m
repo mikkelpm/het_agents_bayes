@@ -26,7 +26,7 @@ fprintf('Computing initial guess from histogram...\n')
 
 % Solve for market clearing wage
 f 								= @(wage) computeLMCResidualHistogram(wage);
-options 						= optimoptions('fsolve','Display','iter-detailed');		% set 'off' if don't want to print progress
+options 						= optimoptions('fsolve','Display','off');		% set 'off' if don't want to print progress
 [wageInit,err,exitflag,output] 	= fsolve(f,wage,options);
 
 % Compute decisions and distribution at wageInit
@@ -77,7 +77,7 @@ fprintf('Compute refined steady state from exponential polynomials...\n')
 
 % Solve for market clearing wage
 f 					= @(wage) computeLMCResidualPolynomials(wage,vParameters,vMomentsHistogram,mGridMoments);
-options 			= optimoptions('fsolve','Display','iter-detailed','Algorithm','levenberg-marquardt');
+options 			= optimoptions('fsolve','Display','off','Algorithm','levenberg-marquardt');
 if abs(f(wageInit)) > 1e-4
 	[wage,err,exitflag] = fsolve(f,wageInit,options);
 end

@@ -30,27 +30,27 @@ for it=1:T_micro
     the_vals = linspace(prodMin+ttheta*log(capitalMin),prodMax+ttheta*log(capitalMax),num_interp); % Compute integral at these grid points for log ouput
     the_ints = zeros(1,num_interp);
     for i_in=1:num_interp
-        the_ints(i_in) = integral(@(prod) g(prod,(the_vals(i_in)-prod)/ttheta)/normalization, ...
-            -Inf, Inf);
+        the_ints(i_in) = integral2(@(x,prod) g(prod,(x-prod)/ttheta), ...
+            -Inf, the_vals(i_in), -Inf, Inf)/(ttheta*normalization);
     end
-    pp = pchip(the_vals,the_ints); % Cubic interpolation of integral between grid points
-    uu = rand(1,N_micro);  
-    v_aux = nan(1,N_micro);  
+    pp = griddedInterpolant(the_vals,the_ints,'pchip'); % Cubic interpolation of integral between grid points
+    uu = rand(1,N_micro); % Random uniforms
+    [uu_sort,ind_sort] = sort(uu); % Sort uniforms to make it easier to do root finding
+    v_aux = nan(1,N_micro);
+    v_aux_prev = the_vals(1);
     for i_micro = 1:N_micro
-        ix = find(uu(i_micro)<the_ints,1,'first');
-        if isempty(ix)
+        if uu_sort(i_micro)>the_ints(end)
             v_aux(i_micro) = the_vals(end);
-        elseif ix == 1
+        elseif uu_sort(i_micro)<the_ints(1)
             v_aux(i_micro) = the_vals(1);
         else
-            ix_1 = ix-1;
-            v_aux(i_micro) = fzero(@(x) pp.coefs(ix_1,:)*((x-the_vals(ix_1)).^(3:-1:0)')-uu(i_micro),...
-                (the_vals(ix_1)+the_vals(ix))/2);
+            v_aux(i_micro) = fzero(@(x) pp(x)-uu_sort(i_micro), v_aux_prev); % Start root finding from previous solution
         end
+        v_aux_prev = v_aux(i_micro); % Update previous solution
     end
     
     % logy
-    simul_data_micro(it,:) = (v_aux+sim_struct.aggregateTFP(t)...
+    simul_data_micro(it,:) = (v_aux(ind_sort)+sim_struct.aggregateTFP(t)...
         +nnu*(log(nnu)-log(sim_struct.wage(t))))/(1-nnu);
     
 end
