@@ -35,7 +35,7 @@ for it=1:T_micro
     end
     pp = griddedInterpolant(the_vals,the_ints,'pchip'); % Cubic interpolation of integral between grid points
     uu = rand(1,N_micro); % Random uniforms
-    [uu_sort,ind_sort] = sort(uu); % Sort uniforms to make it easier to do root finding
+    uu_sort = sort(uu); % Sort uniforms to make it easier to do root finding
     v_aux = nan(1,N_micro);
     v_aux_prev = the_vals(1);
     for i_micro = 1:N_micro
@@ -50,7 +50,7 @@ for it=1:T_micro
     end
     
     % logy
-    simul_data_micro(it,:) = (v_aux(ind_sort)+sim_struct.aggregateTFP(t)...
+    simul_data_micro(it,:) = (v_aux+sim_struct.aggregateTFP(t)...
         +nnu*(log(nnu)-log(sim_struct.wage(t))))/(1-nnu);
     
 end
