@@ -14,8 +14,6 @@
 //----------------------------------------------------------------
 
 @#include "variables.mod"
-var logAggregateOutputObs logAggregateInvestmentObs;
-varexo measErrOutput measErrInvestment;
 
 
 //----------------------------------------------------------------
@@ -25,13 +23,10 @@ varexo measErrOutput measErrInvestment;
 model;
 
 	@#include "equations.mod"
-    logAggregateOutputObs = logAggregateOutput + 0.02*measErrOutput;
-    logAggregateInvestmentObs = logAggregateInvestment + 0.02*measErrInvestment;
 
 end;
 
 varobs logAggregateOutput logAggregateInvestment;
-//varobs logAggregateOutputObs logAggregateInvestmentObs;
 
 //----------------------------------------------------------------
 // Set options
@@ -41,8 +36,6 @@ varobs logAggregateOutput logAggregateInvestment;
 shocks;
     var aggregateTFPShock 	= 1;
     var aggregateQShock   	= 1;
-    var measErrOutput = 1;
-    var measErrInvestment = 1;
 end;
 
 

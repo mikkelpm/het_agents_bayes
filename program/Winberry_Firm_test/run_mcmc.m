@@ -1,5 +1,5 @@
 clear all;
-addpath('auxiliary_functions/dynare', 'auxiliary_functions/likelihood', 'auxiliary_functions/sim');
+addpath('auxiliary_functions/dynare', 'auxiliary_functions/likelihood', 'auxiliary_functions/mcmc', 'auxiliary_functions/sim');
 
 
 %% Settings
@@ -10,16 +10,16 @@ is_data_gen = 1; % whether simulate data:
                  % 1: simulation
 
 % Model/data settings
-T = 100;                                % Number of periods of simulated macro data
-ts_micro = 20:20:T;                        % Time periods where we observe micro data
-N_micro = 1e4;                             % Number of micro entities per non-missing time period
+T = 50;                                % Number of periods of simulated macro data
+ts_micro = 10:10:T;                        % Time periods where we observe micro data
+N_micro = 1e3;                             % Number of micro entities per non-missing time period
 
-% Parameter transformation***
-transf_to_param = @(x) [1/(1+exp(-x(1))) exp(x(2)) -exp(x(3))]; % Function mapping transformed parameters into parameters of interest
+% Parameter transformation
+transf_to_param = @(x) [1/(1+exp(-x(1))) exp(x(2))]; % Function mapping transformed parameters into parameters of interest
 
-% Prior***
+% Prior
 prior_logdens_transf = @(x) sum(x) - 2*log(1+exp(x(1)));    % Log prior density of transformed parameters
-prior_init_transf = @() [log(0.96)-log(1-0.96) log(0.02) log(.25)];  % Distribution of initial log(beta) draw
+prior_init_transf = @() [log(0.53)-log(1-0.53) log(0.0364)];  % Distribution of initial transformed draw
 
 % MCMC settings
 mcmc_num_draws = 1000;                  % Number of MCMC steps (total)
@@ -39,7 +39,7 @@ num_interp = 100;                       % Number of interpolation grid points fo
 
 % Numerical settings
 num_burnin_periods = 100;               % Number of burn-in periods for simulations
-rng_seed = 20180809;                    % Random number generator seed for initial simulation
+rng_seed = 201809141;                    % Random number generator seed for initial simulation
 
 %% Set economic parameters 
 
@@ -50,8 +50,8 @@ global ttheta nnu ddelta rrhoProd ssigmaProd aaUpper aaLower ppsiCapital ...
 ttheta 			= .256;								% capital coefficient
 nnu 				= .64;								% labor coefficient
 ddelta 			= .085;								% depreciation (annual)
-rrhoProd 		= .859; 								% persistence of idiosyncratic shocks (annual)
-ssigmaProd 	= .022;								% SD innovations of idiosycnratic shocks (annual)
+rrhoProd 		= .53; %.859; 								% persistence of idiosyncratic shocks (annual)
+ssigmaProd 	= .0364; %.022;								% SD innovations of idiosycnratic shocks (annual)
 aaUpper 		= .011; 								% no fixed cost region upper bound
 aaLower 		= -.011;								% no fixed cost region lower bound
 ppsiCapital 	= .0083;							% upper bound on fixed adjustment cost draws
@@ -165,18 +165,18 @@ poolobj = parpool;
 
 for i_mcmc=1:mcmc_num_draws % For each MCMC step...
     
-    fprintf(['%s' repmat('%6.4f ',1,length(curr_draw)),'%s\n'], 'current  [bbeta,ssigmaMeas,mu_l] = [',...
-        transf_to_param(curr_draw),']'); % ***
+    fprintf(['%s' repmat('%6.4f ',1,length(curr_draw)),'%s\n'], 'current  [rrhoProd,ssigmaProd] = [',...
+        transf_to_param(curr_draw),']');
     
     % Proposed draw (modified to always start with initial draw)
     prop_draw = rwmh_propose(curr_draw, (i_mcmc>1)*the_stepsize, the_chol); % Proposal
     
     % Set new parameters
     the_transf = num2cell(transf_to_param(prop_draw));
-    [bbeta,ssigmaMeas,mu_l] = deal(the_transf{:}); % ***
+    [rrhoProd,ssigmaProd] = deal(the_transf{:});
 
-    fprintf(['%s' repmat('%6.4f ',1,length(curr_draw)),'%s\n'], 'proposed [bbeta,ssigmaMeas,mu_l] = [',...
-        [bbeta,ssigmaMeas,mu_l],']'); % ***
+    fprintf(['%s' repmat('%6.4f ',1,length(curr_draw)),'%s\n'], 'proposed [rrhoProd,ssigmaProd] = [',...
+        [rrhoProd,ssigmaProd],']');
     
     try
         saveParameters;         % Save parameter values to files
