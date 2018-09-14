@@ -12,7 +12,7 @@ is_data_gen = 1; % whether simulate data:
 % Model/data settings
 T = 100;                                % Number of periods of simulated macro data
 ts_micro = 20:20:T;                        % Time periods where we observe micro data
-N_micro = 1e4;                             % Number of households per non-missing time period
+N_micro = 1e4;                             % Number of micro entities per non-missing time period
 
 % Parameter values to check (prod dynamics)
 param1_vals = 0.011*[0.5 1 2];

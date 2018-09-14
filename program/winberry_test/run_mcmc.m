@@ -41,10 +41,6 @@ num_interp = 100;                       % Number of interpolation grid points fo
 num_burnin_periods = 100;               % Number of burn-in periods for simulations
 rng_seed = 201807271;                    % Random number generator seed for initial simulation
 
-% Profiler save settings
-tag_date = datestr(now,'yyyymmdd');
-
-
 %% Set economic parameters 
 
 global bbeta ssigma aaBar aalpha ddelta vEpsilonGrid aggEmployment uDuration ...
