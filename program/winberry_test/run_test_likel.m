@@ -137,7 +137,11 @@ loglikes_hh = nan(length(param1_vals),length(param2_vals));
 disp('Computing likelihood...');
 timer_likelihood = tic;
 
-poolobj = parpool;
+if contains(pwd,'Laura')
+    poolobj = parpool(2);
+else
+    poolobj = parpool;
+end
 
 for iter_i=1:length(param1_vals) % For each parameter...
     
