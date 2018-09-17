@@ -15,16 +15,16 @@ ts_micro = 10:10:T;                        % Time periods where we observe micro
 N_micro = 1e3;                             % Number of micro entities per non-missing time period
 
 % Parameter transformation
-transf_to_param = @(x) [1/(1+exp(-x(1))) exp(x(2))]; % Function mapping transformed parameters into parameters of interest
+transf_to_param = @(x) [1/(1+exp(-x(1))) exp(x(2:end))]; % Function mapping transformed parameters into parameters of interest
 
 % Prior
 prior_logdens_transf = @(x) sum(x) - 2*log(1+exp(x(1)));    % Log prior density of transformed parameters
-prior_init_transf = @() [log(0.53)-log(1-0.53) log(0.0364)];  % Distribution of initial transformed draw
+prior_init_transf = @() [log(0.53)-log(1-0.53) log(0.0364) log(.011) log(.0083)];  % Distribution of initial transformed draw
 
 % MCMC settings
-mcmc_num_draws = 1000;                  % Number of MCMC steps (total)
+mcmc_num_draws = 1e4;                  % Number of MCMC steps (total)
 mcmc_stepsize_init = 1e-2;              % Initial MCMC step size
-mcmc_adapt_iter = [50 100 200];          % Iterations at which to update the variance/covariance matrix for RWMH proposal; first iteration in list is start of adaptation phase
+mcmc_adapt_iter = [50 100 200 500];          % Iterations at which to update the variance/covariance matrix for RWMH proposal; first iteration in list is start of adaptation phase
 mcmc_adapt_diag = false;                 % =true: Adapt only to posterior std devs of parameters, =false: adapt to full var/cov matrix
 mcmc_adapt_param = 10;                  % Shrinkage parameter for adapting to var/cov matrix (higher values: more shrinkage)
 mcmc_filename = 'mcmc.mat';             % File name of MCMC output
@@ -39,7 +39,7 @@ num_interp = 100;                       % Number of interpolation grid points fo
 
 % Numerical settings
 num_burnin_periods = 100;               % Number of burn-in periods for simulations
-rng_seed = 201809141;                    % Random number generator seed for initial simulation
+rng_seed = 20180917;                    % Random number generator seed for initial simulation
 
 %% Set economic parameters 
 
@@ -165,7 +165,7 @@ poolobj = parpool;
 
 for i_mcmc=1:mcmc_num_draws % For each MCMC step...
     
-    fprintf(['%s' repmat('%6.4f ',1,length(curr_draw)),'%s\n'], 'current  [rrhoProd,ssigmaProd] = [',...
+    fprintf(['%s' repmat('%6.4f ',1,length(curr_draw)),'%s\n'], 'current  [rrhoProd,ssigmaProd,aaUpper,ppsiCapital] = [',...
         transf_to_param(curr_draw),']');
     
     % Proposed draw (modified to always start with initial draw)
@@ -173,10 +173,11 @@ for i_mcmc=1:mcmc_num_draws % For each MCMC step...
     
     % Set new parameters
     the_transf = num2cell(transf_to_param(prop_draw));
-    [rrhoProd,ssigmaProd] = deal(the_transf{:});
+    [rrhoProd,ssigmaProd,aaUpper,ppsiCapital] = deal(the_transf{:});
+    aaLower = -aaUpper;
 
-    fprintf(['%s' repmat('%6.4f ',1,length(curr_draw)),'%s\n'], 'proposed [rrhoProd,ssigmaProd] = [',...
-        [rrhoProd,ssigmaProd],']');
+    fprintf(['%s' repmat('%6.4f ',1,length(curr_draw)),'%s\n'], 'proposed [rrhoProd,ssigmaProd,aaUpper,ppsiCapital] = [',...
+        [rrhoProd,ssigmaProd,aaUpper,ppsiCapital],']');
     
     try
         saveParameters;         % Save parameter values to files
