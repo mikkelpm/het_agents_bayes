@@ -15,10 +15,8 @@ ts_micro = 10:10:T;                        % Time periods where we observe micro
 N_micro = 1e3;                             % Number of micro entities per non-missing time period
 
 % Parameter values to check (prod dynamics)
-param1_vals = .53*[0.9 1 1.1]; %.53*[0.5 1 2]; %0.011*[0.5 1 2];
-param2_vals = .0364*[0.9 1 1.1]; %.0364*[0.5 1 2]; %0.0083*[0.5 1 2];
-param3_vals = 0.011*[0.9 1 1.1];
-param4_vals = 0.0083*[0.9 1 1.1];
+param1_vals = .53*[0.85 0.9 1 1.1 1.15]; %.53*[0.5 1 2]; %0.011*[0.5 1 2];
+param2_vals = .0364*[0.85 0.9 1 1.1 1.15]; %.0364*[0.5 1 2]; %0.0083*[0.5 1 2];
 
 % Likelihood settings
 num_smooth_draws = 500;                 % Number of draws from the smoothing distribution (for unbiased likelihood estimate)
@@ -151,40 +149,34 @@ for iter_i=1:length(param1_vals) % For each parameter...
     
     for iter_j=1:length(param2_vals) % For each parameter...
         
-        for iter_k=1:length(param3_vals) % For each parameter...
-            for iter_l=1:length(param4_vals) % For each parameter...
-                
-                
-                % Set new parameters
-                aaUpper = param3_vals(iter_k);
-                aaLower = -aaUpper;
-                ppsiCapital = param4_vals(iter_l);
-                rrhoProd = param1_vals(iter_i);
-                ssigmaProd = param2_vals(iter_j);
-                
-                %         fprintf(['%s' repmat('%6.4f ',1,2),'%s\n'], '[aaUpper,ppsiCapital] = [',aaUpper,ppsiCapital,']');
-                fprintf(['%s' repmat('%6.4f ',1,4),'%s\n'], '[rrhoProd,ssigmaProd,aaUpper,ppsiCapital] = [',rrhoProd,ssigmaProd,aaUpper,ppsiCapital,']');
-                
-                saveParameters;         % Save parameter values to files
-                setDynareParameters;    % Update Dynare parameters in model struct
-                compute_steady_state;   % Compute steady state, no need for parameters of agg dynamics
-                
-                % Log likelihood of proposal
-                [loglikes(iter_i,iter_j,iter_k,iter_l), loglikes_macro(iter_i,iter_j,iter_k,iter_l), loglikes_micro(iter_i,iter_j,iter_k,iter_l)] = ...
-                    loglike_compute('simul.mat', simul_data_micro, ts_micro, ...
-                    num_smooth_draws, num_interp, num_burnin_periods, ...
-                    M_, oo_, options_);
-                
-            end
-            
-        end
+        % Set new parameters
+%         aaUpper = param1_vals(iter_i);
+%         aaLower = -aaUpper;
+%         ppsiCapital = param2_vals(iter_j);
+        rrhoProd = param1_vals(iter_i);
+        ssigmaProd = param2_vals(iter_j);
+
+%         fprintf(['%s' repmat('%6.4f ',1,2),'%s\n'], '[aaUpper,ppsiCapital] = [',aaUpper,ppsiCapital,']');
+        fprintf(['%s' repmat('%6.4f ',1,2),'%s\n'], '[rrhoProd,ssigmaProd] = [',rrhoProd,ssigmaProd,']');
+
+        saveParameters;         % Save parameter values to files
+        setDynareParameters;    % Update Dynare parameters in model struct
+        compute_steady_state;   % Compute steady state, no need for parameters of agg dynamics
+
+        % Log likelihood of proposal
+        [loglikes(iter_i,iter_j), loglikes_macro(iter_i,iter_j), loglikes_micro(iter_i,iter_j)] = ...
+            loglike_compute('simul.mat', simul_data_micro, ts_micro, ...
+                                       num_smooth_draws, num_interp, num_burnin_periods, ...
+                                       M_, oo_, options_);
+    
     end
+    
 end
-        
-        delete(poolobj);
-        
-        likelihood_elapsed = toc(timer_likelihood);
-        fprintf('%s%8.2f\n', 'Done. Elapsed minutes: ', likelihood_elapsed/60);
-        
-        cd('../../');
-        rmpath('auxiliary_functions/dynare', 'auxiliary_functions/likelihood', 'auxiliary_functions/sim');
+
+delete(poolobj);
+
+likelihood_elapsed = toc(timer_likelihood);
+fprintf('%s%8.2f\n', 'Done. Elapsed minutes: ', likelihood_elapsed/60);
+
+cd('../../');
+rmpath('auxiliary_functions/dynare', 'auxiliary_functions/likelihood', 'auxiliary_functions/sim');
