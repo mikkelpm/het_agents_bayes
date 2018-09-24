@@ -33,8 +33,8 @@ nobs = dataset_.nobs;
 
 % Make local versions of global variables so Matlab doesn't complain in the parfor loop
 nMeasure_local = nMeasure;
-ttheta_local = ttheta;
-nnu_local = nnu;
+% ttheta_local = ttheta;
+% nnu_local = nnu;
 
 % Fix some warning messages during parallization
 options_new.dataset = [];
@@ -84,17 +84,19 @@ parfor i_draw = 1:num_smooth_draws
             error('Improper micro density');
         end
         
-        % Convolution
-        data_aux = (1-nnu_local)*data_micro(it,:)...
-            -nnu_local*(log(nnu_local)-log(the_smooth_draw.wage(t)))....
-            -the_smooth_draw.aggregateTFP(t);
-        the_vals = linspace(min(data_aux),max(data_aux),num_interp); % Compute integral at these grid points for log ouput
-        the_ints = zeros(1,num_interp);
-        for i_in=1:num_interp
-            the_ints(i_in) = integral(@(prod) g(prod,(the_vals(i_in)-prod)/ttheta_local), ...
-                -Inf, Inf)/(ttheta_local*normalization); 
-        end
-        the_likes = interp1(the_vals,the_ints,data_aux,'pchip'); % Cubic interpolation of integral between grid points
+        the_likes = g(data_micro(it,:,1),data_micro(it,:,2))/normalization;
+        
+%         % Convolution
+%         data_aux = (1-nnu_local)*data_micro(it,:)...
+%             -nnu_local*(log(nnu_local)-log(the_smooth_draw.wage(t)))....
+%             -the_smooth_draw.aggregateTFP(t);
+%         the_vals = linspace(min(data_aux),max(data_aux),num_interp); % Compute integral at these grid points for log ouput
+%         the_ints = zeros(1,num_interp);
+%         for i_in=1:num_interp
+%             the_ints(i_in) = integral(@(prod) g(prod,(the_vals(i_in)-prod)/ttheta_local), ...
+%                 -Inf, Inf)/(ttheta_local*normalization); 
+%         end
+%         the_likes = interp1(the_vals,the_ints,data_aux,'pchip'); % Cubic interpolation of integral between grid points
         
         % Log likelihood
         the_loglikes_micro_draw_t = log(the_likes);

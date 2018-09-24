@@ -15,8 +15,8 @@ ts_micro = 10:10:T;                        % Time periods where we observe micro
 N_micro = 1e3;                             % Number of micro entities per non-missing time period
 
 % Parameter values to check (prod dynamics)
-param1_vals = .53*[0.85 0.9 1 1.1 1.15]; %.53*[0.5 1 2]; %0.011*[0.5 1 2];
-param2_vals = .0364*[0.85 0.9 1 1.1 1.15]; %.0364*[0.5 1 2]; %0.0083*[0.5 1 2];
+param1_vals = .53*[0.9 1 1.1]; %.53*[0.5 1 2]; %0.011*[0.5 1 2];
+param2_vals = .0364*[0.9 1 1.1]; %.0364*[0.5 1 2]; %0.0083*[0.5 1 2];
 
 % Likelihood settings
 num_smooth_draws = 500;                 % Number of draws from the smoothing distribution (for unbiased likelihood estimate)
@@ -105,6 +105,12 @@ dynare dynamicModel noclearall nopathchange; % Run Dynare once to process model 
 
 %% Simulate data
 
+if contains(pwd,'Laura')
+    poolobj = parpool(2);
+else
+    poolobj = parpool;
+end
+
 if is_data_gen == 0
     
     % Load previous data
@@ -138,8 +144,6 @@ loglikes_micro = nan(length(param1_vals),length(param2_vals));
 
 disp('Computing likelihood...');
 timer_likelihood = tic;
-
-poolobj = parpool;
 
 for iter_i=1:length(param1_vals) % For each parameter...
     
