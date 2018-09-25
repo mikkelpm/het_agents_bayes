@@ -22,7 +22,8 @@ prior_logdens_transf = @(x) sum(x) - 2*log(1+exp(x(1)));    % Log prior density 
 prior_init_transf = @() [log(0.53)-log(1-0.53) log(0.0364) log(.011) log(.0083)];  % Distribution of initial transformed draw
 
 % MCMC settings
-mcmc_num_draws = 1e4;                  % Number of MCMC steps (total)
+mcmc_num_iter = 1e4;                  % Number of MCMC steps (total)
+mcmc_thin = 5;                         % Store every X draws
 mcmc_stepsize_init = 1e-2;              % Initial MCMC step size
 mcmc_adapt_iter = [50 100 200 500];          % Iterations at which to update the variance/covariance matrix for RWMH proposal; first iteration in list is start of adaptation phase
 mcmc_adapt_diag = false;                 % =true: Adapt only to posterior std devs of parameters, =false: adapt to full var/cov matrix
@@ -146,8 +147,11 @@ end
 %% MCMC
 
 curr_draw = prior_init_transf();        % Initial draw
+
+accepts = zeros(mcmc_num_iter,1);
+
+mcmc_num_draws = floor(mcmc_num_iter/mcmc_thin); % Number of stored draws
 post_draws = nan(mcmc_num_draws,length(curr_draw));
-accepts = zeros(mcmc_num_draws,1);
 
 curr_logpost = -Inf;
 loglikes_prop = nan(mcmc_num_draws,1);
@@ -163,7 +167,7 @@ timer_mcmc = tic;
 
 poolobj = parpool;
 
-for i_mcmc=1:mcmc_num_draws % For each MCMC step...
+for i_mcmc=1:mcmc_num_iter % For each MCMC step...
     
     fprintf(['%s' repmat('%6.4f ',1,length(curr_draw)),'%s\n'], 'current  [rrhoProd,ssigmaProd,aaUpper,ppsiCapital] = [',...
         transf_to_param(curr_draw),']');
@@ -179,13 +183,17 @@ for i_mcmc=1:mcmc_num_draws % For each MCMC step...
     fprintf(['%s' repmat('%6.4f ',1,length(curr_draw)),'%s\n'], 'proposed [rrhoProd,ssigmaProd,aaUpper,ppsiCapital] = [',...
         [rrhoProd,ssigmaProd,aaUpper,ppsiCapital],']');
     
+    the_loglike_prop = [];
+    the_loglike_prop_macro = [];
+    the_loglike_prop_micro = [];
+    
     try
         saveParameters;         % Save parameter values to files
         setDynareParameters;    % Update Dynare parameters in model struct
         compute_steady_state;   % Compute steady state, no need for parameters of agg dynamics
 
         % Log likelihood of proposal
-        [loglikes_prop(i_mcmc), loglikes_prop_macro(i_mcmc), loglikes_prop_micro(i_mcmc)] = ...
+        [the_loglike_prop, the_loglike_prop_macro, the_loglike_prop_micro] = ...
             loglike_compute('simul.mat', simul_data_micro, ts_micro, ...
                                        num_smooth_draws, num_interp, num_burnin_periods, ...
                                        M_, oo_, options_);
@@ -194,7 +202,7 @@ for i_mcmc=1:mcmc_num_draws % For each MCMC step...
         logprior_prop = prior_logdens_transf(prop_draw);
 
         % Accept/reject
-        [curr_draw, curr_logpost, accepts(i_mcmc), the_log_ar] = rwmh_accrej(curr_draw, prop_draw, curr_logpost, logprior_prop+loglikes_prop(i_mcmc));
+        [curr_draw, curr_logpost, accepts(i_mcmc), the_log_ar] = rwmh_accrej(curr_draw, prop_draw, curr_logpost, logprior_prop+the_loglike_prop);
 
         % Adapt proposal step size
         [the_stepsize, the_stepsize_iter] = adapt_stepsize(the_stepsize, the_stepsize_iter, i_mcmc, the_log_ar, mcmc_c, mcmc_ar_tg);
@@ -206,12 +214,17 @@ for i_mcmc=1:mcmc_num_draws % For each MCMC step...
         
     end
     
-    % Store
-    post_draws(i_mcmc,:) = transf_to_param(curr_draw);
+    % Store (with thinning)
+    if mod(i_mcmc, mcmc_thin)==0
+        post_draws(i_mcmc/mcmc_thin,:) = transf_to_param(curr_draw);
+        loglikes_prop(i_mcmc/mcmc_thin) = the_loglike_prop;
+        loglikes_prop_macro(i_mcmc/mcmc_thin) = the_loglike_prop_macro;
+        loglikes_prop_micro(i_mcmc/mcmc_thin) = the_loglike_prop_micro;
+    end
     
     % Print acceptance rate
     fprintf('%s%5.1f%s\n', 'Accept. rate last 100: ', 100*mean(accepts(max(i_mcmc-99,1):i_mcmc)), '%');
-    fprintf('%s%6d%s%6d\n\n', 'Progress: ', i_mcmc, '/', mcmc_num_draws);
+    fprintf('%s%6d%s%6d\n\n', 'Progress: ', i_mcmc, '/', mcmc_num_iter);
     
     % Adapt proposal covariance matrix
     [the_chol, the_stepsize_iter] = adapt_cov(the_chol, the_stepsize_iter, mcmc_adapt_iter, i_mcmc, post_draws, mcmc_adapt_diag, mcmc_adapt_param);
