@@ -10,39 +10,51 @@ simul_data_micro = nan(T_micro,N_micro,2);
 disp('Simulating micro data...');
 
 
-parfor it=1:T_micro
+for it=1:T_micro
     t = ts_micro(it);
     fprintf('t = %4d\n', t);
     
     % prepare the parameters
     nMeasure_all = (nMeasure+3)*nMeasure/2;
     moment = nan(1,nMeasure_all);
-    measureCoefficient = nan(1,nMeasure_all);
+%     measureCoefficient = nan(1,nMeasure_all);
     for i_Measure = 1:nMeasure_all
         moment(i_Measure) = sim_struct.(['moment_' num2str(i_Measure)])(t-1);
-        measureCoefficient(i_Measure) = sim_struct.(['measureCoefficient_' num2str(i_Measure)])(t-1);
+%         measureCoefficient(i_Measure) = sim_struct.(['measureCoefficient_' num2str(i_Measure)])(t-1);
     end
     
-    % draw logy      
-    g = @(prod,logk) exp(g_kernel(prod,logk,moment,measureCoefficient,nMeasure));
-    normalization = integral2(g,-Inf,Inf,-Inf,Inf);
+    % draw (prod,logk)
+    the_mean = moment(1:2);
+    the_varcov = [moment(3) moment(4); moment(4) moment(5)];
+    the_draws = mvnrnd(the_mean, the_varcov, N_micro);
     
-    ccdf_prod = @(p) integral2(@(prod,logk) g(prod,logk)/normalization, -Inf, p, -Inf, Inf);
+    % transform to (logn, logk)
+    c = log(nnu)+sim_struct.aggregateTFP(t)-sim_struct.logWage(t);
+    simul_data_micro(it,:,:) = [(c+the_draws(:,1)+ttheta*the_draws(:,2))/(1-nnu) the_draws(:,2)];
     
-    v_prod = nan(1,N_micro);
-    v_logk = nan(1,N_micro);
-    uu = rand(2,N_micro);
-    for i_micro = 1:N_micro
-        if mod(i_micro,10) == 0
-            fprintf('i_micro = %4d\n', i_micro);
-        end
-        v_prod(i_micro) = fzero(@(p) ccdf_prod(p)-uu(1,i_micro),moment(1));
-        ccdf_logk = @(lk) integral(@(logk) g(v_prod(i_micro),logk)/normalization, -Inf, lk) ...
-            /integral(@(logk) g(v_prod(i_micro),logk)/normalization, -Inf, Inf);
-        v_logk(i_micro) = fzero(@(lk) ccdf_logk(lk)-uu(2,i_micro),moment(2));
-    end
     
-    simul_data_micro(it,:,:) = [v_prod' v_logk'];
+%     % draw logy      
+%     g = @(prod,logk) exp(g_kernel(prod,logk,moment,measureCoefficient,nMeasure));
+%     normalization = integral2(g,-Inf,Inf,-Inf,Inf);
+%     
+%     ccdf_prod = @(p) integral2(@(prod,logk) g(prod,logk)/normalization, -Inf, p, -Inf, Inf);
+%     
+%     v_prod = nan(N_micro,1);
+%     v_logk = nan(N_micro,1);
+%     uu = rand(N_micro,2);
+%     parfor i_micro = 1:N_micro
+% %         if mod(i_micro,10) == 0
+% %             fprintf('i_micro = %4d\n', i_micro);
+% %         end
+%         the_uu = uu(i_micro,:);
+%         v_prod(i_micro) = fzero(@(p) ccdf_prod(p)-the_uu(1),moment(1));
+%         the_norm = integral(@(logk) g(v_prod(i_micro),logk), -Inf, Inf);
+%         the_ccdf_logk = @(lk) integral(@(logk) g(v_prod(i_micro),logk)/the_norm, -Inf, lk);
+%         v_logk(i_micro) = fzero(@(lk) the_ccdf_logk(lk)-the_uu(2),moment(2));
+%     end
+%     
+%     c = log(nnu)+sim_struct.aggregateTFP(t)-sim_struct.logWage(t);
+%     simul_data_micro(it,:,:) = [(c+v_prod+ttheta*v_logk)/(1-nnu) v_logk];
 
     
 %     the_vals = linspace(prodMin+ttheta*log(capitalMin),prodMax+ttheta*log(capitalMax),num_interp); % Compute integral at these grid points for log ouput

@@ -5,7 +5,7 @@ addpath('auxiliary_functions/dynare', 'auxiliary_functions/likelihood', 'auxilia
 %% Settings
 
 % Decide what to do
-is_data_gen = 0; % whether simulate data:  
+is_data_gen = 1; % whether simulate data:  
                  % 0: no simulation
                  % 1: simulation
 

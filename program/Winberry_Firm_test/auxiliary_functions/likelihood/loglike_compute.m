@@ -17,7 +17,7 @@ for i_Measure = 1:nMeasure_all
     smooth_vars_aux1{i_Measure} = ['moment_' num2str(i_Measure)];
     smooth_vars_aux2{i_Measure} = ['measureCoefficient_' num2str(i_Measure)];
 end
-smooth_vars = char([{'wage'; 'aggregateTFP'}; smooth_vars_aux1(:); smooth_vars_aux2(:)]);
+smooth_vars = char([{'logWage'; 'aggregateTFP'}; smooth_vars_aux1(:); smooth_vars_aux2(:)]);
 
 % Run mean smoother and compute macro log likelihood
 timer = tic;
@@ -33,8 +33,8 @@ nobs = dataset_.nobs;
 
 % Make local versions of global variables so Matlab doesn't complain in the parfor loop
 nMeasure_local = nMeasure;
-% ttheta_local = ttheta;
-% nnu_local = nnu;
+ttheta_local = ttheta;
+nnu_local = nnu;
 
 % Fix some warning messages during parallization
 options_new.dataset = [];
@@ -68,23 +68,31 @@ parfor i_draw = 1:num_smooth_draws
         
         % Prepare smoothed draws
         moment = nan(1,nMeasure_all);
-        measureCoefficient = nan(1,nMeasure_all);
+%         measureCoefficient = nan(1,nMeasure_all);
         for i_Measure = 1:nMeasure_all
             moment(i_Measure) = the_smooth_draw.(['moment_' num2str(i_Measure)])(t-1);
-            measureCoefficient(i_Measure) = the_smooth_draw.(['measureCoefficient_' num2str(i_Measure)])(t-1);
+%             measureCoefficient(i_Measure) = the_smooth_draw.(['measureCoefficient_' num2str(i_Measure)])(t-1);
         end
         
-        % Compute normalization constant
-        g = @(prod,logk) exp(g_kernel(prod,logk,moment,measureCoefficient,nMeasure_local));
-        lastwarn('');
-        normalization = integral2(g,-Inf,Inf,-Inf,Inf);
-        warnMsg = lastwarn;
-        if ~isempty(warnMsg)
-            disp(measureCoefficient);
-            error('Improper micro density');
-        end
+%         % Compute normalization constant
+%         g = @(prod,logk) exp(g_kernel(prod,logk,moment,measureCoefficient,nMeasure_local));
+%         lastwarn('');
+%         normalization = integral2(g,-Inf,Inf,-Inf,Inf);
+%         warnMsg = lastwarn;
+%         if ~isempty(warnMsg)
+%             disp(measureCoefficient);
+%             error('Improper micro density');
+%         end
         
-        the_likes = g(data_micro(it,:,1),data_micro(it,:,2))/normalization;
+        the_c = log(nnu_local)+the_smooth_draw.aggregateTFP(t)-the_smooth_draw.logWage(t);
+        the_jacob = 1-nnu_local;
+        the_prod = the_jacob*data_micro(it,:,1)-the_c-ttheta_local*data_micro(it,:,2);
+        
+        the_mean = moment(1:2);
+        the_varcov = [moment(3) moment(4); moment(4) moment(5)];
+        the_likes = the_jacob*mvnpdf([the_prod' data_micro(it,:,2)'], the_mean, the_varcov);
+        
+%         the_likes = the_jacob*g(the_prod,data_micro(it,:,2))/normalization;
         
 %         % Convolution
 %         data_aux = (1-nnu_local)*data_micro(it,:)...

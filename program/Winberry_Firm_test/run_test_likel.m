@@ -24,7 +24,7 @@ num_interp = 100;                       % Number of interpolation grid points fo
 
 % Numerical settings
 num_burnin_periods = 100;               % Number of burn-in periods for simulations
-rng_seed = 201809142;                    % Random number generator seed for initial simulation
+rng_seed = 201809241;                    % Random number generator seed for initial simulation
 
 
 %% Set economic parameters 
