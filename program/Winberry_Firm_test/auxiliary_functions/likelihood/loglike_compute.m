@@ -12,12 +12,12 @@ global nMeasure ttheta nnu;
 % Determine variables to smooth
 nMeasure_all = (nMeasure+3)*nMeasure/2;
 smooth_vars_aux1 = cell(1,nMeasure_all);
-smooth_vars_aux2 = cell(1,nMeasure_all);
+% smooth_vars_aux2 = cell(1,nMeasure_all);
 for i_Measure = 1:nMeasure_all
     smooth_vars_aux1{i_Measure} = ['moment_' num2str(i_Measure)];
-    smooth_vars_aux2{i_Measure} = ['measureCoefficient_' num2str(i_Measure)];
+%     smooth_vars_aux2{i_Measure} = ['measureCoefficient_' num2str(i_Measure)];
 end
-smooth_vars = char([{'logWage'; 'aggregateTFP'}; smooth_vars_aux1(:); smooth_vars_aux2(:)]);
+smooth_vars = char([{'logWage'; 'aggregateTFP'}; smooth_vars_aux1(:)]); %; smooth_vars_aux2(:)]);
 
 % Run mean smoother and compute macro log likelihood
 timer = tic;
@@ -32,7 +32,7 @@ T_micro = length(ts_micro);
 nobs = dataset_.nobs;
 
 % Make local versions of global variables so Matlab doesn't complain in the parfor loop
-nMeasure_local = nMeasure;
+% nMeasure_local = nMeasure;
 ttheta_local = ttheta;
 nnu_local = nnu;
 
@@ -64,7 +64,7 @@ parfor i_draw = 1:num_smooth_draws
         t = ts_micro(it);
 
         N_micro = length(data_micro(it,:));
-        the_loglikes_micro_draw_t = nan(1,N_micro);
+%         the_loglikes_micro_draw_t = nan(1,N_micro);
         
         % Prepare smoothed draws
         moment = nan(1,nMeasure_all);

@@ -24,7 +24,7 @@ num_interp = 100;                       % Number of interpolation grid points fo
 
 % Numerical settings
 num_burnin_periods = 100;               % Number of burn-in periods for simulations
-rng_seed = 201809241;                    % Random number generator seed for initial simulation
+rng_seed = 20180925;                    % Random number generator seed for initial simulation
 
 
 %% Set economic parameters 
@@ -105,12 +105,6 @@ dynare dynamicModel noclearall nopathchange; % Run Dynare once to process model 
 
 %% Simulate data
 
-if contains(pwd,'Laura')
-    poolobj = parpool(2);
-else
-    poolobj = parpool;
-end
-
 if is_data_gen == 0
     
     % Load previous data
@@ -144,6 +138,12 @@ loglikes_micro = nan(length(param1_vals),length(param2_vals));
 
 disp('Computing likelihood...');
 timer_likelihood = tic;
+
+if contains(pwd,'Laura')
+    poolobj = parpool(2);
+else
+    poolobj = parpool;
+end
 
 for iter_i=1:length(param1_vals) % For each parameter...
     
