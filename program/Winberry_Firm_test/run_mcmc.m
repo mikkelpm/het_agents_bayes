@@ -23,9 +23,9 @@ prior_init_transf = @() [log(0.53)-log(1-0.53) log(0.0364) log(.011) log(.0083)]
 
 % MCMC settings
 mcmc_num_iter = 1e4;                  % Number of MCMC steps (total)
-mcmc_thin = 5;                         % Store every X draws
+mcmc_thin = 2;                         % Store every X draws
 mcmc_stepsize_init = 1e-2;              % Initial MCMC step size
-mcmc_adapt_iter = [50 100 200 500];          % Iterations at which to update the variance/covariance matrix for RWMH proposal; first iteration in list is start of adaptation phase
+mcmc_adapt_iter = [5 200 500 1000];          % Iterations at which to update the variance/covariance matrix for RWMH proposal; first iteration in list is start of adaptation phase
 mcmc_adapt_diag = false;                 % =true: Adapt only to posterior std devs of parameters, =false: adapt to full var/cov matrix
 mcmc_adapt_param = 10;                  % Shrinkage parameter for adapting to var/cov matrix (higher values: more shrinkage)
 mcmc_filename = 'mcmc.mat';             % File name of MCMC output
@@ -227,7 +227,7 @@ for i_mcmc=1:mcmc_num_iter % For each MCMC step...
     fprintf('%s%6d%s%6d\n\n', 'Progress: ', i_mcmc, '/', mcmc_num_iter);
     
     % Adapt proposal covariance matrix
-    [the_chol, the_stepsize_iter] = adapt_cov(the_chol, the_stepsize_iter, mcmc_adapt_iter, i_mcmc, post_draws, mcmc_adapt_diag, mcmc_adapt_param);
+    [the_chol, the_stepsize_iter] = adapt_cov(the_chol, the_stepsize_iter, mcmc_adapt_iter, i_mcmc, post_draws, mcmc_thin, mcmc_adapt_diag, mcmc_adapt_param);
     
 end
 
