@@ -12,7 +12,7 @@ is_data_gen = 1; % whether simulate data:
 % Model/data settings
 T = 50;                                % Number of periods of simulated macro data
 ts_micro = 10:10:T;                        % Time periods where we observe micro data
-N_micro = 1e3;                             % Number of micro entities per non-missing time period
+N_micro = 1e4;                             % Number of micro entities per non-missing time period
 
 % Parameter transformation
 transf_to_param = @(x) [1/(1+exp(-x(1))) exp(x(2:end))]; % Function mapping transformed parameters into parameters of interest
@@ -40,7 +40,7 @@ num_interp = 100;                       % Number of interpolation grid points fo
 
 % Numerical settings
 num_burnin_periods = 100;               % Number of burn-in periods for simulations
-rng_seed = 201809251;                    % Random number generator seed for initial simulation
+rng_seed = 201810011;                    % Random number generator seed for initial simulation
 
 %% Set economic parameters 
 
