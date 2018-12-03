@@ -12,11 +12,11 @@ is_data_gen = 1; % whether simulate data:
 % Model/data settings
 T = 50;                                % Number of periods of simulated macro data
 ts_micro = 10:10:T;                        % Time periods where we observe micro data
-N_micro = 1e3;                             % Number of micro entities per non-missing time period
+N_micro = 1e4;                             % Number of micro entities per non-missing time period
 
 % Parameter values to check (prod dynamics)
-param1_vals = .53*[0.9 1 1.1]; %.53*[0.5 1 2]; %0.011*[0.5 1 2];
-param2_vals = .0364*[0.9 1 1.1]; %.0364*[0.5 1 2]; %0.0083*[0.5 1 2];
+param1_vals = 0.011*[0.5 1 2]; %.53*[0.9 1 1.1]; %.53*[0.5 1 2];
+param2_vals = 0.0083*[0.5 1 2]; %.0364*[0.9 1 1.1]; %.0364*[0.5 1 2];
 
 % Likelihood settings
 num_smooth_draws = 500;                 % Number of draws from the smoothing distribution (for unbiased likelihood estimate)
@@ -24,7 +24,7 @@ num_interp = 100;                       % Number of interpolation grid points fo
 
 % Numerical settings
 num_burnin_periods = 100;               % Number of burn-in periods for simulations
-rng_seed = 20180925;                    % Random number generator seed for initial simulation
+rng_seed = 201810011;                    % Random number generator seed for initial simulation
 
 
 %% Set economic parameters 
@@ -150,14 +150,14 @@ for iter_i=1:length(param1_vals) % For each parameter...
     for iter_j=1:length(param2_vals) % For each parameter...
         
         % Set new parameters
-%         aaUpper = param1_vals(iter_i);
-%         aaLower = -aaUpper;
-%         ppsiCapital = param2_vals(iter_j);
-        rrhoProd = param1_vals(iter_i);
-        ssigmaProd = param2_vals(iter_j);
+        aaUpper = param1_vals(iter_i);
+        aaLower = -aaUpper;
+        ppsiCapital = param2_vals(iter_j);
+%         rrhoProd = param1_vals(iter_i);
+%         ssigmaProd = param2_vals(iter_j);
 
-%         fprintf(['%s' repmat('%6.4f ',1,2),'%s\n'], '[aaUpper,ppsiCapital] = [',aaUpper,ppsiCapital,']');
-        fprintf(['%s' repmat('%6.4f ',1,2),'%s\n'], '[rrhoProd,ssigmaProd] = [',rrhoProd,ssigmaProd,']');
+        fprintf(['%s' repmat('%6.4f ',1,2),'%s\n'], '[aaUpper,ppsiCapital] = [',aaUpper,ppsiCapital,']');
+%         fprintf(['%s' repmat('%6.4f ',1,2),'%s\n'], '[rrhoProd,ssigmaProd] = [',rrhoProd,ssigmaProd,']');
 
         saveParameters;         % Save parameter values to files
         setDynareParameters;    % Update Dynare parameters in model struct
