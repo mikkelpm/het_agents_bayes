@@ -6,8 +6,8 @@
 % Set economic parameters 
 %----------------------------------------------------------------
 
-global bbeta ssigma aaBar aalpha ddelta vEpsilonGrid mEpsilonTransition vEpsilonInvariant aggEmployment ...
-	mmu ttau rrhoTFP ssigmaTFP
+% global bbeta ssigma aaBar aalpha ddelta vEpsilonGrid mEpsilonTransition vEpsilonInvariant aggEmployment ...
+% 	mmu ttau rrhoTFP ssigmaTFP
 	
 % Preferences
 bbeta = .96;										% discount factor (annual calibration)
@@ -38,8 +38,8 @@ ssigmaTFP = .014;
 % Set approximation parameters
 %----------------------------------------------------------------
 
-global nEpsilon nAssets nState assetsMin assetsMax nAssetsFine nStateFine nAssetsQuadrature nStateQuadrature ...
-	nMeasure nMeasureCoefficients kRepSS maxIterations tolerance dampening splineOpt displayOpt
+% global nEpsilon nAssets nState assetsMin assetsMax nAssetsFine nStateFine nAssetsQuadrature nStateQuadrature ...
+% 	nMeasure nMeasureCoefficients kRepSS maxIterations tolerance dampening splineOpt displayOpt
 	
 % Whether approximating decision rule with splines or polynomials
 splineOpt = 0;	% if splineOpt = 1, use splines to approximate savings policy; if splineOpt = 0, use polynomials

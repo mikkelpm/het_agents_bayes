@@ -15,6 +15,19 @@ if splineOpt == 0
 	computePolynomials;
 end
 
+% variables in structure to pass on
+var_struc.names = {'bbeta','ssigma','aalpha','ddelta','aaBar','aggEmployment','mmu','ttau','mEpsilonTransition','vEpsilonGrid',...
+    'nEpsilon','nAssets','nState','assetsMin','assetsMax',...
+    'vAssetsGrid','mEpsilonGrid','mAssetsGrid',...
+    'vAssetsPoly','vAssetsPolySquared','w','r','mEpsilonPrimeGrid','maxIterations','tolerance','dampening','vAssetsPolyFine','vAssetsGridFine',...
+    'mEpsilonGridFine','mAssetsGridFine','nAssetsFine','nStateFine',...
+    'vAssetsPolyQuadrature','vAssetsGridQuadrature','mEpsilonGridQuadrature','mAssetsGridQuadrature','nAssetsQuadrature',...
+    'vQuadratureWeights','vEpsilonInvariant','nMeasure','splineOpt','vAssetsPolyBC'};
+n_var = length(var_struc.names);
+for i_var = 1:n_var
+    eval(['var_struc.' var_struc.names{i_var} '=' var_struc.names{i_var} ';'])
+end
+
 %----------------------------------------------------------------
 % Compute initial guess of market-clearing capital stock using
 % histogram approximation of distribution, from Young (2010)
@@ -24,7 +37,7 @@ t0 = tic;
 fprintf('Computing initial guess from histogram...\n')
 
 % Solve for market clearing capital stock
-f = @(capital) computeMCResidualHistogram(capital);
+f = @(capital) computeMCResidualHistogram(capital,var_struc);
 options = optimoptions('fsolve','Display',displayOpt,'TolFun',1e-2); % In older versions of MATLAB, use: options = optimset('Display',displayOpt); 
 [aggregateCapitalInit,err,exitflag] = fsolve(f,1.01*kRepSS,options);
 
@@ -44,7 +57,7 @@ end
 %----------------------------------------------------------------
 
 % Compute histogram
-[~, mHistogram] = computeMCResidualHistogram(aggregateCapital);
+[~, mHistogram] = computeMCResidualHistogram(aggregateCapital,var_struc);
 
 % Compute moments from histogram
 mMomentsHistogram = zeros(nEpsilon,nMeasure);
@@ -78,7 +91,7 @@ t0 = tic;
 fprintf('Compute steady state from parametric family...\n')
 
 % Solve for market clearing capital stock
-f = @(capital) computeMCResidualPolynomials(capital,mMomentsHistogram,aGridMoments,mHatHistogram);
+f = @(capital) computeMCResidualPolynomials(capital,mMomentsHistogram,aGridMoments,mHatHistogram,var_struc);
 options = optimoptions('fsolve','Display',displayOpt,'TolFun',1e-2);
 if abs(f(aggregateCapitalInit)) > 1e-4
 	[aggregateCapital,err,exitflag] = fsolve(f,aggregateCapitalInit,options);
@@ -99,4 +112,4 @@ end
 %----------------------------------------------------------------
 
 [~,mCoefficients,mParameters,mMoments,mHat] = ...
-    computeMCResidualPolynomials(aggregateCapital,mMomentsHistogram,aGridMoments,mHatHistogram);
+    computeMCResidualPolynomials(aggregateCapital,mMomentsHistogram,aGridMoments,mHatHistogram,var_struc);

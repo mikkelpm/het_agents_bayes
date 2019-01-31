@@ -6,7 +6,7 @@
 % Grid for approximating conditional expectation
 %---------------------------------------------------------------
 
-global vAssetsPoly vAssetsPolySquared
+% global vAssetsPoly vAssetsPolySquared
 
 % Create polynomials
 vAssetsPoly = computeChebyshev(nAssets,vAssetsGridZeros);
@@ -18,7 +18,7 @@ vAssetsPolySquared = sum(vAssetsPoly .^ 2)';
 % Fine grid, for histogram and plots
 %---------------------------------------------------------------
 
-global vAssetsPolyFine
+% global vAssetsPolyFine
 
 % Create polynomials
 vAssetsPolyFine = computeChebyshev(nAssets,vAssetsGridFineZeros);
@@ -27,7 +27,7 @@ vAssetsPolyFine = computeChebyshev(nAssets,vAssetsGridFineZeros);
 % Quadrature grid, for integrating distribution
 %---------------------------------------------------------------
 
-global vAssetsPolyQuadrature
+% global vAssetsPolyQuadrature
 
 % Create polynomials
 vAssetsPolyQuadrature = computeChebyshev(nAssets,vAssetsGridQuadratureZeros);
@@ -36,7 +36,7 @@ vAssetsPolyQuadrature = computeChebyshev(nAssets,vAssetsGridQuadratureZeros);
 % At borrowing constraint, for integrating mass point
 %---------------------------------------------------------------
 
-global vAssetsPolyBC
+% global vAssetsPolyBC
 
 % Create polynomials
 vAssetsPolyBC = computeChebyshev(nAssets,-1);	% at edge of state space

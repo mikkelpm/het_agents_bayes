@@ -1,4 +1,4 @@
-function mCoefficientsNew = updateCoefficients_polynomials(mCoefficients)
+function mCoefficientsNew = updateCoefficients_polynomials(mCoefficients,var_struc)
 
 % Updates polynomial coefficients approximating the conditional expectation function in steady state
 % 
@@ -11,10 +11,10 @@ function mCoefficientsNew = updateCoefficients_polynomials(mCoefficients)
 % Thomas Winberry, January 19, 2016
 
 % Declare global variables
-global bbeta ssigma aalpha ddelta eepsilonBar rrhoEpsilon ssigmaEpsilon aaBar aggEmployment mmu ttau mEpsilonTransition vEpsilonGrid ...
-	nEpsilon nAssets nState epsilonMin epsilonMax assetsMin assetsMax ...
-	vAssetsGridZeros vAssetsGrid vAssetsGridHistogram mEpsilonGrid mAssetsGrid ...
-	vAssetsGridHistogramZeros vAssetsPoly vAssetsPolySquared mAssetsPolyHistogram w r mEpsilonPrimeGrid
+n_var = length(var_struc.names);
+for i_var = 1:n_var
+    eval([var_struc.names{i_var} '=var_struc.' var_struc.names{i_var} ';'])
+end
 
 %---------------------------------------------------------------
 % Compute current period's savings policy function

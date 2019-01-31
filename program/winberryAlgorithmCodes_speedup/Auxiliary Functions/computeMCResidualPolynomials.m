@@ -1,5 +1,5 @@
 function [residual,mCoefficientsOptional,mParametersOptional,mMomentsOptional,mHatOptional] = ...
-	computeMCResidualPolynomials(capital,mMoments,aGridMoments,mHat)
+	computeMCResidualPolynomials(capital,mMoments,aGridMoments,mHat,var_struc)
 
 % Computes residual of market-clearing condition, parametric family to approximate distribution
 % 
@@ -20,17 +20,16 @@ function [residual,mCoefficientsOptional,mParametersOptional,mMomentsOptional,mH
 % Thomas Winberry, July 26th, 2016
 
 % Declare global variables
-global bbeta ssigma aalpha ddelta eepsilonBar rrhoEpsilon ssigmaEpsilon aaBar aggEmployment mmu ttau mEpsilonTransition vEpsilonGrid ...
-	nEpsilon nAssets nState epsilonMin epsilonMax assetsMin assetsMax ...
-	vAssetsGridZeros vAssetsGrid vAssetsGridHistogram mEpsilonGrid mAssetsGrid ...
-	vAssetsPoly vAssetsPolySquared mAssetsPolyHistogram w r mEpsilonPrimeGrid maxIterations tolerance dampening vAssetsPolyFine vAssetsGridFine ...
-	mEpsilonGridFine mAssetsGridFine nAssetsFine nStateFine ...
-	vAssetsPolyQuadrature vAssetsGridQuadrature mEpsilonGridQuadrature mAssetsGridQuadrature nAssetsQuadrature ...
-	nStateQuadrature vQuadratureWeights vEpsilonInvariant nMeasure splineOpt vAssetsPolyBC
+n_var = length(var_struc.names);
+for i_var = 1:n_var
+    eval([var_struc.names{i_var} '=var_struc.' var_struc.names{i_var} ';'])
+end
 	
 % Compute prices
 r = aalpha * (capital ^ (aalpha - 1)) * (aggEmployment ^ (1 - aalpha)) - ddelta;
 w = (capital ^ aalpha) * (1 - aalpha) * (aggEmployment ^ (-aalpha));
+var_struc.r = r;
+var_struc.w = w;
 
 %----------------------------------------------------------------
 % Set error tolerance & max iteration depending on use
@@ -67,7 +66,7 @@ if splineOpt == 0	% approximate conditional expectation function using polynomia
 	err = 100; iteration = 1;
 	while err > tolerance && iteration <= maxIterations
 
-		mCoefficientsNew = updateCoefficients_polynomials(mCoefficients);
+		mCoefficientsNew = updateCoefficients_polynomials(mCoefficients,var_struc);
 		err = max(abs(mCoefficientsNew(:) - mCoefficients(:)));
 		iteration = iteration + 1;
 		mCoefficients = dampening * mCoefficients + (1 - dampening) * mCoefficientsNew;
@@ -167,7 +166,7 @@ while err > err2 && iteration <= tol2
 	% Compute parameters of the distribution by minimization
 	mParameters = zeros(nEpsilon,nMeasure+1);
 	for iEpsilon = 1 : nEpsilon
-		objectiveFunction = @(vParametersTilde) parametersResidual(vParametersTilde,reshape(aGridMoments(iEpsilon,:,:),nAssetsQuadrature,nMeasure));
+		objectiveFunction = @(vParametersTilde) parametersResidual(vParametersTilde,reshape(aGridMoments(iEpsilon,:,:),nAssetsQuadrature,nMeasure),vQuadratureWeights,nMeasure);
 		[vParameters,normalization] = fminunc(objectiveFunction,zeros(nMeasure,1),options);
 		mParameters(iEpsilon,:) = [1 / normalization; vParameters];
 	end

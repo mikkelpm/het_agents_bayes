@@ -1,4 +1,4 @@
-function [value vDerivs] = parametersResidual(vParameters,mGridMoments);
+function [value vDerivs] = parametersResidual(vParameters,mGridMoments,vQuadratureWeights,nMeasure);
 
 % Computes the objective function and Jacobian for computing the parameters of the distribution, given
 % moments to match
@@ -13,7 +13,7 @@ function [value vDerivs] = parametersResidual(vParameters,mGridMoments);
 % 
 % Thomas Winberry, October 12, 2015
 
-global assetsMax assetsMin vQuadratureWeights nMeasure
+% global assetsMax assetsMin vQuadratureWeights nMeasure
 
 % Value of function
 value = vQuadratureWeights' * exp(mGridMoments * vParameters);

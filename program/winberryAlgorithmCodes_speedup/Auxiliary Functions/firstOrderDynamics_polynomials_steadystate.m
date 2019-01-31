@@ -21,12 +21,12 @@ setParameters;
 check = 0;
 
 % Read parameters from Dynare
-global M_ 
+global M_ % LL: seems that we need to keep this global to satisfies the requirement of Dynare...
 
 % Read out parameters to access them with their name
 for iParameter = 1:M_.param_nbr
   paramname = deblank(M_.param_names(iParameter,:));
-  eval(['global ' paramname]);
+%   eval(['global ' paramname]);
   eval([ paramname ' = M_.params(' int2str(iParameter) ');']);
 end
 

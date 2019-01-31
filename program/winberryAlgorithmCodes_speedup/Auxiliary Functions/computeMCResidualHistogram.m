@@ -1,4 +1,4 @@
-function [residual,mHistogramOptional,mAssetsPrimeOptional,mConsumptionOptional] = computeMCResidualHistogram(capital)
+function [residual,mHistogramOptional,mAssetsPrimeOptional,mConsumptionOptional] = computeMCResidualHistogram(capital,var_struc)
 
 % Computes residual of market-clearing condition, using histogram approximation of distribution
 % as in Young (2010); used to compute initial guess for parametric family
@@ -15,15 +15,17 @@ function [residual,mHistogramOptional,mAssetsPrimeOptional,mConsumptionOptional]
 % Thomas Winberry, July 26th, 2016
 
 % Declare global variables
-global bbeta ssigma aalpha ddelta eepsilonBar rrhoEpsilon ssigmaEpsilon aaBar aggEmployment mmu ttau mEpsilonTransition vEpsilonGrid ...
-	nEpsilon nAssets nState epsilonMin epsilonMax assetsMin assetsMax ...
-	vAssetsGridZeros vAssetsGrid vAssetsGridHistogram mEpsilonGrid mAssetsGrid ...
-	vAssetsPoly vAssetsPolySquared mAssetsPolyHistogram w r mEpsilonPrimeGrid maxIterations tolerance dampening vAssetsPolyFine vAssetsGridFine ...
-	mEpsilonGridFine mAssetsGridFine nAssetsFine nStateFine splineOpt
+n_var = length(var_struc.names);
+for i_var = 1:n_var
+    eval([var_struc.names{i_var} '=var_struc.' var_struc.names{i_var} ';'])
+end
+
 	
 % Compute prices
 r = aalpha * (capital ^ (aalpha - 1)) * (aggEmployment ^ (1 - aalpha)) - ddelta;
 w = (capital ^ aalpha) * (1 - aalpha) * (aggEmployment ^ (-aalpha));
+var_struc.r = r;
+var_struc.w = w;
 
 %----------------------------------------------------------------
 % Compute individual decisions
@@ -44,7 +46,7 @@ if splineOpt == 0	% approximate conditional expectation function using polynomia
 	err = 100; iteration = 1;
 	while err > tolerance && iteration <= maxIterations
 
-		mCoefficientsNew = updateCoefficients_polynomials(mCoefficients);
+		mCoefficientsNew = updateCoefficients_polynomials(mCoefficients,var_struc);
 		err = max(abs(mCoefficientsNew(:) - mCoefficients(:)));
 		iteration = iteration + 1;
 		mCoefficients = dampening * mCoefficients + (1 - dampening) * mCoefficientsNew;
