@@ -156,6 +156,8 @@ options = optimset('LargeScale','off','Display','notify-detailed',...
 	'MaxFunEvals',50000,'TolFun',1e-12,'GradObj','on','MaxIter',1000);
 %}
 
+mParameters = zeros(nEpsilon,nMeasure+1);
+mParameters0 = mParameters;
 % Iteration
 while err > err2 && iteration <= tol2
 	
@@ -164,11 +166,26 @@ while err > err2 && iteration <= tol2
 	%%%
 
 	% Compute parameters of the distribution by minimization
-	mParameters = zeros(nEpsilon,nMeasure+1);
+	if mod(iteration,100) == 0
+		mParameters0 = mParameters;
+	end
 	for iEpsilon = 1 : nEpsilon
-		objectiveFunction = @(vParametersTilde) parametersResidual(vParametersTilde,reshape(aGridMoments(iEpsilon,:,:),nAssetsQuadrature,nMeasure),vQuadratureWeights,nMeasure);
-		[vParameters,normalization] = fminunc(objectiveFunction,zeros(nMeasure,1),options);
+		% objectiveFunction = @(vParametersTilde) parametersResidual(vParametersTilde,reshape(aGridMoments(iEpsilon,:,:),nAssetsQuadrature,nMeasure),vQuadratureWeights,nMeasure);
+		% [vParameters,normalization] = fminunc(objectiveFunction,zeros(nMeasure,1),options);		
+		vParameters = mParameters(iEpsilon,2:end);
+		mGridMoments = reshape(aGridMoments(iEpsilon,:,:),nAssetsQuadrature,nMeasure);
+		DD = vQuadratureWeights' * (exp(mGridMoments * vParameters).*mGridMoments);
+		HH = zeros(nMeasure);
+		for iH = 1:nAssetsQuadrature
+			HH = HH+vQuadratureWeights(iH)*exp(mGridMoments(iH,:) * vParameters)*mGridMoments(iH,:)'*mGridMoments(iH,:);
+		end
+		vParameters = vParameters-DD/HH;
+		normalization = sum(repmat(vQuadratureWeights,[1 nMeasure]) .* mGridMoments .* repmat(exp(mGridMoments * vParameters),...
+		[1 nMeasure]),1)';
 		mParameters(iEpsilon,:) = [1 / normalization; vParameters];
+	end
+	if mod(iteration,100) == 99
+		disp(['Parameter convergence (iter' num2str(iteration) '-iter' num2str(iteration-99) '):' num2sr(sum((mParameters(:)-mParameters0(:)).^2))])
 	end
 	
 	% Compute new moments and centered moments grid
