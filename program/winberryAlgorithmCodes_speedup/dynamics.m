@@ -7,6 +7,8 @@ clear all
 close all
 clc
 
+profile on
+
 cd('./Auxiliary Functions');
 
 %----------------------------------------------------------------
@@ -80,3 +82,5 @@ else	% if using splines to approximate individual decisions
 end
 
 cd('../')
+
+profsave(profile('info'),['profile_results_' datestr(now,'yyyymmdd')]);
