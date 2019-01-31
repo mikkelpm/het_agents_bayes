@@ -5,9 +5,13 @@ addpath('auxiliary_functions/dynare', 'auxiliary_functions/likelihood', 'auxilia
 %% Settings
 
 % Decide what to do
-is_data_gen = 1; % whether simulate data:  
+is_data_gen = 0; % whether simulate data:  
                  % 0: no simulation
                  % 1: simulation
+is_profile = 1; %whether run profiler for execution time
+if is_profile == 1
+    profile on
+end
 
 % Model/data settings
 T = 50;                                % Number of periods of simulated macro data
@@ -16,7 +20,7 @@ N_micro = 1e4;                             % Number of micro entities per non-mi
 
 % Parameter values to check (prod dynamics)
 param1_vals = 0.011*[0.5 1 2]; %.53*[0.9 1 1.1]; %.53*[0.5 1 2];
-param2_vals = 0.0083*[0.5 1 2]; %.0364*[0.9 1 1.1]; %.0364*[0.5 1 2];
+param2_vals = 0.0083;%*[0.5 1 2]; %.0364*[0.9 1 1.1]; %.0364*[0.5 1 2];
 
 % Likelihood settings
 num_smooth_draws = 500;                 % Number of draws from the smoothing distribution (for unbiased likelihood estimate)
@@ -180,3 +184,7 @@ fprintf('%s%8.2f\n', 'Done. Elapsed minutes: ', likelihood_elapsed/60);
 
 cd('../../');
 rmpath('auxiliary_functions/dynare', 'auxiliary_functions/likelihood', 'auxiliary_functions/sim');
+
+if is_profile
+    profsave(profile('info'),['profile_results_' datestr(now,'yyyymmdd')]);
+end
