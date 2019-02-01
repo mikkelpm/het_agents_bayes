@@ -1,4 +1,4 @@
-function [residual,mHistogramOptional,mAssetsPrimeOptional,mConsumptionOptional] = computeMCResidualHistogram(capital,var_struc)
+function [residual,mHistogramOptional,mAssetsPrimeOptional,mConsumptionOptional] = computeMCResidualHistogram(capital,var_array)
 
 % Computes residual of market-clearing condition, using histogram approximation of distribution
 % as in Young (2010); used to compute initial guess for parametric family
@@ -15,18 +15,52 @@ function [residual,mHistogramOptional,mAssetsPrimeOptional,mConsumptionOptional]
 % Thomas Winberry, July 26th, 2016
 
 % Declare global variables
-n_var = length(var_struc.names);
-for i_var = 1:n_var
-    eval([var_struc.names{i_var} '=var_struc.' var_struc.names{i_var} ';'])
-end
-
+bbeta=var_array{1};
+ssigma=var_array{2};
+aalpha=var_array{3};
+ddelta=var_array{4};
+aaBar=var_array{5};
+aggEmployment=var_array{6};
+mmu=var_array{7};
+ttau=var_array{8};
+mEpsilonTransition=var_array{9};
+vEpsilonGrid=var_array{10};
+nEpsilon=var_array{11};
+nAssets=var_array{12};
+nState=var_array{13};
+assetsMin=var_array{14};
+assetsMax=var_array{15};
+vAssetsGrid=var_array{16};
+mEpsilonGrid=var_array{17};
+mAssetsGrid=var_array{18};
+vAssetsPoly=var_array{19};
+vAssetsPolySquared=var_array{20};
+mEpsilonPrimeGrid=var_array{21};
+maxIterations=var_array{22};
+tolerance=var_array{23};
+dampening=var_array{24};
+vAssetsPolyFine=var_array{25};
+vAssetsGridFine=var_array{26};
+mEpsilonGridFine=var_array{27};
+mAssetsGridFine=var_array{28};
+nAssetsFine=var_array{29};
+nStateFine=var_array{30};
+vAssetsPolyQuadrature=var_array{31};
+vAssetsGridQuadrature=var_array{32};
+mEpsilonGridQuadrature=var_array{33};
+mAssetsGridQuadrature=var_array{34};
+nAssetsQuadrature=var_array{35};
+vQuadratureWeights=var_array{36};
+vEpsilonInvariant=var_array{37};
+nMeasure=var_array{38};
+splineOpt=var_array{39};
+vAssetsPolyBC=var_array{40};
 	
 % Compute prices
 r = aalpha * (capital ^ (aalpha - 1)) * (aggEmployment ^ (1 - aalpha)) - ddelta;
 w = (capital ^ aalpha) * (1 - aalpha) * (aggEmployment ^ (-aalpha));
-var_struc.r = r;
-var_struc.w = w;
-var_struc.names = [var_struc.names,{'w','r'}];
+var_array{41} = r;
+var_array{42} = w;
 
 %----------------------------------------------------------------
 % Compute individual decisions
@@ -47,7 +81,7 @@ if splineOpt == 0	% approximate conditional expectation function using polynomia
 	err = 100; iteration = 1;
 	while err > tolerance && iteration <= maxIterations
 
-		mCoefficientsNew = updateCoefficients_polynomials(mCoefficients,var_struc);
+		mCoefficientsNew = updateCoefficients_polynomials(mCoefficients,var_array);
 		err = max(abs(mCoefficientsNew(:) - mCoefficients(:)));
 		iteration = iteration + 1;
 		mCoefficients = dampening * mCoefficients + (1 - dampening) * mCoefficientsNew;
