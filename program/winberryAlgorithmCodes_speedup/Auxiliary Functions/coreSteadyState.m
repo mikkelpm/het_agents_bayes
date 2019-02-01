@@ -16,46 +16,8 @@ if splineOpt == 0
 end
 
 % variables in array to pass on
-var_array{1}=bbeta;
-var_array{2}=ssigma;
-var_array{3}=aalpha;
-var_array{4}=ddelta;
-var_array{5}=aaBar;
-var_array{6}=aggEmployment;
-var_array{7}=mmu;
-var_array{8}=ttau;
-var_array{9}=mEpsilonTransition;
-var_array{10}=vEpsilonGrid;
-var_array{11}=nEpsilon;
-var_array{12}=nAssets;
-var_array{13}=nState;
-var_array{14}=assetsMin;
-var_array{15}=assetsMax;
-var_array{16}=vAssetsGrid;
-var_array{17}=mEpsilonGrid;
-var_array{18}=mAssetsGrid;
-var_array{19}=vAssetsPoly;
-var_array{20}=vAssetsPolySquared;
-var_array{21}=mEpsilonPrimeGrid;
-var_array{22}=maxIterations;
-var_array{23}=tolerance;
-var_array{24}=dampening;
-var_array{25}=vAssetsPolyFine;
-var_array{26}=vAssetsGridFine;
-var_array{27}=mEpsilonGridFine;
-var_array{28}=mAssetsGridFine;
-var_array{29}=nAssetsFine;
-var_array{30}=nStateFine;
-var_array{31}=vAssetsPolyQuadrature;
-var_array{32}=vAssetsGridQuadrature;
-var_array{33}=mEpsilonGridQuadrature;
-var_array{34}=mAssetsGridQuadrature;
-var_array{35}=nAssetsQuadrature;
-var_array{36}=vQuadratureWeights;
-var_array{37}=vEpsilonInvariant;
-var_array{38}=nMeasure;
-var_array{39}=splineOpt;
-var_array{40}=vAssetsPolyBC;
+is_array2var = 0;
+var_array_convert;
 
 %----------------------------------------------------------------
 % Compute initial guess of market-clearing capital stock using
