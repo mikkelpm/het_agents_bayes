@@ -158,7 +158,7 @@ options = optimset('LargeScale','off','Display','notify-detailed',...
 %}
 
 mParameters = zeros(nEpsilon,nMeasure+1);
-mParameters0 = mParameters;
+% mParameters0 = mParameters;
 % Iteration
 while err > err2 && iteration <= tol2
 	
@@ -167,9 +167,9 @@ while err > err2 && iteration <= tol2
 	%%%
 
 	% Compute parameters of the distribution by minimization
-	if mod(iteration,100) == 0
-		mParameters0 = mParameters;
-	end
+% 	if mod(iteration,100) == 0
+% 		mParameters0 = mParameters;
+% 	end
 	for iEpsilon = 1 : nEpsilon
 		% objectiveFunction = @(vParametersTilde) parametersResidual(vParametersTilde,reshape(aGridMoments(iEpsilon,:,:),nAssetsQuadrature,nMeasure),vQuadratureWeights,nMeasure);
 		% [vParameters,normalization] = fminunc(objectiveFunction,zeros(nMeasure,1),options);		
@@ -184,9 +184,9 @@ while err > err2 && iteration <= tol2
 		normalization = vQuadratureWeights' * exp(mGridMoments * vParameters);
 		mParameters(iEpsilon,:) = [1 / normalization; vParameters];
 	end
-	if mod(iteration,100) == 99
-		disp(['Parameter convergence (iter' num2str(iteration) '-iter' num2str(iteration-99) '): ' num2str(sum((mParameters(:)-mParameters0(:)).^2))])
-	end
+% 	if mod(iteration,100) == 99
+% 		disp(['Parameter convergence (iter' num2str(iteration) '-iter' num2str(iteration-99) '): ' num2str(sum((mParameters(:)-mParameters0(:)).^2))])
+% 	end
 	
 	% Compute new moments and centered moments grid
 	mMomentsNew = zeros(nEpsilon,nMeasure);
