@@ -46,7 +46,7 @@ splineOpt = 0;	% if splineOpt = 1, use splines to approximate savings policy; if
 				% to approximate conditional expectation function
 
 % Whether to print out results from steady state computation
-displayOpt = 'iter-detailed';       % 'iter-detailed' or 'off'
+displayOpt = 'off';       % 'iter-detailed' or 'off'
 
 % Order of approximation
 nEpsilon = 2;
