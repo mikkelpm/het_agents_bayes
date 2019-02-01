@@ -66,12 +66,16 @@ mAssetsPrimeStar = w * (mmu * (1 - mEpsilonGrid) + (1 - ttau) * mEpsilonGrid) + 
 	(mConditionalExpectation .^ (-1 / ssigma));
 
 % Compute actual saving
-mAssetsPrime = max(mAssetsPrimeStar,aaBar * ones(nEpsilon,nAssets));
-mAssetsPrimeGrid = repmat(reshape(mAssetsPrime,1,nState),[nEpsilon 1]);
+mAssetsPrime = max(mAssetsPrimeStar,aaBar);
+mAssetsPrimeGrid = reshape(mAssetsPrime,1,nState);
 
 % Compute next period's polynomials
-mAssetsPrimeZeros = scaleDown(mAssetsPrime,assetsMin,assetsMax);
-mPolyAssetsPrime = computeChebyshev(nAssets,reshape(mAssetsPrimeZeros,nState,1));
+mAssetsPrimeZeros = min(max(2 * ((mAssetsPrime - assetsMin) / (assetsMax - assetsMin)) - 1,-1),1); 
+mPolyAssetsPrime = ones(nState,nAssets);
+mPolyAssetsPrime(:,2) = mAssetsPrimeZeros(:);
+for iPower = 3:nAssets
+	mPolyAssetsPrime(:,iPower) = 2 * mAssetsPrimeZeros(:) .* mPolyAssetsPrime(:,iPower-1) - mPolyAssetsPrime(:,iPower-2);
+end
 
 %---------------------------------------------------------------
 % Compute next period's savings policy function
