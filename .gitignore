@@ -6,6 +6,8 @@
 !*.m
 !*.mod
 !*.gitignore
+!*.h
+!*.c
 program/winberry_test/auxiliary_functions/dynare/firstOrderDynamics_polynomials*.*
 !program/winberry_test/auxiliary_functions/dynare/firstOrderDynamics_polynomials.mod
 !program/winberry_test/auxiliary_functions/dynare/firstOrderDynamics_polynomials_steadystate.m
