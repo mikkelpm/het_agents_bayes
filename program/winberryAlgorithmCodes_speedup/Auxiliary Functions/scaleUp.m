@@ -12,5 +12,6 @@ function x = scaleUp(z,xmin,xmax)
 % 
 % Thomas Winberry, January 19, 2016
 
-x = min(max((.5 * (z + 1) * (xmax - xmin)) + xmin,xmin * ones(size(z))),...
-    xmax * ones(size(z)));
+% x = min(max((.5 * (z + 1) * (xmax - xmin)) + xmin,xmin * ones(size(z))),...
+%     xmax * ones(size(z)));
+x = min(max((.5 * (z + 1) * (xmax - xmin)) + xmin,xmin), xmax);

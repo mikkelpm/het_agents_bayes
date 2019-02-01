@@ -74,11 +74,11 @@ var_array{42} = w;
 if nargout == 1 
     err1 = tolerance;
     err2 = 1e-4;
-    tol2 = 200;
+    tol2 = 2000;
 elseif nargout > 1 
     err1 = 1e-8;
     err2 = 1e-6;
-    tol2 = 500;
+    tol2 = 5000;
 else
     error('Check # of inputs & outputs for computeMCResidualPolynomials');
 end
@@ -188,8 +188,8 @@ err = 100; iteration = 1;
 % options = optimoptions(@fminunc,'Algorithm','quasi-newton','Display','notify-detailed',...
 	% 'MaxFunEvals',50000,'TolFun',1e-12,'GradObj','on','MaxIter',1000);
 %{ For older versions of MATLAB:
-options = optimset('LargeScale','off','Display','notify-detailed',...
-	'MaxFunEvals',50000,'TolFun',1e-12,'GradObj','on','MaxIter',1000);
+% options = optimset('LargeScale','off','Display','notify-detailed',...
+% 	'MaxFunEvals',50000,'TolFun',1e-12,'GradObj','on','MaxIter',1000);
 %}
 
 mParameters = zeros(nEpsilon,nMeasure+1);
@@ -201,23 +201,22 @@ while err > err2 && iteration <= tol2
 	% Update density away from borrowing constraint
 	%%%
 
-	% Compute parameters of the distribution by minimization
-% 	if mod(iteration,100) == 0
-% 		mParameters0 = mParameters;
-% 	end
+    mParametersNew = zeros(nEpsilon,nMeasure+1);
+
 	for iEpsilon = 1 : nEpsilon
 		% objectiveFunction = @(vParametersTilde) parametersResidual(vParametersTilde,reshape(aGridMoments(iEpsilon,:,:),nAssetsQuadrature,nMeasure),vQuadratureWeights,nMeasure);
 		% [vParameters,normalization] = fminunc(objectiveFunction,zeros(nMeasure,1),options);		
 		vParameters = mParameters(iEpsilon,2:end)';
 		mGridMoments = reshape(aGridMoments(iEpsilon,:,:),nAssetsQuadrature,nMeasure);
-		DD = vQuadratureWeights' * (exp(mGridMoments * vParameters).*mGridMoments);
+        dens_nonnormaliz = exp(mGridMoments * vParameters);
+		DD = vQuadratureWeights' * (dens_nonnormaliz.*mGridMoments);
 		HH = zeros(nMeasure);
 		for iH = 1:nAssetsQuadrature
-			HH = HH+vQuadratureWeights(iH)*exp(mGridMoments(iH,:) * vParameters)*mGridMoments(iH,:)'*mGridMoments(iH,:);
+			HH = HH+vQuadratureWeights(iH)*dens_nonnormaliz(iH,:)*mGridMoments(iH,:)'*mGridMoments(iH,:);
 		end
 		vParameters = vParameters-HH\DD';
-		normalization = vQuadratureWeights' * exp(mGridMoments * vParameters);
-		mParameters(iEpsilon,:) = [1 / normalization; vParameters];
+		normalization = vQuadratureWeights' * dens_nonnormaliz;
+		mParametersNew(iEpsilon,:) = [1 / normalization; vParameters];
 	end
 % 	if mod(iteration,100) == 99
 % 		disp(['Parameter convergence (iter' num2str(iteration) '-iter' num2str(iteration-99) '): ' num2str(sum((mParameters(:)-mParameters0(:)).^2))])
@@ -234,8 +233,8 @@ while err > err2 && iteration <= tol2
 		for iEpsilonTilde = 1 : nEpsilon
 		
 			mMomentsNew(iEpsilon,1) = mMomentsNew(iEpsilon,1) + (1 - mHat(iEpsilonTilde,1)) * vEpsilonInvariant(iEpsilonTilde) * mEpsilonTransition(...
-				iEpsilonTilde,iEpsilon) * mParameters(iEpsilonTilde,1) * vQuadratureWeights' * (mAssetsPrimeQuadrature(iEpsilonTilde,:)' .* ...
-				exp(reshape(aGridMoments(iEpsilonTilde,:,:),nAssetsQuadrature,nMeasure) * mParameters(iEpsilonTilde,2:nMeasure+1)')) + mHat(iEpsilonTilde,1) * ...
+				iEpsilonTilde,iEpsilon) * mParametersNew(iEpsilonTilde,1) * vQuadratureWeights' * (mAssetsPrimeQuadrature(iEpsilonTilde,:)' .* ...
+				exp(reshape(aGridMoments(iEpsilonTilde,:,:),nAssetsQuadrature,nMeasure) * mParametersNew(iEpsilonTilde,2:nMeasure+1)')) + mHat(iEpsilonTilde,1) * ...
 				vEpsilonInvariant(iEpsilonTilde) * mEpsilonTransition(iEpsilonTilde,iEpsilon) * mAssetsPrimeBC(iEpsilonTilde,1);	
 				
 		end
@@ -251,9 +250,9 @@ while err > err2 && iteration <= tol2
 			for iEpsilonTilde = 1 : nEpsilon
 			
 				mMomentsNew(iEpsilon,iMoment) = mMomentsNew(iEpsilon,iMoment) + (1 - mHat(iEpsilonTilde,1)) * vEpsilonInvariant(iEpsilonTilde) * mEpsilonTransition(...
-					iEpsilonTilde,iEpsilon) * mParameters(iEpsilonTilde,1) * vQuadratureWeights' * (((mAssetsPrimeQuadrature(iEpsilonTilde,:)' - ...
+					iEpsilonTilde,iEpsilon) * mParametersNew(iEpsilonTilde,1) * vQuadratureWeights' * (((mAssetsPrimeQuadrature(iEpsilonTilde,:)' - ...
 					mMomentsNew(iEpsilon,1)) .^ iMoment) .* exp(reshape(aGridMoments(iEpsilonTilde,:,:),nAssetsQuadrature,nMeasure) * ...
-					mParameters(iEpsilonTilde,2:nMeasure+1)')) + mHat(iEpsilonTilde,1) * vEpsilonInvariant(iEpsilonTilde) * ...
+					mParametersNew(iEpsilonTilde,2:nMeasure+1)')) + mHat(iEpsilonTilde,1) * vEpsilonInvariant(iEpsilonTilde) * ...
 					mEpsilonTransition(iEpsilonTilde,iEpsilon) * ((mAssetsPrimeBC(iEpsilonTilde,1) - mMomentsNew(iEpsilon,1)) .^ iMoment);
 					
 			end
@@ -272,13 +271,13 @@ while err > err2 && iteration <= tol2
 	
 	mHatNew = zeros(nEpsilon,1);
 	
-	for iEpsilon = 1 : nEpsilon;
+	for iEpsilon = 1 : nEpsilon
 	
 		for iEpsilonTilde = 1 : nEpsilon
 		
 			mHatNew(iEpsilon,1) = mHatNew(iEpsilon,1) + (1 - mHat(iEpsilonTilde,1)) * vEpsilonInvariant(iEpsilonTilde) * ...
-				mEpsilonTransition(iEpsilonTilde,iEpsilon) * mParameters(iEpsilonTilde,1) * vQuadratureWeights' * ...
-				((mAssetsPrimeQuadrature(iEpsilonTilde,:)' <= aaBar + 1e-8) .* exp(reshape(aGridMoments(iEpsilonTilde,:,:),nAssetsQuadrature,nMeasure) * mParameters(iEpsilonTilde,2:nMeasure+1)')) + ...
+				mEpsilonTransition(iEpsilonTilde,iEpsilon) * mParametersNew(iEpsilonTilde,1) * vQuadratureWeights' * ...
+				((mAssetsPrimeQuadrature(iEpsilonTilde,:)' <= aaBar + 1e-8) .* exp(reshape(aGridMoments(iEpsilonTilde,:,:),nAssetsQuadrature,nMeasure) * mParametersNew(iEpsilonTilde,2:nMeasure+1)')) + ...
 				mHat(iEpsilonTilde,1) * vEpsilonInvariant(iEpsilonTilde) * mEpsilonTransition(iEpsilonTilde,iEpsilon) * ...
 				(mAssetsPrimeBC(iEpsilonTilde,1) <= aaBar + 1e-8);
 				
@@ -292,13 +291,16 @@ while err > err2 && iteration <= tol2
 	% Update iteration
 	%%%
 	
-	err = max([max(abs(mMomentsNew(:) - mMoments(:))),max(abs(mHatNew(:) - mHat(:)))]);
+	err = max([max(abs(mMomentsNew(:) - mMoments(:))),max(abs(mHatNew(:) - mHat(:))),max(abs(mParametersNew(:) - mParameters(:)))]);
 	iteration = iteration + 1;
 	mMoments = mMomentsNew;
 	aGridMoments = aGridMomentsNew;
 	mHat = mHatNew;
+    mParameters = mParametersNew;
 	
 end
+
+disp(iteration);
 
 %----------------------------------------------------------------
 % Return market clearing residual

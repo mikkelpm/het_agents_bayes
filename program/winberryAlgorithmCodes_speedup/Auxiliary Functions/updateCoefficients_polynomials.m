@@ -85,7 +85,8 @@ mAssetsPrimePrimeStar = w * (mmu * (1 - mEpsilonPrimeGrid) + (1 - ttau) * mEpsil
 	(mConditionalExpectationPrime .^ (-1 / ssigma));
 
 % Compute actual savings
-mAssetsPrimePrimeGrid = max(mAssetsPrimePrimeStar,aaBar*ones(nEpsilon,nEpsilon*nAssets));
+% mAssetsPrimePrimeGrid = max(mAssetsPrimePrimeStar,aaBar*ones(nEpsilon,nEpsilon*nAssets));
+mAssetsPrimePrimeGrid = max(mAssetsPrimePrimeStar,aaBar);
 
 %---------------------------------------------------------------
 % Update conditional expectation function
@@ -106,7 +107,8 @@ end
 % Update the coefficients
 mCoefficientsNew = zeros(nEpsilon,nAssets);
 for iEpsilon = 1:nEpsilon
-	vCoefficients = sum(vAssetsPoly' .* (ones(nAssets,1) * log(mConditionalExpectation(iEpsilon,:))),2);
+% 	vCoefficients = sum(vAssetsPoly' .* (ones(nAssets,1) * log(mConditionalExpectation(iEpsilon,:))),2);
+    vCoefficients = vAssetsPoly' * log(mConditionalExpectation(iEpsilon,:))';
 	mCoefficientsNew(iEpsilon,:) = (vCoefficients ./ vAssetsPolySquared)';
 end
 

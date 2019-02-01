@@ -12,4 +12,5 @@ function z = scaleDown(x,xmin,xmax)
 % 
 % Thomas Winberry, January 19, 2016
 
-z = min(max(2 * ((x - xmin) / (xmax - xmin)) - 1,-1 * ones(size(x))),ones(size(x)));
+% z = min(max(2 * ((x - xmin) / (xmax - xmin)) - 1,-1 * ones(size(x))),ones(size(x)));
+z = min(max(2 * ((x - xmin) / (xmax - xmin)) - 1,-1),1);

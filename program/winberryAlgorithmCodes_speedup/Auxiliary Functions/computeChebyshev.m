@@ -13,7 +13,7 @@ function mPoly = computeChebyshev(nPower,vGrid);
 % Thomas Winberry, January 19, 2016
 
 % Compute grid size
-[nGrid,~] = size(vGrid);
+nGrid = size(vGrid,1);
 
 % Create polynomial
 mPoly = ones(nGrid,nPower);
