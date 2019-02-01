@@ -26,6 +26,7 @@ r = aalpha * (capital ^ (aalpha - 1)) * (aggEmployment ^ (1 - aalpha)) - ddelta;
 w = (capital ^ aalpha) * (1 - aalpha) * (aggEmployment ^ (-aalpha));
 var_struc.r = r;
 var_struc.w = w;
+var_struc.names = [var_struc.names,{'w','r'}];
 
 %----------------------------------------------------------------
 % Compute individual decisions
