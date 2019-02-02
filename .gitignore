@@ -6,6 +6,25 @@
 !*.m
 !*.mod
 !*.gitignore
+!program/winberryAlgorithmCodes_speedup/Auxiliary Functions/codegen/lib/*
+!program/winberryAlgorithmCodes_speedup/Auxiliary Functions/codegen/mex/*
+!program/winberryAlgorithmCodes_speedup/Auxiliary Functions/codegen/lib/updateCoefficients_polynomials/*
+!program/winberryAlgorithmCodes_speedup/Auxiliary Functions/codegen/lib/updateCoefficients_polynomials/examples/*
+!program/winberryAlgorithmCodes_speedup/Auxiliary Functions/codegen/lib/updateCoefficients_polynomials/html/*
+!program/winberryAlgorithmCodes_speedup/Auxiliary Functions/codegen/lib/updateCoefficients_polynomials/interface/*
+!program/winberryAlgorithmCodes_speedup/Auxiliary Functions/codegen/lib/updateCoefficients_polynomials/html/resources/*
+!program/winberryAlgorithmCodes_speedup/Auxiliary Functions/codegen/lib/updateCoefficients_polynomials/html/resources/css/*
+!program/winberryAlgorithmCodes_speedup/Auxiliary Functions/codegen/lib/updateCoefficients_polynomials/html/resources/jQuery/*
+!program/winberryAlgorithmCodes_speedup/Auxiliary Functions/codegen/lib/updateCoefficients_polynomials/html/resources/js/*
+!program/winberryAlgorithmCodes_speedup/Auxiliary Functions/codegen/mex/updateCoefficients_polynomials/*
+!program/winberryAlgorithmCodes_speedup/Auxiliary Functions/codegen/mex/updateCoefficients_polynomials/html/*
+!program/winberryAlgorithmCodes_speedup/Auxiliary Functions/codegen/mex/updateCoefficients_polynomials/interface/*
+!program/winberryAlgorithmCodes_speedup/Auxiliary Functions/codegen/mex/updateCoefficients_polynomials/html/resources/*
+!program/winberryAlgorithmCodes_speedup/Auxiliary Functions/codegen/mex/updateCoefficients_polynomials/html/resources/css/*
+!program/winberryAlgorithmCodes_speedup/Auxiliary Functions/codegen/mex/updateCoefficients_polynomials/html/resources/jQuery/*
+!program/winberryAlgorithmCodes_speedup/Auxiliary Functions/codegen/mex/updateCoefficients_polynomials/html/resources/js/*
+
+!*.mexw64
 program/winberry_test/auxiliary_functions/dynare/firstOrderDynamics_polynomials*.*
 !program/winberry_test/auxiliary_functions/dynare/firstOrderDynamics_polynomials.mod
 !program/winberry_test/auxiliary_functions/dynare/firstOrderDynamics_polynomials_steadystate.m

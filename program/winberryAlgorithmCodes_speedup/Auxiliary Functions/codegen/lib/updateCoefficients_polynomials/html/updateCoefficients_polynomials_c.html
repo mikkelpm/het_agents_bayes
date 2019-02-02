@@ -1,0 +1,524 @@
+<!-- saved from url=(0014)about:internet -->
+<html>
+<head>
+<meta http-equiv="content-type" content="text/html; charset=utf-8" />
+<title>RTW Report - updateCoefficients_polynomials.c</title>
+<script language="JavaScript" type="text/javascript" src="rtwreport_utils.js"></script>
+<script src="resources/eml_report_loadable_data.js"></script>
+</head>
+<body bgcolor="#eeeeee" onload="try {if (top) { if (top.rtwFileOnLoad) top.rtwFileOnLoad(window.document); else local_onload();}} catch(err) {};">
+<p>
+<table border="0" cellspacing="0" cellpadding="6" width="100%%" height="100%%"><tr><td width="100%%" valign="top" bgcolor="#ffffff">
+<h4>File: <a href="../updateCoefficients_polynomials.c" target="rtwreport_document_frame" id="linkToText_plain">updateCoefficients_polynomials.c</a></h4>
+<pre id="RTWcode">
+<a name="1"><font color="#888888 "><i>    1   </i></font></a><font color="#117755"><i>/*</i></font>
+<a name="2"><font color="#888888 "><i>    2   </i></font></a><font color="#117755"><I> * Academic License - for use in teaching, academic research, and meeting</i></font>
+<a name="3"><font color="#888888 "><i>    3   </i></font></a><font color="#117755"><I> * course requirements at degree granting institutions only.  Not for</i></font>
+<a name="4"><font color="#888888 "><i>    4   </i></font></a><font color="#117755"><I> * government, commercial, or other organizational use.</i></font>
+<a name="5"><font color="#888888 "><i>    5   </i></font></a><font color="#117755"><I> *</i></font>
+<a name="6"><font color="#888888 "><i>    6   </i></font></a><font color="#117755"><I> * updateCoefficients_polynomials.c</i></font>
+<a name="7"><font color="#888888 "><i>    7   </i></font></a><font color="#117755"><I> *</i></font>
+<a name="8"><font color="#888888 "><i>    8   </i></font></a><font color="#117755"><I> * Code generation for function 'updateCoefficients_polynomials'</i></font>
+<a name="9"><font color="#888888 "><i>    9   </i></font></a><font color="#117755"><I> *</i></font>
+<a name="10"><font color="#888888 "><i>   10   </i></font></a><font color="#117755"><I> */</i></font>
+<a name="11"><font color="#888888 "><i>   11   </i></font></a>
+<a name="12"><font color="#888888 "><i>   12   </i></font></a><font color="#117755"><i>/* Include files */</i></font>
+<a name="13"><font color="#888888 "><i>   13   </i></font></a><font color="#992211">#</font><font color="#992211"><b>include</b></font> <font color="#992211">&quot;rt_nonfinite.h&quot;</font>
+<a name="14"><font color="#888888 "><i>   14   </i></font></a><font color="#992211">#</font><font color="#992211"><b>include</b></font> <font color="#992211">&quot;updateCoefficients_polynomials.h&quot;</font>
+<a name="15"><font color="#888888 "><i>   15   </i></font></a><font color="#992211">#</font><font color="#992211"><b>include</b></font> <font color="#992211">&quot;updateCoefficients_polynomials_emxutil.h&quot;</font>
+<a name="16"><font color="#888888 "><i>   16   </i></font></a><font color="#992211">#</font><font color="#992211"><b>include</b></font> <font color="#992211">&quot;repmat.h&quot;</font>
+<a name="17"><font color="#888888 "><i>   17   </i></font></a><font color="#992211">#</font><font color="#992211"><b>include</b></font> <font color="#992211">&quot;power.h&quot;</font>
+<a name="18"><font color="#888888 "><i>   18   </i></font></a><font color="#992211">#</font><font color="#992211"><b>include</b></font> <font color="#992211">&quot;exp.h&quot;</font>
+<a name="19"><font color="#888888 "><i>   19   </i></font></a><font color="#992211">#</font><font color="#992211"><b>include</b></font> <font color="#992211">&quot;updateCoefficients_polynomials_rtwutil.h&quot;</font>
+<a name="20"><font color="#888888 "><i>   20   </i></font></a>
+<a name="21"><font color="#888888 "><i>   21   </i></font></a><font color="#117755"><i>/* Function Definitions */</i></font>
+<a name="22"><font color="#888888 "><i>   22   </i></font></a><font color="#112266"><b>void</b></font> <a name="fcn_updateCoefficients_polynomials">updateCoefficients_polynomials</a>(<font color="#112266"><b>const</b></font> <font color="#112266"><b>double</b></font> mCoefficients[50], <font color="#112266"><b>double</b></font> bbeta,
+<a name="23"><font color="#888888 "><i>   23   </i></font></a>  <font color="#112266"><b>double</b></font> ssigma, <font color="#112266"><b>double</b></font> aaBar, <font color="#112266"><b>double</b></font> mmu, <font color="#112266"><b>double</b></font> ttau, <font color="#112266"><b>const</b></font> <font color="#112266"><b>double</b></font>
+<a name="24"><font color="#888888 "><i>   24   </i></font></a>  mEpsilonTransition[4], <font color="#112266"><b>double</b></font> nEpsilon, <font color="#112266"><b>double</b></font> nAssets, <font color="#112266"><b>double</b></font> nState, <font color="#112266"><b>double</b></font>
+<a name="25"><font color="#888888 "><i>   25   </i></font></a>  assetsMin, <font color="#112266"><b>double</b></font> assetsMax, <font color="#112266"><b>const</b></font> <font color="#112266"><b>double</b></font> mEpsilonGrid[50], <font color="#112266"><b>const</b></font> <font color="#112266"><b>double</b></font>
+<a name="26"><font color="#888888 "><i>   26   </i></font></a>  mAssetsGrid[50], <font color="#112266"><b>const</b></font> <font color="#112266"><b>double</b></font> vAssetsPoly[625], <font color="#112266"><b>const</b></font> <font color="#112266"><b>double</b></font>
+<a name="27"><font color="#888888 "><i>   27   </i></font></a>  vAssetsPolySquared[25], <font color="#112266"><b>const</b></font> <font color="#112266"><b>double</b></font> mEpsilonPrimeGrid[100], <font color="#112266"><b>double</b></font> r, <font color="#112266"><b>double</b></font>
+<a name="28"><font color="#888888 "><i>   28   </i></font></a>  w, <a href="updateCoefficients_polynomials_types_h.html#type_emxArray_real_T" onclick="if (top) if (top.docHiliteMe) top.docHiliteMe(window, 'type_emxArray_real_T');" target="_self"><font color="#1122aa">emxArray_real_T</font></a> *mCoefficientsNew)
+<a name="29"><font color="#888888 "><i>   29   </i></font></a><b>{</b>
+<a name="30"><font color="#888888 "><i>   30   </i></font></a>  <font color="#112266"><b>int</b></font> ia;
+<a name="31"><font color="#888888 "><i>   31   </i></font></a>  <font color="#112266"><b>double</b></font> mAssetsPrime[50];
+<a name="32"><font color="#888888 "><i>   32   </i></font></a>  <font color="#112266"><b>int</b></font> ar;
+<a name="33"><font color="#888888 "><i>   33   </i></font></a>  <font color="#112266"><b>double</b></font> mAssetsPrimeStar[50];
+<a name="34"><font color="#888888 "><i>   34   </i></font></a>  <font color="#112266"><b>int</b></font> k;
+<a name="35"><font color="#888888 "><i>   35   </i></font></a>  <font color="#112266"><b>int</b></font> nx;
+<a name="36"><font color="#888888 "><i>   36   </i></font></a>  <a href="updateCoefficients_polynomials_types_h.html#type_emxArray_real_T" onclick="if (top) if (top.docHiliteMe) top.docHiliteMe(window, 'type_emxArray_real_T');" target="_self"><font color="#1122aa">emxArray_real_T</font></a> *mAssetsPrimeGrid;
+<a name="37"><font color="#888888 "><i>   37   </i></font></a>  <font color="#112266"><b>double</b></font> b_mAssetsPrimeStar;
+<a name="38"><font color="#888888 "><i>   38   </i></font></a>  <font color="#112266"><b>double</b></font> b_nEpsilon[2];
+<a name="39"><font color="#888888 "><i>   39   </i></font></a>  <font color="#112266"><b>int</b></font> iv0[2];
+<a name="40"><font color="#888888 "><i>   40   </i></font></a>  <font color="#112266"><b>double</b></font> b_mAssetsPrime;
+<a name="41"><font color="#888888 "><i>   41   </i></font></a>  <a href="updateCoefficients_polynomials_types_h.html#type_emxArray_real_T" onclick="if (top) if (top.docHiliteMe) top.docHiliteMe(window, 'type_emxArray_real_T');" target="_self"><font color="#1122aa">emxArray_real_T</font></a> *mPolyAssetsPrime;
+<a name="42"><font color="#888888 "><i>   42   </i></font></a>  <font color="#112266"><b>int</b></font> loop_ub;
+<a name="43"><font color="#888888 "><i>   43   </i></font></a>  <a href="updateCoefficients_polynomials_types_h.html#type_emxArray_int32_T" onclick="if (top) if (top.docHiliteMe) top.docHiliteMe(window, 'type_emxArray_int32_T');" target="_self"><font color="#1122aa">emxArray_int32_T</font></a> *r0;
+<a name="44"><font color="#888888 "><i>   44   </i></font></a>  <a href="updateCoefficients_polynomials_types_h.html#type_emxArray_real_T" onclick="if (top) if (top.docHiliteMe) top.docHiliteMe(window, 'type_emxArray_real_T');" target="_self"><font color="#1122aa">emxArray_real_T</font></a> *b_mPolyAssetsPrime;
+<a name="45"><font color="#888888 "><i>   45   </i></font></a>  <a href="updateCoefficients_polynomials_types_h.html#type_emxArray_real_T" onclick="if (top) if (top.docHiliteMe) top.docHiliteMe(window, 'type_emxArray_real_T');" target="_self"><font color="#1122aa">emxArray_real_T</font></a> *c_mPolyAssetsPrime;
+<a name="46"><font color="#888888 "><i>   46   </i></font></a>  <a href="updateCoefficients_polynomials_types_h.html#type_emxArray_real_T" onclick="if (top) if (top.docHiliteMe) top.docHiliteMe(window, 'type_emxArray_real_T');" target="_self"><font color="#1122aa">emxArray_real_T</font></a> *mConditionalExpectationPrime;
+<a name="47"><font color="#888888 "><i>   47   </i></font></a>  <a href="updateCoefficients_polynomials_types_h.html#type_emxArray_real_T" onclick="if (top) if (top.docHiliteMe) top.docHiliteMe(window, 'type_emxArray_real_T');" target="_self"><font color="#1122aa">emxArray_real_T</font></a> *b;
+<a name="48"><font color="#888888 "><i>   48   </i></font></a>  <font color="#112266"><b>unsigned</b></font> <font color="#112266"><b>int</b></font> unnamed_idx_1;
+<a name="49"><font color="#888888 "><i>   49   </i></font></a>  <a href="updateCoefficients_polynomials_types_h.html#type_emxArray_real_T" onclick="if (top) if (top.docHiliteMe) top.docHiliteMe(window, 'type_emxArray_real_T');" target="_self"><font color="#1122aa">emxArray_real_T</font></a> *z1;
+<a name="50"><font color="#888888 "><i>   50   </i></font></a>  <font color="#112266"><b>int</b></font> br;
+<a name="51"><font color="#888888 "><i>   51   </i></font></a>  <font color="#112266"><b>int</b></font> ic;
+<a name="52"><font color="#888888 "><i>   52   </i></font></a>  <font color="#112266"><b>double</b></font> mAssetsPrimePrimeStar[100];
+<a name="53"><font color="#888888 "><i>   53   </i></font></a>  <font color="#112266"><b>double</b></font> mAssetsPrimePrimeGrid[100];
+<a name="54"><font color="#888888 "><i>   54   </i></font></a>  <font color="#112266"><b>double</b></font> b_z1[100];
+<a name="55"><font color="#888888 "><i>   55   </i></font></a>  <a href="updateCoefficients_polynomials_types_h.html#type_emxArray_real_T" onclick="if (top) if (top.docHiliteMe) top.docHiliteMe(window, 'type_emxArray_real_T');" target="_self"><font color="#1122aa">emxArray_real_T</font></a> *aConditionalExpectationTilde;
+<a name="56"><font color="#888888 "><i>   56   </i></font></a>  <a href="updateCoefficients_polynomials_types_h.html#type_emxArray_real_T" onclick="if (top) if (top.docHiliteMe) top.docHiliteMe(window, 'type_emxArray_real_T');" target="_self"><font color="#1122aa">emxArray_real_T</font></a> *x;
+<a name="57"><font color="#888888 "><i>   57   </i></font></a>  <a href="updateCoefficients_polynomials_types_h.html#type_emxArray_real_T" onclick="if (top) if (top.docHiliteMe) top.docHiliteMe(window, 'type_emxArray_real_T');" target="_self"><font color="#1122aa">emxArray_real_T</font></a> *b_b;
+<a name="58"><font color="#888888 "><i>   58   </i></font></a>  <font color="#112266"><b>double</b></font> a[625];
+<a name="59"><font color="#888888 "><i>   59   </i></font></a>  <font color="#112266"><b>double</b></font> vCoefficients[25];
+<a name="60"><font color="#888888 "><i>   60   </i></font></a>  <font color="#112266"><b>double</b></font> b_vCoefficients[25];
+<a name="61"><font color="#888888 "><i>   61   </i></font></a>
+<a name="62"><font color="#888888 "><i>   62   </i></font></a>  <font color="#117755"><i>/*  Updates polynomial coefficients approximating the conditional expectation function in steady state */</i></font>
+<a name="63"><font color="#888888 "><i>   63   </i></font></a>  <font color="#117755"><i>/*   */</i></font>
+<a name="64"><font color="#888888 "><i>   64   </i></font></a>  <font color="#117755"><i>/*  Inputs */</i></font>
+<a name="65"><font color="#888888 "><i>   65   </i></font></a>  <font color="#117755"><i>/*    (1) mCoefficients: nEpsilon x nAssets matrix, storing previous iteration's coefficients */</i></font>
+<a name="66"><font color="#888888 "><i>   66   </i></font></a>  <font color="#117755"><i>/*  */</i></font>
+<a name="67"><font color="#888888 "><i>   67   </i></font></a>  <font color="#117755"><i>/*  Outputs */</i></font>
+<a name="68"><font color="#888888 "><i>   68   </i></font></a>  <font color="#117755"><i>/*    (1) mCoefficientsNew: nEpsilon x nAssets matrix, storing updated coefficients */</i></font>
+<a name="69"><font color="#888888 "><i>   69   </i></font></a>  <font color="#117755"><i>/*   */</i></font>
+<a name="70"><font color="#888888 "><i>   70   </i></font></a>  <font color="#117755"><i>/*  Thomas Winberry, January 19, 2016 */</i></font>
+<a name="71"><font color="#888888 "><i>   71   </i></font></a>  <font color="#117755"><i>/*  Declare global variables */</i></font>
+<a name="72"><font color="#888888 "><i>   72   </i></font></a>  <font color="#117755"><i>/* --------------------------------------------------------------- */</i></font>
+<a name="73"><font color="#888888 "><i>   73   </i></font></a>  <font color="#117755"><i>/*  Compute current period's savings policy function */</i></font>
+<a name="74"><font color="#888888 "><i>   74   </i></font></a>  <font color="#117755"><i>/* --------------------------------------------------------------- */</i></font>
+<a name="75"><font color="#888888 "><i>   75   </i></font></a>  <font color="#117755"><i>/*  Compute conditional expectation */</i></font>
+<a name="76"><font color="#888888 "><i>   76   </i></font></a>  <font color="#117755"><i>/*  Compute target saving */</i></font>
+<a name="77"><font color="#888888 "><i>   77   </i></font></a>  <font color="#112266"><b>for</b></font> (ia = 0; ia &lt; 2; ia++) <b>{</b>
+<a name="78"><font color="#888888 "><i>   78   </i></font></a>    <font color="#112266"><b>for</b></font> (ar = 0; ar &lt; 25; ar++) <b>{</b>
+<a name="79"><font color="#888888 "><i>   79   </i></font></a>      mAssetsPrime[ia + (ar &lt;&lt; 1)] = 0.0;
+<a name="80"><font color="#888888 "><i>   80   </i></font></a>      <font color="#112266"><b>for</b></font> (nx = 0; nx &lt; 25; nx++) <b>{</b>
+<a name="81"><font color="#888888 "><i>   81   </i></font></a>        mAssetsPrime[ia + (ar &lt;&lt; 1)] += mCoefficients[ia + (nx &lt;&lt; 1)] *
+<a name="82"><font color="#888888 "><i>   82   </i></font></a>          vAssetsPoly[ar + 25 * nx];
+<a name="83"><font color="#888888 "><i>   83   </i></font></a>      <b>}</b>
+<a name="84"><font color="#888888 "><i>   84   </i></font></a>    <b>}</b>
+<a name="85"><font color="#888888 "><i>   85   </i></font></a>  <b>}</b>
+<a name="86"><font color="#888888 "><i>   86   </i></font></a>
+<a name="87"><font color="#888888 "><i>   87   </i></font></a>  <a href="exp_c.html#fcn_b_exp" onclick="if (top) if (top.docHiliteMe) top.docHiliteMe(window, 'fcn_b_exp');" target="_self"><font color="#1122aa">b_exp</font></a>(mAssetsPrime);
+<a name="88"><font color="#888888 "><i>   88   </i></font></a>  <a href="power_c.html#fcn_power" onclick="if (top) if (top.docHiliteMe) top.docHiliteMe(window, 'fcn_power');" target="_self"><font color="#1122aa">power</font></a>(mAssetsPrime, -1.0 / ssigma, mAssetsPrimeStar);
+<a name="89"><font color="#888888 "><i>   89   </i></font></a>
+<a name="90"><font color="#888888 "><i>   90   </i></font></a>  <font color="#117755"><i>/*  Compute actual saving */</i></font>
+<a name="91"><font color="#888888 "><i>   91   </i></font></a>  <font color="#112266"><b>for</b></font> (k = 0; k &lt; 50; k++) <b>{</b>
+<a name="92"><font color="#888888 "><i>   92   </i></font></a>    b_mAssetsPrimeStar = (w * (mmu * (1.0 - mEpsilonGrid[k]) + (1.0 - ttau) *
+<a name="93"><font color="#888888 "><i>   93   </i></font></a>      mEpsilonGrid[k]) + (1.0 + r) * mAssetsGrid[k]) - mAssetsPrimeStar[k];
+<a name="94"><font color="#888888 "><i>   94   </i></font></a>    <font color="#112266"><b>if</b></font> ((b_mAssetsPrimeStar &gt; aaBar) || <a href="rt_nonfinite_c.html#fcn_rtIsNaN" onclick="if (top) if (top.docHiliteMe) top.docHiliteMe(window, 'fcn_rtIsNaN');" target="_self"><font color="#1122aa">rtIsNaN</font></a>(aaBar)) <b>{</b>
+<a name="95"><font color="#888888 "><i>   95   </i></font></a>      mAssetsPrime[k] = b_mAssetsPrimeStar;
+<a name="96"><font color="#888888 "><i>   96   </i></font></a>    <b>}</b> <font color="#112266"><b>else</b></font> <b>{</b>
+<a name="97"><font color="#888888 "><i>   97   </i></font></a>      mAssetsPrime[k] = aaBar;
+<a name="98"><font color="#888888 "><i>   98   </i></font></a>    <b>}</b>
+<a name="99"><font color="#888888 "><i>   99   </i></font></a>  <b>}</b>
+<a name="100"><font color="#888888 "><i>  100   </i></font></a>
+<a name="101"><font color="#888888 "><i>  101   </i></font></a>  <a href="updateCoefficients_polynomials_emxutil_c.html#fcn_emxInit_real_T" onclick="if (top) if (top.docHiliteMe) top.docHiliteMe(window, 'fcn_emxInit_real_T');" target="_self"><font color="#1122aa">emxInit_real_T</font></a>(&amp;mAssetsPrimeGrid, 2);
+<a name="102"><font color="#888888 "><i>  102   </i></font></a>  b_nEpsilon[0] = nEpsilon;
+<a name="103"><font color="#888888 "><i>  103   </i></font></a>  b_nEpsilon[1] = 1.0;
+<a name="104"><font color="#888888 "><i>  104   </i></font></a>  iv0[0] = 1;
+<a name="105"><font color="#888888 "><i>  105   </i></font></a>  iv0[1] = (<font color="#112266"><b>int</b></font>)nState;
+<a name="106"><font color="#888888 "><i>  106   </i></font></a>  <a href="repmat_c.html#fcn_repmat" onclick="if (top) if (top.docHiliteMe) top.docHiliteMe(window, 'fcn_repmat');" target="_self"><font color="#1122aa">repmat</font></a>(mAssetsPrime, iv0, b_nEpsilon, mAssetsPrimeGrid);
+<a name="107"><font color="#888888 "><i>  107   </i></font></a>
+<a name="108"><font color="#888888 "><i>  108   </i></font></a>  <font color="#117755"><i>/*  Compute next period's polynomials */</i></font>
+<a name="109"><font color="#888888 "><i>  109   </i></font></a>  b_mAssetsPrimeStar = assetsMax - assetsMin;
+<a name="110"><font color="#888888 "><i>  110   </i></font></a>  <font color="#112266"><b>for</b></font> (k = 0; k &lt; 50; k++) <b>{</b>
+<a name="111"><font color="#888888 "><i>  111   </i></font></a>    b_mAssetsPrime = 2.0 * ((mAssetsPrime[k] - assetsMin) / b_mAssetsPrimeStar)
+<a name="112"><font color="#888888 "><i>  112   </i></font></a>      - 1.0;
+<a name="113"><font color="#888888 "><i>  113   </i></font></a>    <font color="#112266"><b>if</b></font> (!(b_mAssetsPrime &gt; -1.0)) <b>{</b>
+<a name="114"><font color="#888888 "><i>  114   </i></font></a>      b_mAssetsPrime = -1.0;
+<a name="115"><font color="#888888 "><i>  115   </i></font></a>    <b>}</b>
+<a name="116"><font color="#888888 "><i>  116   </i></font></a>
+<a name="117"><font color="#888888 "><i>  117   </i></font></a>    mAssetsPrimeStar[k] = b_mAssetsPrime;
+<a name="118"><font color="#888888 "><i>  118   </i></font></a>  <b>}</b>
+<a name="119"><font color="#888888 "><i>  119   </i></font></a>
+<a name="120"><font color="#888888 "><i>  120   </i></font></a>  <font color="#112266"><b>for</b></font> (k = 0; k &lt; 50; k++) <b>{</b>
+<a name="121"><font color="#888888 "><i>  121   </i></font></a>    b_mAssetsPrimeStar = mAssetsPrimeStar[k];
+<a name="122"><font color="#888888 "><i>  122   </i></font></a>    <font color="#112266"><b>if</b></font> (!(b_mAssetsPrimeStar &lt; 1.0)) <b>{</b>
+<a name="123"><font color="#888888 "><i>  123   </i></font></a>      b_mAssetsPrimeStar = 1.0;
+<a name="124"><font color="#888888 "><i>  124   </i></font></a>    <b>}</b>
+<a name="125"><font color="#888888 "><i>  125   </i></font></a>
+<a name="126"><font color="#888888 "><i>  126   </i></font></a>    mAssetsPrime[k] = b_mAssetsPrimeStar;
+<a name="127"><font color="#888888 "><i>  127   </i></font></a>  <b>}</b>
+<a name="128"><font color="#888888 "><i>  128   </i></font></a>
+<a name="129"><font color="#888888 "><i>  129   </i></font></a>  <a href="updateCoefficients_polynomials_emxutil_c.html#fcn_emxInit_real_T" onclick="if (top) if (top.docHiliteMe) top.docHiliteMe(window, 'fcn_emxInit_real_T');" target="_self"><font color="#1122aa">emxInit_real_T</font></a>(&amp;mPolyAssetsPrime, 2);
+<a name="130"><font color="#888888 "><i>  130   </i></font></a>  ia = mPolyAssetsPrime-&gt;size[0] * mPolyAssetsPrime-&gt;size[1];
+<a name="131"><font color="#888888 "><i>  131   </i></font></a>  mPolyAssetsPrime-&gt;size[0] = (<font color="#112266"><b>int</b></font>)nState;
+<a name="132"><font color="#888888 "><i>  132   </i></font></a>  mPolyAssetsPrime-&gt;size[1] = (<font color="#112266"><b>int</b></font>)nAssets;
+<a name="133"><font color="#888888 "><i>  133   </i></font></a>  <a href="updateCoefficients_polynomials_emxutil_c.html#fcn_emxEnsureCapacity_real_T" onclick="if (top) if (top.docHiliteMe) top.docHiliteMe(window, 'fcn_emxEnsureCapacity_real_T');" target="_self"><font color="#1122aa">emxEnsureCapacity_real_T</font></a>(mPolyAssetsPrime, ia);
+<a name="134"><font color="#888888 "><i>  134   </i></font></a>  loop_ub = (<font color="#112266"><b>int</b></font>)nState * (<font color="#112266"><b>int</b></font>)nAssets;
+<a name="135"><font color="#888888 "><i>  135   </i></font></a>  <font color="#112266"><b>for</b></font> (ia = 0; ia &lt; loop_ub; ia++) <b>{</b>
+<a name="136"><font color="#888888 "><i>  136   </i></font></a>    mPolyAssetsPrime-&gt;data[ia] = 1.0;
+<a name="137"><font color="#888888 "><i>  137   </i></font></a>  <b>}</b>
+<a name="138"><font color="#888888 "><i>  138   </i></font></a>
+<a name="139"><font color="#888888 "><i>  139   </i></font></a>  <a href="updateCoefficients_polynomials_emxutil_c.html#fcn_emxInit_int32_T" onclick="if (top) if (top.docHiliteMe) top.docHiliteMe(window, 'fcn_emxInit_int32_T');" target="_self"><font color="#1122aa">emxInit_int32_T</font></a>(&amp;r0, 1);
+<a name="140"><font color="#888888 "><i>  140   </i></font></a>  ia = r0-&gt;size[0];
+<a name="141"><font color="#888888 "><i>  141   </i></font></a>  r0-&gt;size[0] = (<font color="#112266"><b>int</b></font>)nState;
+<a name="142"><font color="#888888 "><i>  142   </i></font></a>  <a href="updateCoefficients_polynomials_emxutil_c.html#fcn_emxEnsureCapacity_int32_T" onclick="if (top) if (top.docHiliteMe) top.docHiliteMe(window, 'fcn_emxEnsureCapacity_int32_T');" target="_self"><font color="#1122aa">emxEnsureCapacity_int32_T</font></a>(r0, ia);
+<a name="143"><font color="#888888 "><i>  143   </i></font></a>  loop_ub = (<font color="#112266"><b>int</b></font>)nState;
+<a name="144"><font color="#888888 "><i>  144   </i></font></a>  <font color="#112266"><b>for</b></font> (ia = 0; ia &lt; loop_ub; ia++) <b>{</b>
+<a name="145"><font color="#888888 "><i>  145   </i></font></a>    r0-&gt;data[ia] = ia;
+<a name="146"><font color="#888888 "><i>  146   </i></font></a>  <b>}</b>
+<a name="147"><font color="#888888 "><i>  147   </i></font></a>
+<a name="148"><font color="#888888 "><i>  148   </i></font></a>  nx = r0-&gt;size[0];
+<a name="149"><font color="#888888 "><i>  149   </i></font></a>  <font color="#112266"><b>for</b></font> (ia = 0; ia &lt; nx; ia++) <b>{</b>
+<a name="150"><font color="#888888 "><i>  150   </i></font></a>    mPolyAssetsPrime-&gt;data[r0-&gt;data[ia] + mPolyAssetsPrime-&gt;size[0]] =
+<a name="151"><font color="#888888 "><i>  151   </i></font></a>      mAssetsPrime[ia];
+<a name="152"><font color="#888888 "><i>  152   </i></font></a>  <b>}</b>
+<a name="153"><font color="#888888 "><i>  153   </i></font></a>
+<a name="154"><font color="#888888 "><i>  154   </i></font></a>  k = 0;
+<a name="155"><font color="#888888 "><i>  155   </i></font></a>  <a href="updateCoefficients_polynomials_emxutil_c.html#fcn_emxInit_real_T2" onclick="if (top) if (top.docHiliteMe) top.docHiliteMe(window, 'fcn_emxInit_real_T2');" target="_self"><font color="#1122aa">emxInit_real_T2</font></a>(&amp;b_mPolyAssetsPrime, 1);
+<a name="156"><font color="#888888 "><i>  156   </i></font></a>  <a href="updateCoefficients_polynomials_emxutil_c.html#fcn_emxInit_real_T2" onclick="if (top) if (top.docHiliteMe) top.docHiliteMe(window, 'fcn_emxInit_real_T2');" target="_self"><font color="#1122aa">emxInit_real_T2</font></a>(&amp;c_mPolyAssetsPrime, 1);
+<a name="157"><font color="#888888 "><i>  157   </i></font></a>  <font color="#112266"><b>while</b></font> (k &lt;= (<font color="#112266"><b>int</b></font>)(nAssets + -2.0) - 1) <b>{</b>
+<a name="158"><font color="#888888 "><i>  158   </i></font></a>    loop_ub = mPolyAssetsPrime-&gt;size[0];
+<a name="159"><font color="#888888 "><i>  159   </i></font></a>    ia = r0-&gt;size[0];
+<a name="160"><font color="#888888 "><i>  160   </i></font></a>    r0-&gt;size[0] = loop_ub;
+<a name="161"><font color="#888888 "><i>  161   </i></font></a>    <a href="updateCoefficients_polynomials_emxutil_c.html#fcn_emxEnsureCapacity_int32_T" onclick="if (top) if (top.docHiliteMe) top.docHiliteMe(window, 'fcn_emxEnsureCapacity_int32_T');" target="_self"><font color="#1122aa">emxEnsureCapacity_int32_T</font></a>(r0, ia);
+<a name="162"><font color="#888888 "><i>  162   </i></font></a>    <font color="#112266"><b>for</b></font> (ia = 0; ia &lt; loop_ub; ia++) <b>{</b>
+<a name="163"><font color="#888888 "><i>  163   </i></font></a>      r0-&gt;data[ia] = ia;
+<a name="164"><font color="#888888 "><i>  164   </i></font></a>    <b>}</b>
+<a name="165"><font color="#888888 "><i>  165   </i></font></a>
+<a name="166"><font color="#888888 "><i>  166   </i></font></a>    nx = mPolyAssetsPrime-&gt;size[0];
+<a name="167"><font color="#888888 "><i>  167   </i></font></a>    ia = b_mPolyAssetsPrime-&gt;size[0];
+<a name="168"><font color="#888888 "><i>  168   </i></font></a>    b_mPolyAssetsPrime-&gt;size[0] = nx;
+<a name="169"><font color="#888888 "><i>  169   </i></font></a>    <a href="updateCoefficients_polynomials_emxutil_c.html#fcn_emxEnsureCapacity_real_T1" onclick="if (top) if (top.docHiliteMe) top.docHiliteMe(window, 'fcn_emxEnsureCapacity_real_T1');" target="_self"><font color="#1122aa">emxEnsureCapacity_real_T1</font></a>(b_mPolyAssetsPrime, ia);
+<a name="170"><font color="#888888 "><i>  170   </i></font></a>    <font color="#112266"><b>for</b></font> (ia = 0; ia &lt; nx; ia++) <b>{</b>
+<a name="171"><font color="#888888 "><i>  171   </i></font></a>      b_mPolyAssetsPrime-&gt;data[ia] = mPolyAssetsPrime-&gt;data[ia +
+<a name="172"><font color="#888888 "><i>  172   </i></font></a>        mPolyAssetsPrime-&gt;size[0] * ((<font color="#112266"><b>int</b></font>)((3.0 + (<font color="#112266"><b>double</b></font>)k) - 1.0) - 1)];
+<a name="173"><font color="#888888 "><i>  173   </i></font></a>    <b>}</b>
+<a name="174"><font color="#888888 "><i>  174   </i></font></a>
+<a name="175"><font color="#888888 "><i>  175   </i></font></a>    nx = mPolyAssetsPrime-&gt;size[0];
+<a name="176"><font color="#888888 "><i>  176   </i></font></a>    ia = c_mPolyAssetsPrime-&gt;size[0];
+<a name="177"><font color="#888888 "><i>  177   </i></font></a>    c_mPolyAssetsPrime-&gt;size[0] = nx;
+<a name="178"><font color="#888888 "><i>  178   </i></font></a>    <a href="updateCoefficients_polynomials_emxutil_c.html#fcn_emxEnsureCapacity_real_T1" onclick="if (top) if (top.docHiliteMe) top.docHiliteMe(window, 'fcn_emxEnsureCapacity_real_T1');" target="_self"><font color="#1122aa">emxEnsureCapacity_real_T1</font></a>(c_mPolyAssetsPrime, ia);
+<a name="179"><font color="#888888 "><i>  179   </i></font></a>    <font color="#112266"><b>for</b></font> (ia = 0; ia &lt; nx; ia++) <b>{</b>
+<a name="180"><font color="#888888 "><i>  180   </i></font></a>      c_mPolyAssetsPrime-&gt;data[ia] = mPolyAssetsPrime-&gt;data[ia +
+<a name="181"><font color="#888888 "><i>  181   </i></font></a>        mPolyAssetsPrime-&gt;size[0] * ((<font color="#112266"><b>int</b></font>)((3.0 + (<font color="#112266"><b>double</b></font>)k) - 2.0) - 1)];
+<a name="182"><font color="#888888 "><i>  182   </i></font></a>    <b>}</b>
+<a name="183"><font color="#888888 "><i>  183   </i></font></a>
+<a name="184"><font color="#888888 "><i>  184   </i></font></a>    <font color="#112266"><b>for</b></font> (ia = 0; ia &lt; 50; ia++) <b>{</b>
+<a name="185"><font color="#888888 "><i>  185   </i></font></a>      mAssetsPrimeStar[ia] = 2.0 * mAssetsPrime[ia] * b_mPolyAssetsPrime-&gt;
+<a name="186"><font color="#888888 "><i>  186   </i></font></a>        data[ia] - c_mPolyAssetsPrime-&gt;data[ia];
+<a name="187"><font color="#888888 "><i>  187   </i></font></a>    <b>}</b>
+<a name="188"><font color="#888888 "><i>  188   </i></font></a>
+<a name="189"><font color="#888888 "><i>  189   </i></font></a>    nx = r0-&gt;size[0];
+<a name="190"><font color="#888888 "><i>  190   </i></font></a>    <font color="#112266"><b>for</b></font> (ia = 0; ia &lt; nx; ia++) <b>{</b>
+<a name="191"><font color="#888888 "><i>  191   </i></font></a>      mPolyAssetsPrime-&gt;data[r0-&gt;data[ia] + mPolyAssetsPrime-&gt;size[0] * (k + 2)]
+<a name="192"><font color="#888888 "><i>  192   </i></font></a>        = mAssetsPrimeStar[ia];
+<a name="193"><font color="#888888 "><i>  193   </i></font></a>    <b>}</b>
+<a name="194"><font color="#888888 "><i>  194   </i></font></a>
+<a name="195"><font color="#888888 "><i>  195   </i></font></a>    k++;
+<a name="196"><font color="#888888 "><i>  196   </i></font></a>  <b>}</b>
+<a name="197"><font color="#888888 "><i>  197   </i></font></a>
+<a name="198"><font color="#888888 "><i>  198   </i></font></a>  <a href="updateCoefficients_polynomials_emxutil_c.html#fcn_emxFree_real_T" onclick="if (top) if (top.docHiliteMe) top.docHiliteMe(window, 'fcn_emxFree_real_T');" target="_self"><font color="#1122aa">emxFree_real_T</font></a>(&amp;c_mPolyAssetsPrime);
+<a name="199"><font color="#888888 "><i>  199   </i></font></a>  <a href="updateCoefficients_polynomials_emxutil_c.html#fcn_emxFree_real_T" onclick="if (top) if (top.docHiliteMe) top.docHiliteMe(window, 'fcn_emxFree_real_T');" target="_self"><font color="#1122aa">emxFree_real_T</font></a>(&amp;b_mPolyAssetsPrime);
+<a name="200"><font color="#888888 "><i>  200   </i></font></a>  <a href="updateCoefficients_polynomials_emxutil_c.html#fcn_emxInit_real_T" onclick="if (top) if (top.docHiliteMe) top.docHiliteMe(window, 'fcn_emxInit_real_T');" target="_self"><font color="#1122aa">emxInit_real_T</font></a>(&amp;mConditionalExpectationPrime, 2);
+<a name="201"><font color="#888888 "><i>  201   </i></font></a>  <a href="updateCoefficients_polynomials_emxutil_c.html#fcn_emxInit_real_T" onclick="if (top) if (top.docHiliteMe) top.docHiliteMe(window, 'fcn_emxInit_real_T');" target="_self"><font color="#1122aa">emxInit_real_T</font></a>(&amp;b, 2);
+<a name="202"><font color="#888888 "><i>  202   </i></font></a>
+<a name="203"><font color="#888888 "><i>  203   </i></font></a>  <font color="#117755"><i>/* --------------------------------------------------------------- */</i></font>
+<a name="204"><font color="#888888 "><i>  204   </i></font></a>  <font color="#117755"><i>/*  Compute next period's savings policy function */</i></font>
+<a name="205"><font color="#888888 "><i>  205   </i></font></a>  <font color="#117755"><i>/* --------------------------------------------------------------- */</i></font>
+<a name="206"><font color="#888888 "><i>  206   </i></font></a>  <font color="#117755"><i>/*  Compute conditional expectation */</i></font>
+<a name="207"><font color="#888888 "><i>  207   </i></font></a>  ia = b-&gt;size[0] * b-&gt;size[1];
+<a name="208"><font color="#888888 "><i>  208   </i></font></a>  b-&gt;size[0] = mPolyAssetsPrime-&gt;size[1];
+<a name="209"><font color="#888888 "><i>  209   </i></font></a>  b-&gt;size[1] = mPolyAssetsPrime-&gt;size[0];
+<a name="210"><font color="#888888 "><i>  210   </i></font></a>  <a href="updateCoefficients_polynomials_emxutil_c.html#fcn_emxEnsureCapacity_real_T" onclick="if (top) if (top.docHiliteMe) top.docHiliteMe(window, 'fcn_emxEnsureCapacity_real_T');" target="_self"><font color="#1122aa">emxEnsureCapacity_real_T</font></a>(b, ia);
+<a name="211"><font color="#888888 "><i>  211   </i></font></a>  loop_ub = mPolyAssetsPrime-&gt;size[0];
+<a name="212"><font color="#888888 "><i>  212   </i></font></a>  <font color="#112266"><b>for</b></font> (ia = 0; ia &lt; loop_ub; ia++) <b>{</b>
+<a name="213"><font color="#888888 "><i>  213   </i></font></a>    k = mPolyAssetsPrime-&gt;size[1];
+<a name="214"><font color="#888888 "><i>  214   </i></font></a>    <font color="#112266"><b>for</b></font> (ar = 0; ar &lt; k; ar++) <b>{</b>
+<a name="215"><font color="#888888 "><i>  215   </i></font></a>      b-&gt;data[ar + b-&gt;size[0] * ia] = mPolyAssetsPrime-&gt;data[ia +
+<a name="216"><font color="#888888 "><i>  216   </i></font></a>        mPolyAssetsPrime-&gt;size[0] * ar];
+<a name="217"><font color="#888888 "><i>  217   </i></font></a>    <b>}</b>
+<a name="218"><font color="#888888 "><i>  218   </i></font></a>  <b>}</b>
+<a name="219"><font color="#888888 "><i>  219   </i></font></a>
+<a name="220"><font color="#888888 "><i>  220   </i></font></a>  <font color="#112266"><b>if</b></font> (b-&gt;size[0] == 1) <b>{</b>
+<a name="221"><font color="#888888 "><i>  221   </i></font></a>    ia = mConditionalExpectationPrime-&gt;size[0] *
+<a name="222"><font color="#888888 "><i>  222   </i></font></a>      mConditionalExpectationPrime-&gt;size[1];
+<a name="223"><font color="#888888 "><i>  223   </i></font></a>    mConditionalExpectationPrime-&gt;size[0] = 2;
+<a name="224"><font color="#888888 "><i>  224   </i></font></a>    mConditionalExpectationPrime-&gt;size[1] = b-&gt;size[1];
+<a name="225"><font color="#888888 "><i>  225   </i></font></a>    <a href="updateCoefficients_polynomials_emxutil_c.html#fcn_emxEnsureCapacity_real_T" onclick="if (top) if (top.docHiliteMe) top.docHiliteMe(window, 'fcn_emxEnsureCapacity_real_T');" target="_self"><font color="#1122aa">emxEnsureCapacity_real_T</font></a>(mConditionalExpectationPrime, ia);
+<a name="226"><font color="#888888 "><i>  226   </i></font></a>    <font color="#112266"><b>for</b></font> (ia = 0; ia &lt; 2; ia++) <b>{</b>
+<a name="227"><font color="#888888 "><i>  227   </i></font></a>      loop_ub = b-&gt;size[1];
+<a name="228"><font color="#888888 "><i>  228   </i></font></a>      <font color="#112266"><b>for</b></font> (ar = 0; ar &lt; loop_ub; ar++) <b>{</b>
+<a name="229"><font color="#888888 "><i>  229   </i></font></a>        mConditionalExpectationPrime-&gt;data[ia +
+<a name="230"><font color="#888888 "><i>  230   </i></font></a>          mConditionalExpectationPrime-&gt;size[0] * ar] = 0.0;
+<a name="231"><font color="#888888 "><i>  231   </i></font></a>        <font color="#112266"><b>for</b></font> (nx = 0; nx &lt; 25; nx++) <b>{</b>
+<a name="232"><font color="#888888 "><i>  232   </i></font></a>          mConditionalExpectationPrime-&gt;data[ia +
+<a name="233"><font color="#888888 "><i>  233   </i></font></a>            mConditionalExpectationPrime-&gt;size[0] * ar] += mCoefficients[ia +
+<a name="234"><font color="#888888 "><i>  234   </i></font></a>            (nx &lt;&lt; 1)] * b-&gt;data[nx + b-&gt;size[0] * ar];
+<a name="235"><font color="#888888 "><i>  235   </i></font></a>        <b>}</b>
+<a name="236"><font color="#888888 "><i>  236   </i></font></a>      <b>}</b>
+<a name="237"><font color="#888888 "><i>  237   </i></font></a>    <b>}</b>
+<a name="238"><font color="#888888 "><i>  238   </i></font></a>  <b>}</b> <font color="#112266"><b>else</b></font> <b>{</b>
+<a name="239"><font color="#888888 "><i>  239   </i></font></a>    unnamed_idx_1 = (<font color="#112266"><b>unsigned</b></font> <font color="#112266"><b>int</b></font>)b-&gt;size[1];
+<a name="240"><font color="#888888 "><i>  240   </i></font></a>    ia = mConditionalExpectationPrime-&gt;size[0] *
+<a name="241"><font color="#888888 "><i>  241   </i></font></a>      mConditionalExpectationPrime-&gt;size[1];
+<a name="242"><font color="#888888 "><i>  242   </i></font></a>    mConditionalExpectationPrime-&gt;size[1] = (<font color="#112266"><b>int</b></font>)unnamed_idx_1;
+<a name="243"><font color="#888888 "><i>  243   </i></font></a>    mConditionalExpectationPrime-&gt;size[0] = 2;
+<a name="244"><font color="#888888 "><i>  244   </i></font></a>    <a href="updateCoefficients_polynomials_emxutil_c.html#fcn_emxEnsureCapacity_real_T" onclick="if (top) if (top.docHiliteMe) top.docHiliteMe(window, 'fcn_emxEnsureCapacity_real_T');" target="_self"><font color="#1122aa">emxEnsureCapacity_real_T</font></a>(mConditionalExpectationPrime, ia);
+<a name="245"><font color="#888888 "><i>  245   </i></font></a>    loop_ub = mConditionalExpectationPrime-&gt;size[1];
+<a name="246"><font color="#888888 "><i>  246   </i></font></a>    <font color="#112266"><b>for</b></font> (ia = 0; ia &lt; loop_ub; ia++) <b>{</b>
+<a name="247"><font color="#888888 "><i>  247   </i></font></a>      <font color="#112266"><b>for</b></font> (ar = 0; ar &lt; 2; ar++) <b>{</b>
+<a name="248"><font color="#888888 "><i>  248   </i></font></a>        mConditionalExpectationPrime-&gt;data[ar +
+<a name="249"><font color="#888888 "><i>  249   </i></font></a>          mConditionalExpectationPrime-&gt;size[0] * ia] = 0.0;
+<a name="250"><font color="#888888 "><i>  250   </i></font></a>      <b>}</b>
+<a name="251"><font color="#888888 "><i>  251   </i></font></a>    <b>}</b>
+<a name="252"><font color="#888888 "><i>  252   </i></font></a>
+<a name="253"><font color="#888888 "><i>  253   </i></font></a>    <font color="#112266"><b>if</b></font> (b-&gt;size[1] != 0) <b>{</b>
+<a name="254"><font color="#888888 "><i>  254   </i></font></a>      nx = (b-&gt;size[1] - 1) &lt;&lt; 1;
+<a name="255"><font color="#888888 "><i>  255   </i></font></a>      <font color="#112266"><b>for</b></font> (k = 0; k &lt;= nx; k += 2) <b>{</b>
+<a name="256"><font color="#888888 "><i>  256   </i></font></a>        <font color="#112266"><b>for</b></font> (ic = k; ic + 1 &lt;= k + 2; ic++) <b>{</b>
+<a name="257"><font color="#888888 "><i>  257   </i></font></a>          mConditionalExpectationPrime-&gt;data[ic] = 0.0;
+<a name="258"><font color="#888888 "><i>  258   </i></font></a>        <b>}</b>
+<a name="259"><font color="#888888 "><i>  259   </i></font></a>      <b>}</b>
+<a name="260"><font color="#888888 "><i>  260   </i></font></a>
+<a name="261"><font color="#888888 "><i>  261   </i></font></a>      br = 0;
+<a name="262"><font color="#888888 "><i>  262   </i></font></a>      <font color="#112266"><b>for</b></font> (k = 0; k &lt;= nx; k += 2) <b>{</b>
+<a name="263"><font color="#888888 "><i>  263   </i></font></a>        ar = 0;
+<a name="264"><font color="#888888 "><i>  264   </i></font></a>        <font color="#112266"><b>for</b></font> (loop_ub = br; loop_ub + 1 &lt;= br + 25; loop_ub++) <b>{</b>
+<a name="265"><font color="#888888 "><i>  265   </i></font></a>          <font color="#112266"><b>if</b></font> (b-&gt;data[loop_ub] != 0.0) <b>{</b>
+<a name="266"><font color="#888888 "><i>  266   </i></font></a>            ia = ar;
+<a name="267"><font color="#888888 "><i>  267   </i></font></a>            <font color="#112266"><b>for</b></font> (ic = k; ic + 1 &lt;= k + 2; ic++) <b>{</b>
+<a name="268"><font color="#888888 "><i>  268   </i></font></a>              ia++;
+<a name="269"><font color="#888888 "><i>  269   </i></font></a>              mConditionalExpectationPrime-&gt;data[ic] += b-&gt;data[loop_ub] *
+<a name="270"><font color="#888888 "><i>  270   </i></font></a>                mCoefficients[ia - 1];
+<a name="271"><font color="#888888 "><i>  271   </i></font></a>            <b>}</b>
+<a name="272"><font color="#888888 "><i>  272   </i></font></a>          <b>}</b>
+<a name="273"><font color="#888888 "><i>  273   </i></font></a>
+<a name="274"><font color="#888888 "><i>  274   </i></font></a>          ar += 2;
+<a name="275"><font color="#888888 "><i>  275   </i></font></a>        <b>}</b>
+<a name="276"><font color="#888888 "><i>  276   </i></font></a>
+<a name="277"><font color="#888888 "><i>  277   </i></font></a>        br += 25;
+<a name="278"><font color="#888888 "><i>  278   </i></font></a>      <b>}</b>
+<a name="279"><font color="#888888 "><i>  279   </i></font></a>    <b>}</b>
+<a name="280"><font color="#888888 "><i>  280   </i></font></a>  <b>}</b>
+<a name="281"><font color="#888888 "><i>  281   </i></font></a>
+<a name="282"><font color="#888888 "><i>  282   </i></font></a>  <a href="updateCoefficients_polynomials_emxutil_c.html#fcn_emxFree_real_T" onclick="if (top) if (top.docHiliteMe) top.docHiliteMe(window, 'fcn_emxFree_real_T');" target="_self"><font color="#1122aa">emxFree_real_T</font></a>(&amp;b);
+<a name="283"><font color="#888888 "><i>  283   </i></font></a>  nx = mConditionalExpectationPrime-&gt;size[1] &lt;&lt; 1;
+<a name="284"><font color="#888888 "><i>  284   </i></font></a>  <font color="#112266"><b>for</b></font> (k = 0; k + 1 &lt;= nx; k++) <b>{</b>
+<a name="285"><font color="#888888 "><i>  285   </i></font></a>    mConditionalExpectationPrime-&gt;data[k] = exp
+<a name="286"><font color="#888888 "><i>  286   </i></font></a>      (mConditionalExpectationPrime-&gt;data[k]);
+<a name="287"><font color="#888888 "><i>  287   </i></font></a>  <b>}</b>
+<a name="288"><font color="#888888 "><i>  288   </i></font></a>
+<a name="289"><font color="#888888 "><i>  289   </i></font></a>  <a href="updateCoefficients_polynomials_emxutil_c.html#fcn_emxInit_real_T" onclick="if (top) if (top.docHiliteMe) top.docHiliteMe(window, 'fcn_emxInit_real_T');" target="_self"><font color="#1122aa">emxInit_real_T</font></a>(&amp;z1, 2);
+<a name="290"><font color="#888888 "><i>  290   </i></font></a>
+<a name="291"><font color="#888888 "><i>  291   </i></font></a>  <font color="#117755"><i>/*  Compute target saving */</i></font>
+<a name="292"><font color="#888888 "><i>  292   </i></font></a>  b_mAssetsPrimeStar = -1.0 / ssigma;
+<a name="293"><font color="#888888 "><i>  293   </i></font></a>  ia = z1-&gt;size[0] * z1-&gt;size[1];
+<a name="294"><font color="#888888 "><i>  294   </i></font></a>  z1-&gt;size[0] = 2;
+<a name="295"><font color="#888888 "><i>  295   </i></font></a>  z1-&gt;size[1] = mConditionalExpectationPrime-&gt;size[1];
+<a name="296"><font color="#888888 "><i>  296   </i></font></a>  <a href="updateCoefficients_polynomials_emxutil_c.html#fcn_emxEnsureCapacity_real_T" onclick="if (top) if (top.docHiliteMe) top.docHiliteMe(window, 'fcn_emxEnsureCapacity_real_T');" target="_self"><font color="#1122aa">emxEnsureCapacity_real_T</font></a>(z1, ia);
+<a name="297"><font color="#888888 "><i>  297   </i></font></a>  unnamed_idx_1 = (<font color="#112266"><b>unsigned</b></font> <font color="#112266"><b>int</b></font>)mConditionalExpectationPrime-&gt;size[1];
+<a name="298"><font color="#888888 "><i>  298   </i></font></a>  nx = (<font color="#112266"><b>int</b></font>)unnamed_idx_1 &lt;&lt; 1;
+<a name="299"><font color="#888888 "><i>  299   </i></font></a>  <font color="#112266"><b>for</b></font> (k = 0; k + 1 &lt;= nx; k++) <b>{</b>
+<a name="300"><font color="#888888 "><i>  300   </i></font></a>    z1-&gt;data[k] = <a href="updateCoefficients_polynomials_rtwutil_c.html#fcn_rt_powd_snf" onclick="if (top) if (top.docHiliteMe) top.docHiliteMe(window, 'fcn_rt_powd_snf');" target="_self"><font color="#1122aa">rt_powd_snf</font></a>(mConditionalExpectationPrime-&gt;data[k],
+<a name="301"><font color="#888888 "><i>  301   </i></font></a>      b_mAssetsPrimeStar);
+<a name="302"><font color="#888888 "><i>  302   </i></font></a>  <b>}</b>
+<a name="303"><font color="#888888 "><i>  303   </i></font></a>
+<a name="304"><font color="#888888 "><i>  304   </i></font></a>  <a href="updateCoefficients_polynomials_emxutil_c.html#fcn_emxFree_real_T" onclick="if (top) if (top.docHiliteMe) top.docHiliteMe(window, 'fcn_emxFree_real_T');" target="_self"><font color="#1122aa">emxFree_real_T</font></a>(&amp;mConditionalExpectationPrime);
+<a name="305"><font color="#888888 "><i>  305   </i></font></a>  <font color="#112266"><b>for</b></font> (ia = 0; ia &lt; 100; ia++) <b>{</b>
+<a name="306"><font color="#888888 "><i>  306   </i></font></a>    mAssetsPrimePrimeStar[ia] = (w * (mmu * (1.0 - mEpsilonPrimeGrid[ia]) + (1.0
+<a name="307"><font color="#888888 "><i>  307   </i></font></a>      - ttau) * mEpsilonPrimeGrid[ia]) + (1.0 + r) * mAssetsPrimeGrid-&gt;data[ia])
+<a name="308"><font color="#888888 "><i>  308   </i></font></a>      - z1-&gt;data[ia];
+<a name="309"><font color="#888888 "><i>  309   </i></font></a>  <b>}</b>
+<a name="310"><font color="#888888 "><i>  310   </i></font></a>
+<a name="311"><font color="#888888 "><i>  311   </i></font></a>  <a href="updateCoefficients_polynomials_emxutil_c.html#fcn_emxFree_real_T" onclick="if (top) if (top.docHiliteMe) top.docHiliteMe(window, 'fcn_emxFree_real_T');" target="_self"><font color="#1122aa">emxFree_real_T</font></a>(&amp;z1);
+<a name="312"><font color="#888888 "><i>  312   </i></font></a>
+<a name="313"><font color="#888888 "><i>  313   </i></font></a>  <font color="#117755"><i>/*  Compute actual savings */</i></font>
+<a name="314"><font color="#888888 "><i>  314   </i></font></a>  <font color="#117755"><i>/*  mAssetsPrimePrimeGrid = max(mAssetsPrimePrimeStar,aaBar*ones(nEpsilon,nEpsilon*nAssets)); */</i></font>
+<a name="315"><font color="#888888 "><i>  315   </i></font></a>  <font color="#112266"><b>for</b></font> (k = 0; k &lt; 100; k++) <b>{</b>
+<a name="316"><font color="#888888 "><i>  316   </i></font></a>    <font color="#112266"><b>if</b></font> ((mAssetsPrimePrimeStar[k] &gt; aaBar) || <a href="rt_nonfinite_c.html#fcn_rtIsNaN" onclick="if (top) if (top.docHiliteMe) top.docHiliteMe(window, 'fcn_rtIsNaN');" target="_self"><font color="#1122aa">rtIsNaN</font></a>(aaBar)) <b>{</b>
+<a name="317"><font color="#888888 "><i>  317   </i></font></a>      mAssetsPrimePrimeGrid[k] = mAssetsPrimePrimeStar[k];
+<a name="318"><font color="#888888 "><i>  318   </i></font></a>    <b>}</b> <font color="#112266"><b>else</b></font> <b>{</b>
+<a name="319"><font color="#888888 "><i>  319   </i></font></a>      mAssetsPrimePrimeGrid[k] = aaBar;
+<a name="320"><font color="#888888 "><i>  320   </i></font></a>    <b>}</b>
+<a name="321"><font color="#888888 "><i>  321   </i></font></a>  <b>}</b>
+<a name="322"><font color="#888888 "><i>  322   </i></font></a>
+<a name="323"><font color="#888888 "><i>  323   </i></font></a>  <font color="#117755"><i>/* --------------------------------------------------------------- */</i></font>
+<a name="324"><font color="#888888 "><i>  324   </i></font></a>  <font color="#117755"><i>/*  Update conditional expectation function */</i></font>
+<a name="325"><font color="#888888 "><i>  325   </i></font></a>  <font color="#117755"><i>/* --------------------------------------------------------------- */</i></font>
+<a name="326"><font color="#888888 "><i>  326   </i></font></a>  <font color="#117755"><i>/*  Compute new conditional expectation function */</i></font>
+<a name="327"><font color="#888888 "><i>  327   </i></font></a>  <font color="#112266"><b>for</b></font> (ia = 0; ia &lt; 100; ia++) <b>{</b>
+<a name="328"><font color="#888888 "><i>  328   </i></font></a>    b_mAssetsPrimeStar = (w * (mmu * (1.0 - mEpsilonPrimeGrid[ia]) + (1.0 - ttau)
+<a name="329"><font color="#888888 "><i>  329   </i></font></a>      * mEpsilonPrimeGrid[ia]) + (1.0 + r) * mAssetsPrimeGrid-&gt;data[ia]) -
+<a name="330"><font color="#888888 "><i>  330   </i></font></a>      mAssetsPrimePrimeGrid[ia];
+<a name="331"><font color="#888888 "><i>  331   </i></font></a>    mAssetsPrimePrimeGrid[ia] = b_mAssetsPrimeStar;
+<a name="332"><font color="#888888 "><i>  332   </i></font></a>  <b>}</b>
+<a name="333"><font color="#888888 "><i>  333   </i></font></a>
+<a name="334"><font color="#888888 "><i>  334   </i></font></a>  <a href="updateCoefficients_polynomials_emxutil_c.html#fcn_emxFree_real_T" onclick="if (top) if (top.docHiliteMe) top.docHiliteMe(window, 'fcn_emxFree_real_T');" target="_self"><font color="#1122aa">emxFree_real_T</font></a>(&amp;mAssetsPrimeGrid);
+<a name="335"><font color="#888888 "><i>  335   </i></font></a>  <font color="#112266"><b>for</b></font> (k = 0; k &lt; 100; k++) <b>{</b>
+<a name="336"><font color="#888888 "><i>  336   </i></font></a>    b_z1[k] = <a href="updateCoefficients_polynomials_rtwutil_c.html#fcn_rt_powd_snf" onclick="if (top) if (top.docHiliteMe) top.docHiliteMe(window, 'fcn_rt_powd_snf');" target="_self"><font color="#1122aa">rt_powd_snf</font></a>(mAssetsPrimePrimeGrid[k], -ssigma);
+<a name="337"><font color="#888888 "><i>  337   </i></font></a>  <b>}</b>
+<a name="338"><font color="#888888 "><i>  338   </i></font></a>
+<a name="339"><font color="#888888 "><i>  339   </i></font></a>  <font color="#112266"><b>for</b></font> (ia = 0; ia &lt; 2; ia++) <b>{</b>
+<a name="340"><font color="#888888 "><i>  340   </i></font></a>    <font color="#112266"><b>for</b></font> (ar = 0; ar &lt; 50; ar++) <b>{</b>
+<a name="341"><font color="#888888 "><i>  341   </i></font></a>      mAssetsPrimePrimeStar[ia + (ar &lt;&lt; 1)] = 0.0;
+<a name="342"><font color="#888888 "><i>  342   </i></font></a>      <font color="#112266"><b>for</b></font> (nx = 0; nx &lt; 2; nx++) <b>{</b>
+<a name="343"><font color="#888888 "><i>  343   </i></font></a>        mAssetsPrimePrimeStar[ia + (ar &lt;&lt; 1)] += bbeta * mEpsilonTransition[ia +
+<a name="344"><font color="#888888 "><i>  344   </i></font></a>          (nx &lt;&lt; 1)] * ((1.0 + r) * b_z1[nx + (ar &lt;&lt; 1)]);
+<a name="345"><font color="#888888 "><i>  345   </i></font></a>      <b>}</b>
+<a name="346"><font color="#888888 "><i>  346   </i></font></a>    <b>}</b>
+<a name="347"><font color="#888888 "><i>  347   </i></font></a>  <b>}</b>
+<a name="348"><font color="#888888 "><i>  348   </i></font></a>
+<a name="349"><font color="#888888 "><i>  349   </i></font></a>  <a href="updateCoefficients_polynomials_emxutil_c.html#fcn_emxInit_real_T1" onclick="if (top) if (top.docHiliteMe) top.docHiliteMe(window, 'fcn_emxInit_real_T1');" target="_self"><font color="#1122aa">emxInit_real_T1</font></a>(&amp;aConditionalExpectationTilde, 3);
+<a name="350"><font color="#888888 "><i>  350   </i></font></a>  ia = aConditionalExpectationTilde-&gt;size[0] *
+<a name="351"><font color="#888888 "><i>  351   </i></font></a>    aConditionalExpectationTilde-&gt;size[1] * aConditionalExpectationTilde-&gt;size[2];
+<a name="352"><font color="#888888 "><i>  352   </i></font></a>  aConditionalExpectationTilde-&gt;size[0] = (<font color="#112266"><b>int</b></font>)nEpsilon;
+<a name="353"><font color="#888888 "><i>  353   </i></font></a>  aConditionalExpectationTilde-&gt;size[1] = (<font color="#112266"><b>int</b></font>)nEpsilon;
+<a name="354"><font color="#888888 "><i>  354   </i></font></a>  aConditionalExpectationTilde-&gt;size[2] = (<font color="#112266"><b>int</b></font>)nAssets;
+<a name="355"><font color="#888888 "><i>  355   </i></font></a>  <a href="updateCoefficients_polynomials_emxutil_c.html#fcn_emxEnsureCapacity_real_T2" onclick="if (top) if (top.docHiliteMe) top.docHiliteMe(window, 'fcn_emxEnsureCapacity_real_T2');" target="_self"><font color="#1122aa">emxEnsureCapacity_real_T2</font></a>(aConditionalExpectationTilde, ia);
+<a name="356"><font color="#888888 "><i>  356   </i></font></a>  loop_ub = (<font color="#112266"><b>int</b></font>)nAssets;
+<a name="357"><font color="#888888 "><i>  357   </i></font></a>  <font color="#112266"><b>for</b></font> (ia = 0; ia &lt; loop_ub; ia++) <b>{</b>
+<a name="358"><font color="#888888 "><i>  358   </i></font></a>    k = (<font color="#112266"><b>int</b></font>)nEpsilon;
+<a name="359"><font color="#888888 "><i>  359   </i></font></a>    <font color="#112266"><b>for</b></font> (ar = 0; ar &lt; k; ar++) <b>{</b>
+<a name="360"><font color="#888888 "><i>  360   </i></font></a>      br = (<font color="#112266"><b>int</b></font>)nEpsilon;
+<a name="361"><font color="#888888 "><i>  361   </i></font></a>      <font color="#112266"><b>for</b></font> (nx = 0; nx &lt; br; nx++) <b>{</b>
+<a name="362"><font color="#888888 "><i>  362   </i></font></a>        aConditionalExpectationTilde-&gt;data[(nx +
+<a name="363"><font color="#888888 "><i>  363   </i></font></a>          aConditionalExpectationTilde-&gt;size[0] * ar) +
+<a name="364"><font color="#888888 "><i>  364   </i></font></a>          aConditionalExpectationTilde-&gt;size[0] *
+<a name="365"><font color="#888888 "><i>  365   </i></font></a>          aConditionalExpectationTilde-&gt;size[1] * ia] = mAssetsPrimePrimeStar
+<a name="366"><font color="#888888 "><i>  366   </i></font></a>          [(nx + (<font color="#112266"><b>int</b></font>)nEpsilon * ar) + (<font color="#112266"><b>int</b></font>)nEpsilon * (<font color="#112266"><b>int</b></font>)nEpsilon * ia];
+<a name="367"><font color="#888888 "><i>  367   </i></font></a>      <b>}</b>
+<a name="368"><font color="#888888 "><i>  368   </i></font></a>    <b>}</b>
+<a name="369"><font color="#888888 "><i>  369   </i></font></a>  <b>}</b>
+<a name="370"><font color="#888888 "><i>  370   </i></font></a>
+<a name="371"><font color="#888888 "><i>  371   </i></font></a>  <font color="#117755"><i>/*  Extract the relevant entries */</i></font>
+<a name="372"><font color="#888888 "><i>  372   </i></font></a>  ia = mPolyAssetsPrime-&gt;size[0] * mPolyAssetsPrime-&gt;size[1];
+<a name="373"><font color="#888888 "><i>  373   </i></font></a>  mPolyAssetsPrime-&gt;size[0] = (<font color="#112266"><b>int</b></font>)nEpsilon;
+<a name="374"><font color="#888888 "><i>  374   </i></font></a>  mPolyAssetsPrime-&gt;size[1] = (<font color="#112266"><b>int</b></font>)nAssets;
+<a name="375"><font color="#888888 "><i>  375   </i></font></a>  <a href="updateCoefficients_polynomials_emxutil_c.html#fcn_emxEnsureCapacity_real_T" onclick="if (top) if (top.docHiliteMe) top.docHiliteMe(window, 'fcn_emxEnsureCapacity_real_T');" target="_self"><font color="#1122aa">emxEnsureCapacity_real_T</font></a>(mPolyAssetsPrime, ia);
+<a name="376"><font color="#888888 "><i>  376   </i></font></a>  <font color="#112266"><b>for</b></font> (br = 0; br &lt; (<font color="#112266"><b>int</b></font>)nEpsilon; br++) <b>{</b>
+<a name="377"><font color="#888888 "><i>  377   </i></font></a>    loop_ub = mPolyAssetsPrime-&gt;size[1];
+<a name="378"><font color="#888888 "><i>  378   </i></font></a>    ia = r0-&gt;size[0];
+<a name="379"><font color="#888888 "><i>  379   </i></font></a>    r0-&gt;size[0] = loop_ub;
+<a name="380"><font color="#888888 "><i>  380   </i></font></a>    <a href="updateCoefficients_polynomials_emxutil_c.html#fcn_emxEnsureCapacity_int32_T" onclick="if (top) if (top.docHiliteMe) top.docHiliteMe(window, 'fcn_emxEnsureCapacity_int32_T');" target="_self"><font color="#1122aa">emxEnsureCapacity_int32_T</font></a>(r0, ia);
+<a name="381"><font color="#888888 "><i>  381   </i></font></a>    <font color="#112266"><b>for</b></font> (ia = 0; ia &lt; loop_ub; ia++) <b>{</b>
+<a name="382"><font color="#888888 "><i>  382   </i></font></a>      r0-&gt;data[ia] = ia;
+<a name="383"><font color="#888888 "><i>  383   </i></font></a>    <b>}</b>
+<a name="384"><font color="#888888 "><i>  384   </i></font></a>
+<a name="385"><font color="#888888 "><i>  385   </i></font></a>    loop_ub = aConditionalExpectationTilde-&gt;size[2];
+<a name="386"><font color="#888888 "><i>  386   </i></font></a>    <font color="#112266"><b>for</b></font> (ia = 0; ia &lt; loop_ub; ia++) <b>{</b>
+<a name="387"><font color="#888888 "><i>  387   </i></font></a>      mAssetsPrimePrimeStar[ia] = aConditionalExpectationTilde-&gt;data[(br +
+<a name="388"><font color="#888888 "><i>  388   </i></font></a>        aConditionalExpectationTilde-&gt;size[0] * br) +
+<a name="389"><font color="#888888 "><i>  389   </i></font></a>        aConditionalExpectationTilde-&gt;size[0] *
+<a name="390"><font color="#888888 "><i>  390   </i></font></a>        aConditionalExpectationTilde-&gt;size[1] * ia];
+<a name="391"><font color="#888888 "><i>  391   </i></font></a>    <b>}</b>
+<a name="392"><font color="#888888 "><i>  392   </i></font></a>
+<a name="393"><font color="#888888 "><i>  393   </i></font></a>    nx = r0-&gt;size[0];
+<a name="394"><font color="#888888 "><i>  394   </i></font></a>    <font color="#112266"><b>for</b></font> (ia = 0; ia &lt; nx; ia++) <b>{</b>
+<a name="395"><font color="#888888 "><i>  395   </i></font></a>      mPolyAssetsPrime-&gt;data[br + mPolyAssetsPrime-&gt;size[0] * r0-&gt;data[ia]] =
+<a name="396"><font color="#888888 "><i>  396   </i></font></a>        mAssetsPrimePrimeStar[ia];
+<a name="397"><font color="#888888 "><i>  397   </i></font></a>    <b>}</b>
+<a name="398"><font color="#888888 "><i>  398   </i></font></a>  <b>}</b>
+<a name="399"><font color="#888888 "><i>  399   </i></font></a>
+<a name="400"><font color="#888888 "><i>  400   </i></font></a>  <a href="updateCoefficients_polynomials_emxutil_c.html#fcn_emxFree_real_T" onclick="if (top) if (top.docHiliteMe) top.docHiliteMe(window, 'fcn_emxFree_real_T');" target="_self"><font color="#1122aa">emxFree_real_T</font></a>(&amp;aConditionalExpectationTilde);
+<a name="401"><font color="#888888 "><i>  401   </i></font></a>
+<a name="402"><font color="#888888 "><i>  402   </i></font></a>  <font color="#117755"><i>/*  Update the coefficients */</i></font>
+<a name="403"><font color="#888888 "><i>  403   </i></font></a>  ia = mCoefficientsNew-&gt;size[0] * mCoefficientsNew-&gt;size[1];
+<a name="404"><font color="#888888 "><i>  404   </i></font></a>  mCoefficientsNew-&gt;size[0] = (<font color="#112266"><b>int</b></font>)nEpsilon;
+<a name="405"><font color="#888888 "><i>  405   </i></font></a>  mCoefficientsNew-&gt;size[1] = (<font color="#112266"><b>int</b></font>)nAssets;
+<a name="406"><font color="#888888 "><i>  406   </i></font></a>  <a href="updateCoefficients_polynomials_emxutil_c.html#fcn_emxEnsureCapacity_real_T" onclick="if (top) if (top.docHiliteMe) top.docHiliteMe(window, 'fcn_emxEnsureCapacity_real_T');" target="_self"><font color="#1122aa">emxEnsureCapacity_real_T</font></a>(mCoefficientsNew, ia);
+<a name="407"><font color="#888888 "><i>  407   </i></font></a>  br = 0;
+<a name="408"><font color="#888888 "><i>  408   </i></font></a>  <a href="updateCoefficients_polynomials_emxutil_c.html#fcn_emxInit_real_T" onclick="if (top) if (top.docHiliteMe) top.docHiliteMe(window, 'fcn_emxInit_real_T');" target="_self"><font color="#1122aa">emxInit_real_T</font></a>(&amp;x, 2);
+<a name="409"><font color="#888888 "><i>  409   </i></font></a>  <a href="updateCoefficients_polynomials_emxutil_c.html#fcn_emxInit_real_T2" onclick="if (top) if (top.docHiliteMe) top.docHiliteMe(window, 'fcn_emxInit_real_T2');" target="_self"><font color="#1122aa">emxInit_real_T2</font></a>(&amp;b_b, 1);
+<a name="410"><font color="#888888 "><i>  410   </i></font></a>  <font color="#112266"><b>if</b></font> (0 &lt;= (<font color="#112266"><b>int</b></font>)nEpsilon - 1) <b>{</b>
+<a name="411"><font color="#888888 "><i>  411   </i></font></a>    <font color="#112266"><b>for</b></font> (ia = 0; ia &lt; 25; ia++) <b>{</b>
+<a name="412"><font color="#888888 "><i>  412   </i></font></a>      <font color="#112266"><b>for</b></font> (ar = 0; ar &lt; 25; ar++) <b>{</b>
+<a name="413"><font color="#888888 "><i>  413   </i></font></a>        a[ar + 25 * ia] = vAssetsPoly[ia + 25 * ar];
+<a name="414"><font color="#888888 "><i>  414   </i></font></a>      <b>}</b>
+<a name="415"><font color="#888888 "><i>  415   </i></font></a>    <b>}</b>
+<a name="416"><font color="#888888 "><i>  416   </i></font></a>  <b>}</b>
+<a name="417"><font color="#888888 "><i>  417   </i></font></a>
+<a name="418"><font color="#888888 "><i>  418   </i></font></a>  <font color="#112266"><b>while</b></font> (br &lt;= (<font color="#112266"><b>int</b></font>)nEpsilon - 1) <b>{</b>
+<a name="419"><font color="#888888 "><i>  419   </i></font></a>    <font color="#117755"><i>/*  	vCoefficients = sum(vAssetsPoly' .* (ones(nAssets,1) * log(mConditionalExpectation(iEpsilon,:))),2); */</i></font>
+<a name="420"><font color="#888888 "><i>  420   </i></font></a>    loop_ub = mPolyAssetsPrime-&gt;size[1];
+<a name="421"><font color="#888888 "><i>  421   </i></font></a>    ia = x-&gt;size[0] * x-&gt;size[1];
+<a name="422"><font color="#888888 "><i>  422   </i></font></a>    x-&gt;size[0] = 1;
+<a name="423"><font color="#888888 "><i>  423   </i></font></a>    x-&gt;size[1] = loop_ub;
+<a name="424"><font color="#888888 "><i>  424   </i></font></a>    <a href="updateCoefficients_polynomials_emxutil_c.html#fcn_emxEnsureCapacity_real_T" onclick="if (top) if (top.docHiliteMe) top.docHiliteMe(window, 'fcn_emxEnsureCapacity_real_T');" target="_self"><font color="#1122aa">emxEnsureCapacity_real_T</font></a>(x, ia);
+<a name="425"><font color="#888888 "><i>  425   </i></font></a>    <font color="#112266"><b>for</b></font> (ia = 0; ia &lt; loop_ub; ia++) <b>{</b>
+<a name="426"><font color="#888888 "><i>  426   </i></font></a>      x-&gt;data[x-&gt;size[0] * ia] = mPolyAssetsPrime-&gt;data[br +
+<a name="427"><font color="#888888 "><i>  427   </i></font></a>        mPolyAssetsPrime-&gt;size[0] * ia];
+<a name="428"><font color="#888888 "><i>  428   </i></font></a>    <b>}</b>
+<a name="429"><font color="#888888 "><i>  429   </i></font></a>
+<a name="430"><font color="#888888 "><i>  430   </i></font></a>    ia = mPolyAssetsPrime-&gt;size[1];
+<a name="431"><font color="#888888 "><i>  431   </i></font></a>    <font color="#112266"><b>for</b></font> (k = 0; k + 1 &lt;= ia; k++) <b>{</b>
+<a name="432"><font color="#888888 "><i>  432   </i></font></a>      x-&gt;data[k] = log(x-&gt;data[k]);
+<a name="433"><font color="#888888 "><i>  433   </i></font></a>    <b>}</b>
+<a name="434"><font color="#888888 "><i>  434   </i></font></a>
+<a name="435"><font color="#888888 "><i>  435   </i></font></a>    ia = b_b-&gt;size[0];
+<a name="436"><font color="#888888 "><i>  436   </i></font></a>    b_b-&gt;size[0] = x-&gt;size[1];
+<a name="437"><font color="#888888 "><i>  437   </i></font></a>    <a href="updateCoefficients_polynomials_emxutil_c.html#fcn_emxEnsureCapacity_real_T1" onclick="if (top) if (top.docHiliteMe) top.docHiliteMe(window, 'fcn_emxEnsureCapacity_real_T1');" target="_self"><font color="#1122aa">emxEnsureCapacity_real_T1</font></a>(b_b, ia);
+<a name="438"><font color="#888888 "><i>  438   </i></font></a>    loop_ub = x-&gt;size[1];
+<a name="439"><font color="#888888 "><i>  439   </i></font></a>    <font color="#112266"><b>for</b></font> (ia = 0; ia &lt; loop_ub; ia++) <b>{</b>
+<a name="440"><font color="#888888 "><i>  440   </i></font></a>      b_b-&gt;data[ia] = x-&gt;data[x-&gt;size[0] * ia];
+<a name="441"><font color="#888888 "><i>  441   </i></font></a>    <b>}</b>
+<a name="442"><font color="#888888 "><i>  442   </i></font></a>
+<a name="443"><font color="#888888 "><i>  443   </i></font></a>    <font color="#112266"><b>if</b></font> (b_b-&gt;size[0] == 1) <b>{</b>
+<a name="444"><font color="#888888 "><i>  444   </i></font></a>      <font color="#112266"><b>for</b></font> (ia = 0; ia &lt; 25; ia++) <b>{</b>
+<a name="445"><font color="#888888 "><i>  445   </i></font></a>        vCoefficients[ia] = 0.0;
+<a name="446"><font color="#888888 "><i>  446   </i></font></a>        <font color="#112266"><b>for</b></font> (ar = 0; ar &lt; 25; ar++) <b>{</b>
+<a name="447"><font color="#888888 "><i>  447   </i></font></a>          b_mAssetsPrimeStar = vCoefficients[ia] + a[ia + 25 * ar] * b_b-&gt;
+<a name="448"><font color="#888888 "><i>  448   </i></font></a>            data[ar];
+<a name="449"><font color="#888888 "><i>  449   </i></font></a>          vCoefficients[ia] = b_mAssetsPrimeStar;
+<a name="450"><font color="#888888 "><i>  450   </i></font></a>        <b>}</b>
+<a name="451"><font color="#888888 "><i>  451   </i></font></a>      <b>}</b>
+<a name="452"><font color="#888888 "><i>  452   </i></font></a>    <b>}</b> <font color="#112266"><b>else</b></font> <font color="#112266"><b>if</b></font> (25 == b_b-&gt;size[0]) <b>{</b>
+<a name="453"><font color="#888888 "><i>  453   </i></font></a>      <font color="#112266"><b>for</b></font> (ia = 0; ia &lt; 25; ia++) <b>{</b>
+<a name="454"><font color="#888888 "><i>  454   </i></font></a>        vCoefficients[ia] = 0.0;
+<a name="455"><font color="#888888 "><i>  455   </i></font></a>        <font color="#112266"><b>for</b></font> (ar = 0; ar &lt; 25; ar++) <b>{</b>
+<a name="456"><font color="#888888 "><i>  456   </i></font></a>          b_mAssetsPrimeStar = vCoefficients[ia] + a[ia + 25 * ar] * b_b-&gt;
+<a name="457"><font color="#888888 "><i>  457   </i></font></a>            data[ar];
+<a name="458"><font color="#888888 "><i>  458   </i></font></a>          vCoefficients[ia] = b_mAssetsPrimeStar;
+<a name="459"><font color="#888888 "><i>  459   </i></font></a>        <b>}</b>
+<a name="460"><font color="#888888 "><i>  460   </i></font></a>      <b>}</b>
+<a name="461"><font color="#888888 "><i>  461   </i></font></a>    <b>}</b> <font color="#112266"><b>else</b></font> <b>{</b>
+<a name="462"><font color="#888888 "><i>  462   </i></font></a>      memset(&amp;vCoefficients[0], 0, 25U * <font color="#112266"><b>sizeof</b></font>(<font color="#112266"><b>double</b></font>));
+<a name="463"><font color="#888888 "><i>  463   </i></font></a>      ar = 0;
+<a name="464"><font color="#888888 "><i>  464   </i></font></a>      <font color="#112266"><b>for</b></font> (loop_ub = 0; loop_ub &lt; 25; loop_ub++) <b>{</b>
+<a name="465"><font color="#888888 "><i>  465   </i></font></a>        <font color="#112266"><b>if</b></font> (b_b-&gt;data[loop_ub] != 0.0) <b>{</b>
+<a name="466"><font color="#888888 "><i>  466   </i></font></a>          ia = ar;
+<a name="467"><font color="#888888 "><i>  467   </i></font></a>          <font color="#112266"><b>for</b></font> (ic = 0; ic &lt; 25; ic++) <b>{</b>
+<a name="468"><font color="#888888 "><i>  468   </i></font></a>            ia++;
+<a name="469"><font color="#888888 "><i>  469   </i></font></a>            b_mAssetsPrimeStar = vCoefficients[ic] + b_b-&gt;data[loop_ub] * a[ia -
+<a name="470"><font color="#888888 "><i>  470   </i></font></a>              1];
+<a name="471"><font color="#888888 "><i>  471   </i></font></a>            vCoefficients[ic] = b_mAssetsPrimeStar;
+<a name="472"><font color="#888888 "><i>  472   </i></font></a>          <b>}</b>
+<a name="473"><font color="#888888 "><i>  473   </i></font></a>        <b>}</b>
+<a name="474"><font color="#888888 "><i>  474   </i></font></a>
+<a name="475"><font color="#888888 "><i>  475   </i></font></a>        ar += 25;
+<a name="476"><font color="#888888 "><i>  476   </i></font></a>      <b>}</b>
+<a name="477"><font color="#888888 "><i>  477   </i></font></a>    <b>}</b>
+<a name="478"><font color="#888888 "><i>  478   </i></font></a>
+<a name="479"><font color="#888888 "><i>  479   </i></font></a>    loop_ub = mCoefficientsNew-&gt;size[1];
+<a name="480"><font color="#888888 "><i>  480   </i></font></a>    ia = r0-&gt;size[0];
+<a name="481"><font color="#888888 "><i>  481   </i></font></a>    r0-&gt;size[0] = loop_ub;
+<a name="482"><font color="#888888 "><i>  482   </i></font></a>    <a href="updateCoefficients_polynomials_emxutil_c.html#fcn_emxEnsureCapacity_int32_T" onclick="if (top) if (top.docHiliteMe) top.docHiliteMe(window, 'fcn_emxEnsureCapacity_int32_T');" target="_self"><font color="#1122aa">emxEnsureCapacity_int32_T</font></a>(r0, ia);
+<a name="483"><font color="#888888 "><i>  483   </i></font></a>    <font color="#112266"><b>for</b></font> (ia = 0; ia &lt; loop_ub; ia++) <b>{</b>
+<a name="484"><font color="#888888 "><i>  484   </i></font></a>      r0-&gt;data[ia] = ia;
+<a name="485"><font color="#888888 "><i>  485   </i></font></a>    <b>}</b>
+<a name="486"><font color="#888888 "><i>  486   </i></font></a>
+<a name="487"><font color="#888888 "><i>  487   </i></font></a>    <font color="#112266"><b>for</b></font> (ia = 0; ia &lt; 25; ia++) <b>{</b>
+<a name="488"><font color="#888888 "><i>  488   </i></font></a>      b_vCoefficients[ia] = vCoefficients[ia] / vAssetsPolySquared[ia];
+<a name="489"><font color="#888888 "><i>  489   </i></font></a>    <b>}</b>
+<a name="490"><font color="#888888 "><i>  490   </i></font></a>
+<a name="491"><font color="#888888 "><i>  491   </i></font></a>    nx = r0-&gt;size[0];
+<a name="492"><font color="#888888 "><i>  492   </i></font></a>    <font color="#112266"><b>for</b></font> (ia = 0; ia &lt; nx; ia++) <b>{</b>
+<a name="493"><font color="#888888 "><i>  493   </i></font></a>      mCoefficientsNew-&gt;data[br + mCoefficientsNew-&gt;size[0] * r0-&gt;data[ia]] =
+<a name="494"><font color="#888888 "><i>  494   </i></font></a>        b_vCoefficients[ia];
+<a name="495"><font color="#888888 "><i>  495   </i></font></a>    <b>}</b>
+<a name="496"><font color="#888888 "><i>  496   </i></font></a>
+<a name="497"><font color="#888888 "><i>  497   </i></font></a>    br++;
+<a name="498"><font color="#888888 "><i>  498   </i></font></a>  <b>}</b>
+<a name="499"><font color="#888888 "><i>  499   </i></font></a>
+<a name="500"><font color="#888888 "><i>  500   </i></font></a>  <a href="updateCoefficients_polynomials_emxutil_c.html#fcn_emxFree_real_T" onclick="if (top) if (top.docHiliteMe) top.docHiliteMe(window, 'fcn_emxFree_real_T');" target="_self"><font color="#1122aa">emxFree_real_T</font></a>(&amp;b_b);
+<a name="501"><font color="#888888 "><i>  501   </i></font></a>  <a href="updateCoefficients_polynomials_emxutil_c.html#fcn_emxFree_real_T" onclick="if (top) if (top.docHiliteMe) top.docHiliteMe(window, 'fcn_emxFree_real_T');" target="_self"><font color="#1122aa">emxFree_real_T</font></a>(&amp;x);
+<a name="502"><font color="#888888 "><i>  502   </i></font></a>  <a href="updateCoefficients_polynomials_emxutil_c.html#fcn_emxFree_int32_T" onclick="if (top) if (top.docHiliteMe) top.docHiliteMe(window, 'fcn_emxFree_int32_T');" target="_self"><font color="#1122aa">emxFree_int32_T</font></a>(&amp;r0);
+<a name="503"><font color="#888888 "><i>  503   </i></font></a>  <a href="updateCoefficients_polynomials_emxutil_c.html#fcn_emxFree_real_T" onclick="if (top) if (top.docHiliteMe) top.docHiliteMe(window, 'fcn_emxFree_real_T');" target="_self"><font color="#1122aa">emxFree_real_T</font></a>(&amp;mPolyAssetsPrime);
+<a name="504"><font color="#888888 "><i>  504   </i></font></a><b>}</b>
+<a name="505"><font color="#888888 "><i>  505   </i></font></a>
+<a name="506"><font color="#888888 "><i>  506   </i></font></a><font color="#117755"><i>/* End of code generation (updateCoefficients_polynomials.c) */</i></font>
+<a name="507"><font color="#888888 "><i>  507   </i></font></a></pre>
+</td></tr></table>
+</p>
+</body>
+</html>
