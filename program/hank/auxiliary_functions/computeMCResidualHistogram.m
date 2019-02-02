@@ -81,7 +81,10 @@ if splineOpt == 0	% approximate conditional expectation function using polynomia
 	err = 100; iteration = 1;
 	while err > tolerance && iteration <= maxIterations
 
-		mCoefficientsNew = updateCoefficients_polynomials(mCoefficients,var_array);
+		mCoefficientsNew = updateCoefficients_polynomials_mex(mCoefficients,...
+            bbeta,ssigma,aaBar,mmu,ttau,mEpsilonTransition,nEpsilon,nAssets,nState,assetsMin,assetsMax,...
+            mEpsilonGrid,mAssetsGrid,vAssetsPoly,vAssetsPolySquared,mEpsilonPrimeGrid,...
+            r,w);
 		err = max(abs(mCoefficientsNew(:) - mCoefficients(:)));
 		iteration = iteration + 1;
 		mCoefficients = dampening * mCoefficients + (1 - dampening) * mCoefficientsNew;
