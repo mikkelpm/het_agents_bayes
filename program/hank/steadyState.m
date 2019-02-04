@@ -1,10 +1,8 @@
 % Computes and analyzes steady state with no aggregate shocks
-%
-% Thomas Winberry, July 26th, 2016
+% 2019-02-04
 
-clear all
-close all
-clc
+clear all;
+close all;
 
 % profile on
 oldFolder = cd('./auxiliary_functions');
@@ -15,19 +13,27 @@ oldFolder = cd('./auxiliary_functions');
 % ECONOMIC PARAMETERS
 
 % Preferences
-bbeta = .96; % Discount factor (annual calibration)
+bbeta = .96^(1/4); % Discount factor (quarterly)
 ppsi = 1;
+nnu = 1;
+
+% Borrowing limit
+bbBar = 0;
+
+% Production
+eepsilon = 5;
 
 % Taxes
-ttau = 0.1;
-mmu = 0.05;
+ttau = 0.3;
+vvarthetaB = -23.3;
+vvarthetaT = 0.06;
 
 % Idioynscratic productivity
 vzGrid = [0;1];
 mzTransition = [0.5 0.5; 0.5 0.5];
 
 % Aggregate productivity
-AAss = 1; % Steady state productivity level
+A_SS = 1; % Steady state productivity level
 
 % APPROXIMATION PARAMETERS
 
