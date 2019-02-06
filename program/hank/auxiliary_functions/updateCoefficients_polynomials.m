@@ -44,7 +44,6 @@ end
 %---------------------------------------------------------------
 
 % Compute new conditional expectation function
-% ASSUMES nnu=1!
     
 % Compute conditional expectation
 mConditionalExpectationPrime = exp(mCoefficients * mPolyAssetsPrime');
@@ -53,13 +52,13 @@ mConditionalExpectationPrime = exp(mCoefficients * mPolyAssetsPrime');
 mAssetsPrimePrimeStar = ((1-ttau)*w_SS*mzPrimeGrid).^(1+1/nnu).*(mConditionalExpectationPrime/ppsi).^(1/nnu) ...
                 +(1+rr)*mAssetsPrimeGrid+chidT_SS-1./mConditionalExpectationPrime;
 
-mConstr = (mAssetsPrimePrimeStar < bbBar);
-
-mLaborPrime = (1-ttau)*w_SS*mzPrimeGrid.*mConditionalExpectationPrime/ppsi;
+% ASSUMES nnu=1!
+mConstr = (mAssetsPrimePrimeStar < bbBar); % Constrained states
+mLaborPrime = (1-ttau)*w_SS*mzPrimeGrid.*mConditionalExpectationPrime/ppsi; % Labor supply if unconstrained
 aux = -bbBar + (1+rr)*mAssetsPrimeGrid(mConstr) + chidT_SS;
 mLaborPrime(mConstr) = (-aux + sqrt(aux.^2 + 4*((1-ttau)*w_SS*mzPrimeGrid(mConstr)).^2/ppsi)) ...
-                       ./ (2*(1-ttau)*w_SS*mzPrimeGrid(mConstr));
-mConsumptionPrime = (1-ttau)*w_SS*mzPrimeGrid./(ppsi*mLaborPrime);
+                       ./ (2*(1-ttau)*w_SS*mzPrimeGrid(mConstr)); % Labor supply if constrained
+mConsumptionPrime = (1-ttau)*w_SS*mzPrimeGrid./(ppsi*mLaborPrime); % Consumption
 
 aConditionalExpectationTilde = reshape(bbeta * mzTransition * ((1 + rr) ./ mConsumptionPrime),...
 	nz,nz,nAssets);

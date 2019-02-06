@@ -4,8 +4,8 @@
 nz = length(vzGrid);
 [zV,zD] = eig(mzTransition');
 vzInvariant = zV(:,abs(diag(zD)-1)<tolerance);
-vzInvariant = vzInvariant/sum(vzInvariant); % Invariant distribution
 assert(size(vzInvariant,2)==1);
+vzInvariant = vzInvariant/sum(vzInvariant); % Invariant distribution
 z_SS = vzGrid'*vzInvariant; % Steady state mean
 
 % Approximation dimensions
@@ -21,4 +21,4 @@ N_RepSS = (((1-ttau)*w_SS/ppsi)/abs((1-r_RepSS*vvarthetaB+vvarthetaT)*A_SS-ttau*
 
 % Bounds on grid space
 assetsMin = bbBar;
-assetsMax = 5 * (-vvarthetaB)*A_SS*N_RepSS; % Multiple of steady state borrowing in repr agent model
+assetsMax = 10 * (-vvarthetaB)*A_SS*N_RepSS; % Multiple of steady state borrowing in repr agent model

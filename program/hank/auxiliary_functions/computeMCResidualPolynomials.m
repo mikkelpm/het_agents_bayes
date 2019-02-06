@@ -67,12 +67,14 @@ w_SS = var_array{40};
 % Compute individual decisions
 %----------------------------------------------------------------
 
-chidT_SS = (1/eepsilon + vvarthetaT)*A_SS*NN;
+chidT_SS = (1/eepsilon + vvarthetaT)*A_SS*NN; % chi*d+T
 
 % Initialize coefficients using rule of thumb savings rule that sets b'=b and z'=z
 % ASSUMES nnu=1!
 % aux = rr*mAssetsGrid + chidT_SS;
 % mGridInit = log(bbeta * (1+rr) * 2 ./ (aux + sqrt(aux.^2 + 4*((1-ttau)*w_SS*mzGrid).^2/ppsi)));
+
+% Initialize using histogram see
 mGridInit = log(mConditionalExpectation);
 
 mCoefficients = zeros(nz,nAssets);
@@ -146,20 +148,25 @@ while err > tolerance && iteration <= maxIterations
     mParametersNew = zeros(nz,nMeasure+1);
 
     for iz = 1 : nz
+        
 %          objectiveFunction = @(vParametersTilde) parametersResidual(vParametersTilde,reshape(bGridMoments(iz,:,:),nAssetsQuadrature,nMeasure),vQuadratureWeights,nMeasure);
 %         [vParameters,normalization] = fminunc(objectiveFunction,zeros(nMeasure,1),options);        
 
 		vParameters = mParameters(iz,2:end)';
 		mGridMoments = reshape(bGridMoments(iz,:,:),nAssetsQuadrature,nMeasure);
-        dens_nonnormaliz = exp(mGridMoments * vParameters);
+        dens_nonnormaliz = exp(mGridMoments * vParameters); % Non-normalized density
+        
+        % Take Newton step to minimize density
 		DD = vQuadratureWeights' * (dens_nonnormaliz.*mGridMoments);
 		HH = zeros(nMeasure);
         for iH = 1:nAssetsQuadrature
 			HH = HH+vQuadratureWeights(iH)*dens_nonnormaliz(iH,:)*(mGridMoments(iH,:)'*mGridMoments(iH,:));
         end
 		vParameters = vParameters-HH\DD';
-		normalization = vQuadratureWeights' * (exp(mGridMoments * vParameters));
-		mParametersNew(iz,:) = [1 / normalization; vParameters];
+        
+		normalization = vQuadratureWeights' * (exp(mGridMoments * vParameters)); % New normalization constant
+		mParametersNew(iz,:) = [1 / normalization; vParameters]; % New parameters
+        
     end
 	
 	% Compute new moments and centered moments grid
@@ -254,10 +261,10 @@ mLabor_times_z = (1-ttau)*w_SS*(vzGrid.^2).*mConditionalExpectation/ppsi; % Away
 aux = rr*bbBar + chidT_SS;
 mLabor_times_z_BC = (-aux + sqrt(aux.^2 + 4*((1-ttau)*w_SS*vzGrid).^2/ppsi)) ...
                        ./ (2*(1-ttau)*w_SS); % At constraint
-NNNew = (vzInvariant.*(1-mHat))'*mLabor_times_z*vQuadratureWeights + (vzInvariant.*mHat)'*mLabor_times_z_BC; % Aggregate labor supply
+NNNew = (vzInvariant.*(1-mHat))'*mLabor_times_z*vQuadratureWeights + (vzInvariant.*mHat)'*mLabor_times_z_BC; % Aggregate effective labor supply
 
-residual = [vvarthetaB*A_SS*NN + bbNew;
-            NN - NNNew];
+residual = [vvarthetaB*A_SS*NN + bbNew; % Bonds
+            NN - NNNew];                % Labor
 
 % Also return optional outputs if requested
 if nargout > 2

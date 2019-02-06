@@ -13,12 +13,12 @@ oldFolder = cd('./auxiliary_functions');
 % ECONOMIC PARAMETERS
 
 % Preferences
-bbeta = .96^(1/4); % Discount factor (quarterly)
+bbeta = .96; % Discount factor
 ppsi = 1; % Coefficient on labor disutility
 nnu = 1; % Inverse Frisch elasticity, MUST be 1 at the moment!
 
 % Borrowing limit
-bbBar = -1;
+bbBar = 0;
 
 % Production
 eepsilon = 5;
@@ -28,12 +28,14 @@ ttau = 0.3;
 vvarthetaB = -0.233;
 vvarthetaT = 0.06;
 
-% Idioynscratic productivity
-vzGrid = [0.5;1.5];
-mzTransition = [0.7 0.3; 0.1 0.9];
+% Idiosyncratic productivity
+vzGrid = [0.5;1;1.5];
+mzTransition = [0.5 0.5 0;
+                0.1 0.8 0.1;
+                0   0.2 0.8]; % (i,j) element: P(z'=z_j | z=z_i)
 
 % Aggregate productivity
-A_SS = 3; % Steady state productivity level
+A_SS = 3; % Steady state aggr productivity level
 
 % APPROXIMATION PARAMETERS
 

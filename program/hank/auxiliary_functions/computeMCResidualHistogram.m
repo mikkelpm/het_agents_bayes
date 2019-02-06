@@ -61,7 +61,7 @@ w_SS = var_array{40};
 % Compute individual decisions
 %----------------------------------------------------------------
 
-chidT_SS = (1/eepsilon + vvarthetaT)*A_SS*NN;
+chidT_SS = (1/eepsilon + vvarthetaT)*A_SS*NN; %chi*d+T
 
 % Initialize coefficients using rule of thumb savings rule that sets b'=b and z'=z
 % ASSUMES nnu=1!
@@ -112,12 +112,12 @@ mAssetsPrimeFine = max(mAssetsPrimeStar,bbBar);
 
 % Compute labor and consumption
 % ASSUMES nnu=1!
-mConstr = (mAssetsPrimeFine==bbBar);
-mLaborFine = (1-ttau)*w_SS*mzGridFine.*mConditionalExpectation/ppsi;
+mConstr = (mAssetsPrimeFine==bbBar); % Constrained states
+mLaborFine = (1-ttau)*w_SS*mzGridFine.*mConditionalExpectation/ppsi; % Labor supply if not constrained
 aux = -bbBar + (1+rr)*mAssetsGridFine(mConstr) + chidT_SS;
 mLaborFine(mConstr) = (-aux + sqrt(aux.^2 + 4*((1-ttau)*w_SS*mzGridFine(mConstr)).^2/ppsi)) ...
-                       ./ (2*(1-ttau)*w_SS*mzGridFine(mConstr));
-mConsumptionFine = (1-ttau)*w_SS*mzGridFine./(ppsi*mLaborFine);
+                       ./ (2*(1-ttau)*w_SS*mzGridFine(mConstr)); % Labor supply if constrained
+mConsumptionFine = (1-ttau)*w_SS*mzGridFine./(ppsi*mLaborFine); % Consumption
 
 %%%
 % Compute transition matrix associated with policy rules
@@ -160,8 +160,8 @@ mHistogram = reshape(full(vHistogramNew),nz,nAssetsFine);
 % Return market clearing residuals
 %----------------------------------------------------------------
 
-residual = [vvarthetaB*A_SS*NN + sum(mHistogram * vAssetsGridFine);
-            NN - (mzGridFine(:).*mLaborFine(:))'*mHistogram(:)];
+residual = [vvarthetaB*A_SS*NN + sum(mHistogram,1) * vAssetsGridFine; % Bonds
+            NN - (mzGridFine(:).*mLaborFine(:))' * mHistogram(:)];    % Labor
 
 if nargout > 1 
 

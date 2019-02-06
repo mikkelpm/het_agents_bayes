@@ -67,7 +67,7 @@ fprintf('Computing initial guess from histogram...\n')
 % Solve for market clearing capital stock
 f = @(x) computeMCResidualHistogram(x(1),x(2),var_array);
 options = optimoptions('fsolve','Display',displayOpt,...
-                       'TolFun',tolerance_SS_root,'TypicalX',[0.01; 0.1]); % In older versions of MATLAB, use: options = optimset('Display',displayOpt); 
+                       'TolFun',tolerance_SS_root,'TypicalX',[0.01; 0.1]);
 [x_solve_hist,err,exitflag] = fsolve(f,[r_RepSS N_RepSS],options);
 
 % Return exitflag if market clearing not solved
@@ -123,15 +123,19 @@ fprintf('Compute steady state from parametric family...\n')
 % Solve for market clearing capital stock
 f = @(x) computeMCResidualPolynomials(x(1),x(2),mMomentsHistogram,bGridMoments,mHatHistogram,mConditionalExpectation,var_array);
 options = optimoptions('fsolve','Display',displayOpt,'TolFun',tolerance_SS_root);
-if abs(f([r_SS_hist,N_SS_hist])) > tolerance_SS_root
-	[x_solve,err,exitflag] = fsolve(f,[r_SS_hist,N_SS_hist],options);
+if sum(abs(f([r_SS_hist,N_SS_hist]))) > tolerance_SS_root
+    [x_solve,err,exitflag] = fsolve(f,[r_SS_hist,N_SS_hist],options);
+    r_SS = x_solve(1);
+    N_SS = x_solve(2);
+    % Return error if market clearing not solved
+    if exitflag < 1
+        check = 1;
+        return; 
+    end	
+else    
+	r_SS = r_SS_hist;
+    N_SS = N_SS_hist;
 end
-
-% Return error if market clearing not solved
-if exitflag < 1
-    check = 1;
-    return; 
-end	
 
 if strcmp(displayOpt,'iter-detailed') == 1
     fprintf('Done! Time to compute: %2.2f seconds \n\n',toc(t0))
@@ -142,11 +146,8 @@ end
 % Compute other objects from steady state
 %----------------------------------------------------------------
 
-r_SS = x_solve(1);
-N_SS = x_solve(2);
-
 [~,mCoefficients,mParameters,mMoments,mHat] = ...
-    computeMCResidualPolynomials(r_SS,N_SS,mMomentsHistogram,bGridMoments,mHatHistogram,var_array);
+    computeMCResidualPolynomials(r_SS,N_SS,mMomentsHistogram,bGridMoments,mHatHistogram,mConditionalExpectation,var_array);
 
 Y_SS = A_SS*N_SS;
 d_SS = Y_SS/eepsilon;
