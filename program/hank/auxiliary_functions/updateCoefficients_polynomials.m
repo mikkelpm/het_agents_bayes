@@ -1,7 +1,7 @@
-function mCoefficientsNew = updateCoefficients_polynomials(mCoefficients,...
-    bbeta,ssigma,aaBar,mmu,ttau,mEpsilonTransition,nEpsilon,nAssets,nState,assetsMin,assetsMax,...
-    mEpsilonGrid,mAssetsGrid,vAssetsPoly,vAssetsPolySquared,mEpsilonPrimeGrid,...
-    r,w)
+function [mCoefficientsNew,mConditionalExpectation] = updateCoefficients_polynomials(mCoefficients,...
+    bbeta,ppsi,nnu,bbBar,eepsilon,ttau,vvarthetaT,mzTransition,nz,nAssets,nState,assetsMin,assetsMax,...
+    mzGrid,mAssetsGrid,vAssetsPoly,vAssetsPolySquared,mzPrimeGrid,...
+    A_SS,w_SS,rr,NN)
 
 % Updates polynomial coefficients approximating the conditional expectation function in steady state
 % 
@@ -23,12 +23,13 @@ function mCoefficientsNew = updateCoefficients_polynomials(mCoefficients,...
 mConditionalExpectation = exp(mCoefficients * vAssetsPoly');
 
 % Compute target saving
-mAssetsPrimeStar = w * (mmu * (1 - mEpsilonGrid) + (1 - ttau) * mEpsilonGrid) + (1 + r) * mAssetsGrid - ...
-	(mConditionalExpectation .^ (-1 / ssigma));
+chidT_SS = (1/eepsilon + vvarthetaT)*A_SS*NN;
+mAssetsPrimeStar = ((1-ttau)*w_SS*mzGrid).^(1+1/nnu).*(mConditionalExpectation/ppsi).^(1/nnu) ...
+                    +(1+rr)*mAssetsGrid+chidT_SS-1./mConditionalExpectation;
 
 % Compute actual saving
-mAssetsPrime = max(mAssetsPrimeStar,aaBar);
-mAssetsPrimeGrid = repmat(reshape(mAssetsPrime,1,nState),[nEpsilon 1]);
+mAssetsPrime = max(mAssetsPrimeStar,bbBar);
+mAssetsPrimeGrid = repmat(reshape(mAssetsPrime,1,nState),[nz 1]);
 
 % Compute next period's polynomials
 mAssetsPrimeZeros = min(max(2 * ((mAssetsPrime - assetsMin) / (assetsMax - assetsMin)) - 1,-1),1); 
@@ -39,41 +40,40 @@ for iPower = 3:nAssets
 end
 
 %---------------------------------------------------------------
-% Compute next period's savings policy function
-%---------------------------------------------------------------
-
-% Compute conditional expectation
-mConditionalExpectationPrime = exp(mCoefficients * mPolyAssetsPrime');
-
-% Compute target saving
-mAssetsPrimePrimeStar = w * (mmu * (1 - mEpsilonPrimeGrid) + (1 - ttau) * mEpsilonPrimeGrid) + (1 + r) * mAssetsPrimeGrid - ...
-	(mConditionalExpectationPrime .^ (-1 / ssigma));
-
-% Compute actual savings
-% mAssetsPrimePrimeGrid = max(mAssetsPrimePrimeStar,aaBar*ones(nEpsilon,nEpsilon*nAssets));
-mAssetsPrimePrimeGrid = max(mAssetsPrimePrimeStar,aaBar);
-
-%---------------------------------------------------------------
 % Update conditional expectation function
 %---------------------------------------------------------------
 
 % Compute new conditional expectation function
-mConsumptionPrime = w * (mmu * (1 - mEpsilonPrimeGrid) + (1 - ttau) * mEpsilonPrimeGrid) + (1 + r) * ...
-	mAssetsPrimeGrid - mAssetsPrimePrimeGrid;
-aConditionalExpectationTilde = reshape(bbeta * mEpsilonTransition * ((1 + r) * (mConsumptionPrime .^ (-ssigma))),...
-	nEpsilon,nEpsilon,nAssets);
+% ASSUMES nnu=1!
+    
+% Compute conditional expectation
+mConditionalExpectationPrime = exp(mCoefficients * mPolyAssetsPrime');
+
+% Compute target saving
+mAssetsPrimePrimeStar = ((1-ttau)*w_SS*mzPrimeGrid).^(1+1/nnu).*(mConditionalExpectationPrime/ppsi).^(1/nnu) ...
+                +(1+rr)*mAssetsPrimeGrid+chidT_SS-1./mConditionalExpectationPrime;
+
+mConstr = (mAssetsPrimePrimeStar < bbBar);
+
+mLaborPrime = (1-ttau)*w_SS*mzPrimeGrid.*mConditionalExpectationPrime/ppsi;
+aux = -bbBar + (1+rr)*mAssetsPrimeGrid(mConstr) + chidT_SS;
+mLaborPrime(mConstr) = (-aux + sqrt(aux.^2 + 4*((1-ttau)*w_SS*mzPrimeGrid(mConstr)).^2/ppsi)) ...
+                       ./ (2*(1-ttau)*w_SS*mzPrimeGrid(mConstr));
+mConsumptionPrime = (1-ttau)*w_SS*mzPrimeGrid./(ppsi*mLaborPrime);
+
+aConditionalExpectationTilde = reshape(bbeta * mzTransition * ((1 + rr) ./ mConsumptionPrime),...
+	nz,nz,nAssets);
 
 % Extract the relevant entries
-mConditionalExpectation = zeros(nEpsilon,nAssets);
-for iEpsilon = 1:nEpsilon
-	mConditionalExpectation(iEpsilon,:) = aConditionalExpectationTilde(iEpsilon,iEpsilon,:);
+mConditionalExpectation = zeros(nz,nAssets);
+for iz = 1:nz
+	mConditionalExpectation(iz,:) = aConditionalExpectationTilde(iz,iz,:);
 end
 
 % Update the coefficients
-mCoefficientsNew = zeros(nEpsilon,nAssets);
-for iEpsilon = 1:nEpsilon
-% 	vCoefficients = sum(vAssetsPoly' .* (ones(nAssets,1) * log(mConditionalExpectation(iEpsilon,:))),2);
-    vCoefficients = vAssetsPoly' * log(mConditionalExpectation(iEpsilon,:))';
-	mCoefficientsNew(iEpsilon,:) = (vCoefficients ./ vAssetsPolySquared)';
+mCoefficientsNew = zeros(nz,nAssets);
+for iz = 1:nz
+    vCoefficients = vAssetsPoly' * log(mConditionalExpectation(iz,:))';
+	mCoefficientsNew(iz,:) = (vCoefficients ./ vAssetsPolySquared)';
 end
 

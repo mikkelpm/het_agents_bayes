@@ -23,7 +23,7 @@ mzPrimeGrid = repmat(vzGrid,[1 nz*nAssets]);
 % Fine grid, for histogram and plotting functions
 %---------------------------------------------------------------
 
-% global vAssetsGridFine vAssetsGridFineZeros mEpsilonGridFine mAssetsGridFine mEpsilonPrimeGridFine 
+% global vAssetsGridFine vAssetsGridFineZeros mzGridFine mAssetsGridFine mzPrimeGridFine 
 
 % Assets grid
 vAssetsGridFine = linspace(assetsMin,assetsMax,nAssetsFine)';
@@ -33,7 +33,7 @@ vAssetsGridFineZeros = scaleDown(vAssetsGridFine,assetsMin,assetsMax);
 
 % Make matrix versions of grids
 mzGridFine = repmat(vzGrid,[1 nAssetsFine]);
-mAssetsGridFine = repmat(vAssetsGridFine',[nEpsilon 1]);
+mAssetsGridFine = repmat(vAssetsGridFine',[nz 1]);
 mzPrimeGridFine = repmat(vzGrid,[1 nStateFine]);
 
 %---------------------------------------------------------------

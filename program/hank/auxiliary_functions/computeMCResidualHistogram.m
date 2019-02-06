@@ -1,4 +1,4 @@
-function [residual,mHistogramOptional,mAssetsPrimeOptional,mConsumptionOptional] = computeMCResidualHistogram(capital,var_array)
+function [residual,mHistogramOptional,mAssetsPrimeOptional,mConsumptionOptional,mLaborOptional,mConditionalExpectationOptional] = computeMCResidualHistogram(rr,NN,var_array)
 
 % Computes residual of market-clearing condition, using histogram approximation of distribution
 % as in Young (2010); used to compute initial guess for parametric family
@@ -15,97 +15,84 @@ function [residual,mHistogramOptional,mAssetsPrimeOptional,mConsumptionOptional]
 % Thomas Winberry, July 26th, 2016
 
 % Declare global variables
-bbeta=var_array{1};
-ssigma=var_array{2};
-aalpha=var_array{3};
-ddelta=var_array{4};
-aaBar=var_array{5};
-aggEmployment=var_array{6};
-mmu=var_array{7};
-ttau=var_array{8};
-mEpsilonTransition=var_array{9};
-vEpsilonGrid=var_array{10};
-nEpsilon=var_array{11};
-nAssets=var_array{12};
-nState=var_array{13};
-assetsMin=var_array{14};
-assetsMax=var_array{15};
-vAssetsGrid=var_array{16};
-mEpsilonGrid=var_array{17};
-mAssetsGrid=var_array{18};
-vAssetsPoly=var_array{19};
-vAssetsPolySquared=var_array{20};
-mEpsilonPrimeGrid=var_array{21};
-maxIterations=var_array{22};
-tolerance=var_array{23};
-dampening=var_array{24};
-vAssetsPolyFine=var_array{25};
-vAssetsGridFine=var_array{26};
-mEpsilonGridFine=var_array{27};
-mAssetsGridFine=var_array{28};
-nAssetsFine=var_array{29};
-nStateFine=var_array{30};
-vAssetsPolyQuadrature=var_array{31};
-vAssetsGridQuadrature=var_array{32};
-mEpsilonGridQuadrature=var_array{33};
-mAssetsGridQuadrature=var_array{34};
-nAssetsQuadrature=var_array{35};
-vQuadratureWeights=var_array{36};
-vEpsilonInvariant=var_array{37};
-nMeasure=var_array{38};
-splineOpt=var_array{39};
-vAssetsPolyBC=var_array{40};
-	
-% Compute prices
-r = aalpha * (capital ^ (aalpha - 1)) * (aggEmployment ^ (1 - aalpha)) - ddelta;
-w = (capital ^ aalpha) * (1 - aalpha) * (aggEmployment ^ (-aalpha));
-var_array{41} = r;
-var_array{42} = w;
+bbeta = var_array{1};
+ppsi = var_array{2};
+nnu = var_array{3};
+bbBar = var_array{4};
+eepsilon = var_array{5};
+ttau = var_array{6};
+vvarthetaB = var_array{7};
+vvarthetaT = var_array{8};
+mzTransition = var_array{9};
+vzInvariant = var_array{10};
+nz = var_array{11};
+nAssets = var_array{12};
+nState = var_array{13};
+nStateFine = var_array{14};
+nAssetsFine = var_array{15};
+nAssetsQuadrature = var_array{16};
+nMeasure = var_array{17};
+assetsMin = var_array{18};
+assetsMax = var_array{19};
+vzGrid = var_array{20};
+mzGrid = var_array{21};
+mzGridFine = var_array{22};
+mzPrimeGrid = var_array{23};
+mzGridQuadrature = var_array{24};
+vAssetsGridFine = var_array{25};
+vAssetsGridQuadrature = var_array{26};
+vAssetsPoly = var_array{27};
+vAssetsPolySquared = var_array{28};
+vAssetsPolyFine = var_array{29};
+vAssetsPolyQuadrature = var_array{30};
+vAssetsPolyBC = var_array{31};
+mAssetsGrid = var_array{32};
+mAssetsGridFine = var_array{33};
+mAssetsGridQuadrature = var_array{34};
+vQuadratureWeights = var_array{35};
+maxIterations = var_array{36};
+tolerance = var_array{37};
+dampening = var_array{38};
+A_SS = var_array{39};
+w_SS = var_array{40};
+
 
 %----------------------------------------------------------------
 % Compute individual decisions
 %----------------------------------------------------------------
 
-if splineOpt == 0	% approximate conditional expectation function using polynomials
+chidT_SS = (1/eepsilon + vvarthetaT)*A_SS*NN;
 
-	% Initialize coefficients using rule of thumb savings rule
-	mGridInit = log(bbeta * (1 + r) * ((w * (mmu * (1 - mEpsilonGrid) + (1 - ttau) * mEpsilonGrid) + ...
-		r * mAssetsGrid) .^ (-ssigma)));
-	mCoefficients = zeros(nEpsilon,nAssets);
-	for iEpsilon = 1:nEpsilon	% interpolate
-		vCoefficients = sum(vAssetsPoly' .* (ones(nAssets,1) * mGridInit(iEpsilon,:)),2);
-		mCoefficients(iEpsilon,:) = (vCoefficients ./ vAssetsPolySquared)';
-	end
+% Initialize coefficients using rule of thumb savings rule that sets b'=b and z'=z
+% ASSUMES nnu=1!
+aux = rr*mAssetsGrid + chidT_SS;
+mGridInit = log(bbeta * (1+rr) * 2 ./ (aux + sqrt(aux.^2 + 4*((1-ttau)*w_SS*mzGrid).^2/ppsi)));
 
-	% Iterate
-	err = 100; iteration = 1;
-	while err > tolerance && iteration <= maxIterations
+mCoefficients = zeros(nz,nAssets);
+for iz = 1:nz	% interpolate
+    vCoefficients = vAssetsPoly' * mGridInit(iz,:)';
+    mCoefficients(iz,:) = (vCoefficients ./ vAssetsPolySquared)';
+end
 
-		mCoefficientsNew = updateCoefficients_polynomials_mex(mCoefficients,...
-            bbeta,ssigma,aaBar,mmu,ttau,mEpsilonTransition,nEpsilon,nAssets,nState,assetsMin,assetsMax,...
-            mEpsilonGrid,mAssetsGrid,vAssetsPoly,vAssetsPolySquared,mEpsilonPrimeGrid,...
-            r,w);
-		err = max(abs(mCoefficientsNew(:) - mCoefficients(:)));
-		iteration = iteration + 1;
-		mCoefficients = dampening * mCoefficients + (1 - dampening) * mCoefficientsNew;
+% Iterate
+err = Inf; iteration = 1;
+while err > tolerance && iteration <= maxIterations
 
-	end
-	
-else	% approximate savings decision using linear splines
-
-	% Initialize coefficients
-	mAssetsPrime = mAssetsGrid;
-	
-	% Iterate
-	err = 100; iteration = 1;
-	while err > tolerance && iteration <= maxIterations
-		mAssetsPrimeNew = updateCoefficients_splines(mAssetsPrime);
-		err = max(abs(mAssetsPrimeNew(:) - mAssetsPrime(:)));
-		iteration = iteration + 1;
-		mAssetsPrime = dampening * mAssetsPrime + (1 - dampening) * mAssetsPrimeNew;
-	end
+    mCoefficientsNew = updateCoefficients_polynomials(mCoefficients,...
+        bbeta,ppsi,nnu,bbBar,eepsilon,ttau,vvarthetaT,mzTransition,nz,nAssets,nState,assetsMin,assetsMax,...
+        mzGrid,mAssetsGrid,vAssetsPoly,vAssetsPolySquared,mzPrimeGrid,...
+        A_SS,w_SS,rr,NN);
+    err = max(abs(mCoefficientsNew(:) - mCoefficients(:)));
+    iteration = iteration + 1;
+    mCoefficients = dampening * mCoefficients + (1 - dampening) * mCoefficientsNew;
 
 end
+
+[~,mConditionalExpectation_hist] = updateCoefficients_polynomials(mCoefficients,...
+        bbeta,ppsi,nnu,bbBar,eepsilon,ttau,vvarthetaT,mzTransition,nz,nAssets,nState,assetsMin,assetsMax,...
+        mzGrid,mAssetsGrid,vAssetsPoly,vAssetsPolySquared,mzPrimeGrid,...
+        A_SS,w_SS,rr,NN);
+
 
 %----------------------------------------------------------------
 % Compute histogram approximation of stationary distribution
@@ -115,72 +102,66 @@ end
 % Compute policies over histogram grid	
 %%%
 
-if splineOpt == 0
+% Compute decision rules along fine grid
+mConditionalExpectation = exp(mCoefficients * vAssetsPolyFine');
 
-	% Compute decision rules along fine grid
-	mConditionalExpectation = exp(mCoefficients * vAssetsPolyFine');
+% Compute savings policy
+mAssetsPrimeStar = ((1-ttau)*w_SS*mzGridFine).^(1+1/nnu).*(mConditionalExpectation/ppsi).^(1/nnu) ...
+                    +(1+rr)*mAssetsGridFine+chidT_SS-1./mConditionalExpectation;
+mAssetsPrimeFine = max(mAssetsPrimeStar,bbBar);
 
-	% Compute savings policy
-	mAssetsPrimeStar = w * (mmu * (1 - mEpsilonGridFine) + (1 - ttau) * mEpsilonGridFine) + ...
-		(1 + r) * mAssetsGridFine - (mConditionalExpectation .^ (-1 / ssigma));
-	mAssetsPrimeFine = max(mAssetsPrimeStar,aaBar * ones(nEpsilon,nAssetsFine));
-		
-else	% linearly interpolate savings rule over fine grid
+% Compute labor and consumption
+% ASSUMES nnu=1!
+mConstr = (mAssetsPrimeFine==bbBar);
+mLaborFine = (1-ttau)*w_SS*mzGridFine.*mConditionalExpectation/ppsi;
+aux = -bbBar + (1+rr)*mAssetsGridFine(mConstr) + chidT_SS;
+mLaborFine(mConstr) = (-aux + sqrt(aux.^2 + 4*((1-ttau)*w_SS*mzGridFine(mConstr)).^2/ppsi)) ...
+                       ./ (2*(1-ttau)*w_SS*mzGridFine(mConstr));
+mConsumptionFine = (1-ttau)*w_SS*mzGridFine./(ppsi*mLaborFine);
 
-	% Compute weights
-	[vIndicesBelow,vIndicesAbove,vWeightBelow,vWeightAbove] = computeLinearWeights(vAssetsGrid,vAssetsGridFine);
-		
-	% Linear interpolation
-	mAssetsPrimeFine = mAssetsPrime(:,vIndicesBelow) .* repmat(vWeightBelow',nEpsilon,1) + ...
-		mAssetsPrime(:,vIndicesAbove) .* repmat(vWeightAbove',nEpsilon,1);
-	
-end
-
-% Compute consumption
-mConsumptionFine = w * (mmu * (1 - mEpsilonGridFine) + (1 - ttau) * mEpsilonGridFine) + ...
-	(1 + r) * mAssetsGridFine - mAssetsPrimeFine;
-	
 %%%
 % Compute transition matrix associated with policy rules
 %%%
 
 % Compute weighting matrices
 [vIndicesBelow,vIndicesAbove,vWeightBelow,vWeightAbove] = computeLinearWeights(vAssetsGridFine,mAssetsPrimeFine(:));
-	
+
 % Compute transition matrix for assets over full grid
 mTransitionAbove = zeros(nStateFine,nAssetsFine);
 mTransitionBelow = zeros(nStateFine,nAssetsFine);
-for a = 1:nAssetsFine
-	mTransitionBelow(vIndicesBelow == a,a) = vWeightBelow(vIndicesBelow == a);
-	mTransitionAbove(vIndicesAbove == a,a) = vWeightAbove(vIndicesAbove == a);
+for b = 1:nAssetsFine
+	mTransitionBelow(vIndicesBelow == b,b) = vWeightBelow(vIndicesBelow == b);
+	mTransitionAbove(vIndicesAbove == b,b) = vWeightAbove(vIndicesAbove == b);
 end
-mAssetsTransition = kron(mTransitionBelow + mTransitionAbove,ones(1,nEpsilon));
+mAssetsTransition = kron(mTransitionBelow + mTransitionAbove,ones(1,nz));
 
 % Compute transition matrix for idiosyncratic shocks over full grid
-mEpsilonTransitionHistogram = repmat(mEpsilonTransition,nAssetsFine);
+mzTransitionHistogram = repmat(mzTransition,nAssetsFine);
 
 % Compute full transition matrix
-mTransition = sparse(mAssetsTransition .* mEpsilonTransitionHistogram);
+mTransition = sparse(mAssetsTransition .* mzTransitionHistogram);
 
 % Compute invariant histogram by iteration
-errHistogram = 100;	iterationHistogram = 0;
-vHistogram = ones(nStateFine,1) ./ nStateFine;
-while errHistogram > 1e-12 && iterationHistogram < 1e4
+errHistogram = Inf;	iterationHistogram = 0;
+vHistogram = ones(nStateFine,1) / nStateFine;
+while errHistogram > 1e-12 && iterationHistogram < maxIterations
 	
 	vHistogramNew = mTransition' * vHistogram;
-	errHistogram = max(abs(vHistogramNew - vHistogram)); iterationHistogram = iterationHistogram + 1;
+	errHistogram = max(abs(vHistogramNew - vHistogram));
+    iterationHistogram = iterationHistogram + 1;
 	vHistogram = vHistogramNew;
 	
 end
 
 % Expand histogram matrix
-mHistogram = reshape(full(vHistogramNew),nEpsilon,nAssetsFine);
+mHistogram = reshape(full(vHistogramNew),nz,nAssetsFine);
 
 %----------------------------------------------------------------
-% Return market clearing residual
+% Return market clearing residuals
 %----------------------------------------------------------------
 
-residual = capital - sum(vAssetsGridFine' .* (mHistogram(1,:) + mHistogram(2,:)));
+residual = [vvarthetaB*A_SS*NN + sum(mHistogram * vAssetsGridFine);
+            NN - (mzGridFine(:).*mLaborFine(:))'*mHistogram(:)];
 
 if nargout > 1 
 
@@ -189,6 +170,8 @@ if nargout > 1
     if nargout > 2
         mAssetsPrimeOptional = mAssetsPrimeFine;
         mConsumptionOptional = mConsumptionFine;
+        mLaborOptional = mLaborFine;
+        mConditionalExpectationOptional = mConditionalExpectation_hist;
     end
 	
 end

@@ -14,34 +14,34 @@ oldFolder = cd('./auxiliary_functions');
 
 % Preferences
 bbeta = .96^(1/4); % Discount factor (quarterly)
-ppsi = 1;
-nnu = 1;
+ppsi = 1; % Coefficient on labor disutility
+nnu = 1; % Inverse Frisch elasticity, MUST be 1 at the moment!
 
 % Borrowing limit
-bbBar = 0;
+bbBar = -1;
 
 % Production
 eepsilon = 5;
 
 % Taxes
 ttau = 0.3;
-vvarthetaB = -23.3;
+vvarthetaB = -0.233;
 vvarthetaT = 0.06;
 
 % Idioynscratic productivity
-vzGrid = [0;1];
-mzTransition = [0.5 0.5; 0.5 0.5];
+vzGrid = [0.5;1.5];
+mzTransition = [0.7 0.3; 0.1 0.9];
 
 % Aggregate productivity
-A_SS = 1; % Steady state productivity level
+A_SS = 3; % Steady state productivity level
 
 % APPROXIMATION PARAMETERS
 
 % Whether to print out results from steady state computation
-displayOpt = 'off';       % 'iter-detailed' or 'off'
+displayOpt = 'iter-detailed';       % 'iter-detailed' or 'off'
 
 % Order of approximation
-nAssets = 25; % number of gridpoints in spline approximation or polynomials in polynomial approximation
+nAssets = 25; % number of polynomials in polynomial approximation
 
 % Finer grid for analyzing policy functions
 nAssetsFine = 100;
@@ -49,6 +49,10 @@ nAssetsFine = 100;
 % Approximation of distribution
 nMeasure = 3;
 nAssetsQuadrature = 8;
+
+% Steady state
+tolerance_SS_root = 0.01; % Numerical tolerance for root finding
+tolerance_SS_invhist = 1e-12; % Numerical tolerance for invariant distribution of histogram approach
 
 % Iteration on individual decisions
 maxIterations = 2e4;
@@ -65,7 +69,7 @@ setParameters;
 
 % Solve for steady state
 coreSteadyState;
-profile viewer;
+% profile viewer;
 % profsave(profile('info'),['profile_results_' datestr(now,'yyyymmdd')]);
 
 
