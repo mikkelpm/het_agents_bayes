@@ -21,4 +21,4 @@ N_RepSS = (((1-ttau)*w_SS/ppsi)/abs((1-r_RepSS*vvarthetaB+vvarthetaT)*A_SS-ttau*
 
 % Bounds on grid space
 assetsMin = bbBar;
-assetsMax = 10 * (-vvarthetaB)*A_SS*N_RepSS; % Multiple of steady state borrowing in repr agent model
+assetsMax = 15 * (-vvarthetaB)*A_SS*N_RepSS; % Multiple of steady state borrowing in repr agent model

@@ -58,9 +58,9 @@ vQuadratureWeights = var_array{35};
 maxIterations = var_array{36};
 tolerance = var_array{37};
 dampening = var_array{38};
-A_SS = var_array{39};
-w_SS = var_array{40};
-
+numNewton = var_array{39};
+A_SS = var_array{40};
+w_SS = var_array{41};
 
 
 %----------------------------------------------------------------
@@ -150,21 +150,24 @@ while err > tolerance && iteration <= maxIterations
     for iz = 1 : nz
         
 %          objectiveFunction = @(vParametersTilde) parametersResidual(vParametersTilde,reshape(bGridMoments(iz,:,:),nAssetsQuadrature,nMeasure),vQuadratureWeights,nMeasure);
-%         [vParameters,normalization] = fminunc(objectiveFunction,zeros(nMeasure,1),options);        
+%         [vParameters,normalization] = fminunc(objectiveFunction,zeros(nMeasure,1),options);
 
-		vParameters = mParameters(iz,2:end)';
+		vParameters = zeros(nMeasure,1);%mParameters(iz,2:end)';
 		mGridMoments = reshape(bGridMoments(iz,:,:),nAssetsQuadrature,nMeasure);
-        dens_nonnormaliz = exp(mGridMoments * vParameters); % Non-normalized density
         
-        % Take Newton step to minimize density
-		DD = vQuadratureWeights' * (dens_nonnormaliz.*mGridMoments);
-		HH = zeros(nMeasure);
-        for iH = 1:nAssetsQuadrature
-			HH = HH+vQuadratureWeights(iH)*dens_nonnormaliz(iH,:)*(mGridMoments(iH,:)'*mGridMoments(iH,:));
+        % Take Newton steps to minimize density
+        for istep=1:numNewton
+            aux = mGridMoments * vParameters;
+            dens_nonnormaliz = exp(aux-max(aux(:))); % Non-normalized density
+            DD = vQuadratureWeights' * (dens_nonnormaliz.*mGridMoments);
+            HH = 0.1*eye(nMeasure); %zeros(nMeasure);
+            for iH = 1:nAssetsQuadrature
+                HH = HH+vQuadratureWeights(iH)*dens_nonnormaliz(iH)*(mGridMoments(iH,:)'*mGridMoments(iH,:));
+            end
+            vParameters = vParameters-HH\DD';
         end
-		vParameters = vParameters-HH\DD';
         
-		normalization = vQuadratureWeights' * (exp(mGridMoments * vParameters)); % New normalization constant
+		normalization = vQuadratureWeights' * exp(mGridMoments * vParameters); % New normalization constant
 		mParametersNew(iz,:) = [1 / normalization; vParameters]; % New parameters
         
     end
@@ -247,7 +250,9 @@ while err > tolerance && iteration <= maxIterations
 	
 end
 
-disp(iteration);
+if iteration>maxIterations
+    warning('Did not converge');
+end
 
 %----------------------------------------------------------------
 % Return market clearing residual

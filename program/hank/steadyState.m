@@ -18,7 +18,7 @@ ppsi = 1; % Coefficient on labor disutility
 nnu = 1; % Inverse Frisch elasticity, MUST be 1 at the moment!
 
 % Borrowing limit
-bbBar = 0;
+bbBar = -1;
 
 % Production
 eepsilon = 5;
@@ -30,7 +30,7 @@ vvarthetaT = 0.06;
 
 % Idiosyncratic productivity
 vzGrid = [0.5;1;1.5];
-mzTransition = [0.5 0.5 0;
+mzTransition = [0.8 0.2 0;
                 0.1 0.8 0.1;
                 0   0.2 0.8]; % (i,j) element: P(z'=z_j | z=z_i)
 
@@ -55,11 +55,10 @@ nAssetsQuadrature = 8;
 % Steady state
 tolerance_SS_root = 0.01; % Numerical tolerance for root finding
 tolerance_SS_invhist = 1e-12; % Numerical tolerance for invariant distribution of histogram approach
-
-% Iteration on individual decisions
 maxIterations = 2e4;
 tolerance = 1e-5;
-dampening = .95;
+dampening = .5;%.95;
+numNewton = 5; % Number of Newton steps per iteration in parametric ss calculation
 
 
 %% Set remaining parameters

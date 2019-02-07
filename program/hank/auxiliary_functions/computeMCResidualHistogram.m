@@ -53,8 +53,9 @@ vQuadratureWeights = var_array{35};
 maxIterations = var_array{36};
 tolerance = var_array{37};
 dampening = var_array{38};
-A_SS = var_array{39};
-w_SS = var_array{40};
+numNewton = var_array{39};
+A_SS = var_array{40};
+w_SS = var_array{41};
 
 
 %----------------------------------------------------------------
