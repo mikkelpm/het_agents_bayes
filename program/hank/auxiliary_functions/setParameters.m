@@ -17,7 +17,7 @@ nMeasureCoefficients = nz * nMeasure;
 % Compute some steady state quantities, including for repr agent model
 w_SS = (eepsilon-1)/eepsilon*A_SS;
 r_RepSS = 1/bbeta-1;
-N_RepSS = (((1-ttau)*w_SS/ppsi)/abs((1-r_RepSS*vvarthetaB+vvarthetaT)*A_SS-ttau*w_SS))^(1/(1+nnu))*z_SS;
+N_RepSS = (((1-ttau)*w_SS/ppsi)/((1-r_RepSS*vvarthetaB+vvarthetaT)*A_SS-ttau*w_SS))^(1/(1+nnu))*z_SS;
 
 % Bounds on grid space
 assetsMin = bbBar;

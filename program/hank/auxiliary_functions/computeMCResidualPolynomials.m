@@ -152,7 +152,7 @@ while err > tolerance && iteration <= maxIterations
 %          objectiveFunction = @(vParametersTilde) parametersResidual(vParametersTilde,reshape(bGridMoments(iz,:,:),nAssetsQuadrature,nMeasure),vQuadratureWeights,nMeasure);
 %         [vParameters,normalization] = fminunc(objectiveFunction,zeros(nMeasure,1),options);
 
-		vParameters = zeros(nMeasure,1);%mParameters(iz,2:end)';
+		vParameters = (1-dampening)*mParameters(iz,2:end)'; %zeros(nMeasure,1);
 		mGridMoments = reshape(bGridMoments(iz,:,:),nAssetsQuadrature,nMeasure);
         
         % Take Newton steps to minimize density
