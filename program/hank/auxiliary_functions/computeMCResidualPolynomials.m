@@ -130,10 +130,6 @@ mAssetsPrimeBC = max(mAssetsPrimeStarBC,bbBar);
 % Compute stationary distribution from these decision rules
 %----------------------------------------------------------------
 
-% options = optimoptions(@fminunc,'Algorithm','quasi-newton','Display','iter-detailed',...
-%     'MaxFunEvals',50000,'TolFun',1e-12,'GradObj','on','MaxIter',1000);
-
-
 % Initialize iteration
 err = Inf; iteration = 1; 
 mParameters = zeros(nz,nMeasure+1);
@@ -148,9 +144,6 @@ while err > tolerance && iteration <= maxIterations
     mParametersNew = zeros(nz,nMeasure+1);
 
     for iz = 1 : nz
-        
-%          objectiveFunction = @(vParametersTilde) parametersResidual(vParametersTilde,reshape(bGridMoments(iz,:,:),nAssetsQuadrature,nMeasure),vQuadratureWeights,nMeasure);
-%         [vParameters,normalization] = fminunc(objectiveFunction,zeros(nMeasure,1),options);
 
 		vParameters = (1-dampening)*mParameters(iz,2:end)'; %zeros(nMeasure,1);
 		mGridMoments = reshape(bGridMoments(iz,:,:),nAssetsQuadrature,nMeasure);
@@ -261,11 +254,19 @@ end
 % Household ss borrowing
 bbNew = (vzInvariant .* (1 - mHat))' * mMoments(:,1) + bbBar * (vzInvariant' * mHat);
 
-% Household ss effective labor supply (=z*n)
-mLabor_times_z = (1-ttau)*w_SS*(vzGrid.^2).*mConditionalExpectation/ppsi; % Away from constraint
-aux = rr*bbBar + chidT_SS;
-mLabor_times_z_BC = (-aux + sqrt(aux.^2 + 4*((1-ttau)*w_SS*vzGrid).^2/ppsi)) ...
-                       ./ (2*(1-ttau)*w_SS); % At constraint
+% Household ss effective labor supply (=z*n) for b>bbBar
+mConstr = (mAssetsPrimeQuadrature==bbBar);
+mLabor_times_z = (1-ttau)*w_SS*(vzGrid.^2).*mConditionalExpectation/ppsi;
+aux = -bbBar + (1+rr)*mAssetsPrimeQuadrature(mConstr) + chidT_SS;
+mLabor_times_z(mConstr) = (-aux + sqrt(aux.^2 + 4*((1-ttau)*w_SS*mzGridQuadrature(mConstr)).^2/ppsi)) ...
+                          ./ (2*(1-ttau)*w_SS); % If savings constrained
+
+% Household ss effective labor supply for b=bbBar
+mConstrBC = (mAssetsPrimeBC==bbBar);
+mLabor_times_zBC = (1-ttau)*w_SS*(vzGrid.^2).*mConditionalExpectationBC/ppsi;
+aux = -bbBar + (1+rr)*mAssetsPrimeBC(mConstrBC) + chidT_SS;
+mLabor_times_zBC(mConstrBC) = (-aux + sqrt(aux.^2 + 4*((1-ttau)*w_SS*vzGrid(mConstrBC)).^2/ppsi)) ...
+                              ./ (2*(1-ttau)*w_SS); % If savings constrained
 
 % Log asset density away from constraint
 logdens = zeros(nz,nAssetsQuadrature);
@@ -274,7 +275,7 @@ for iMoment=1:nMeasure
 end
 
 NNNew = (vzInvariant.*(1-mHat).*mParameters(:,1))'*(mLabor_times_z.*exp(logdens))*vQuadratureWeights ...
-        + (vzInvariant.*mHat)'*mLabor_times_z_BC; % Aggregate effective labor supply
+        + (vzInvariant.*mHat)'*mLabor_times_zBC; % Aggregate effective labor supply
 
 residual = [vvarthetaB*A_SS*NN + bbNew; % Bonds
             NN - NNNew];                % Labor

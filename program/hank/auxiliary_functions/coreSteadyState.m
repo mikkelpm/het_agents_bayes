@@ -65,7 +65,7 @@ var_array{41} = w_SS;
 t0 = tic;
 fprintf('Computing initial guess from histogram...\n')
 
-% Solve for market clearing capital stock
+% Solve for market clearing r and N
 f = @(x) computeMCResidualHistogram(x(1),x(2),var_array);
 options = optimoptions('fsolve','Display',displayOpt,...
                        'TolFun',tolerance_SS_root,'TypicalX',[0.01; 0.1]);
@@ -88,7 +88,8 @@ end
 %----------------------------------------------------------------
 
 % Compute histogram
-[~, mHistogram, mAssets, mConsumption, mLabor, mConditionalExpectation] = computeMCResidualHistogram(r_SS_hist,N_SS_hist,var_array);
+[~, mHistogram, mAssetsPrime_hist, mConsumption_hist, mLabor_hist, mConditionalExpectation_hist] ...
+    = computeMCResidualHistogram(r_SS_hist,N_SS_hist,var_array);
 
 % Compute moments from histogram
 mMomentsHistogram = zeros(nz,nMeasure);
@@ -112,7 +113,7 @@ for iz = 1 : nz
 end
 
 % Mass at borrowing constraint
-mHatHistogram = mHistogram(:,1)./sum(mHistogram,2);
+mHat_hist = mHistogram(:,1)./sum(mHistogram,2);
 
 %----------------------------------------------------------------
 % Compute market-clearing capital stock from parametric family
@@ -121,22 +122,16 @@ mHatHistogram = mHistogram(:,1)./sum(mHistogram,2);
 t0 = tic; 
 fprintf('Compute steady state from parametric family...\n')
 
-% Solve for market clearing capital stock
-f = @(x) computeMCResidualPolynomials(x(1),x(2),mMomentsHistogram,bGridMoments,mHatHistogram,mConditionalExpectation,var_array);
-options = optimoptions('fsolve','Display',displayOpt,'TolFun',tolerance_SS_root);
-if sum(abs(f([r_SS_hist,N_SS_hist]))) > tolerance_SS_root
-    [x_solve,err,exitflag] = fsolve(f,[r_SS_hist,N_SS_hist],options);
-    r_SS = x_solve(1);
-    N_SS = x_solve(2);
-    % Return error if market clearing not solved
-    if exitflag < 1
-        check = 1;
-        return; 
-    end	
-else    
-	r_SS = r_SS_hist;
-    N_SS = N_SS_hist;
-end
+% Solve for market clearing r and N
+f = @(x) computeMCResidualPolynomials(x(1),x(2),mMomentsHistogram,bGridMoments,mHat_hist,mConditionalExpectation_hist,var_array);
+[x_solve,err,exitflag] = fsolve(f,[r_SS_hist,N_SS_hist],options);
+r_SS = x_solve(1);
+N_SS = x_solve(2);
+% Return error if market clearing not solved
+if exitflag < 1
+    check = 1;
+    return; 
+end	
 
 if strcmp(displayOpt,'iter-detailed') == 1
     fprintf('Done! Time to compute: %2.2f seconds \n\n',toc(t0))
@@ -148,7 +143,7 @@ end
 %----------------------------------------------------------------
 
 [~,mCoefficients,mParameters,mMoments,mHat] = ...
-    computeMCResidualPolynomials(r_SS,N_SS,mMomentsHistogram,bGridMoments,mHatHistogram,mConditionalExpectation,var_array);
+    computeMCResidualPolynomials(r_SS,N_SS,mMomentsHistogram,bGridMoments,mHat_hist,mConditionalExpectation_hist,var_array);
 
 Y_SS = A_SS*N_SS;
 d_SS = Y_SS/eepsilon;
