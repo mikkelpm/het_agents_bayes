@@ -266,7 +266,15 @@ mLabor_times_z = (1-ttau)*w_SS*(vzGrid.^2).*mConditionalExpectation/ppsi; % Away
 aux = rr*bbBar + chidT_SS;
 mLabor_times_z_BC = (-aux + sqrt(aux.^2 + 4*((1-ttau)*w_SS*vzGrid).^2/ppsi)) ...
                        ./ (2*(1-ttau)*w_SS); % At constraint
-NNNew = (vzInvariant.*(1-mHat))'*mLabor_times_z*vQuadratureWeights + (vzInvariant.*mHat)'*mLabor_times_z_BC; % Aggregate effective labor supply
+
+% Log asset density away from constraint
+logdens = zeros(nz,nAssetsQuadrature);
+for iMoment=1:nMeasure
+    logdens = logdens + bGridMoments(:,:,iMoment).*mParameters(:,iMoment+1);
+end
+
+NNNew = (vzInvariant.*(1-mHat).*mParameters(:,1))'*(mLabor_times_z.*exp(logdens))*vQuadratureWeights ...
+        + (vzInvariant.*mHat)'*mLabor_times_z_BC; % Aggregate effective labor supply
 
 residual = [vvarthetaB*A_SS*NN + bbNew; % Bonds
             NN - NNNew];                % Labor
