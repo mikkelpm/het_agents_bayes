@@ -6,10 +6,10 @@ function [mCoefficientsNew,mConditionalExpectation] = updateCoefficients_polynom
 % Updates polynomial coefficients approximating the conditional expectation function in steady state
 % 
 % Inputs
-%   (1) mCoefficients: nEpsilon x nAssets matrix, storing previous iteration's coefficients
+%   (1) mCoefficients: nz x nAssets matrix, storing previous iteration's coefficients
 %
 % Outputs
-%   (1) mCoefficientsNew: nEpsilon x nAssets matrix, storing updated coefficients
+%   (1) mCoefficientsNew: nz x nAssets matrix, storing updated coefficients
 % 
 % Thomas Winberry, January 19, 2016
 
