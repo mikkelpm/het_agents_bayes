@@ -8,6 +8,10 @@ assert(size(vzInvariant,2)==1);
 vzInvariant = vzInvariant/sum(vzInvariant); % Invariant distribution
 z_SS = vzGrid'*vzInvariant; % Steady state mean
 
+% Share grid
+nShare = length(vShareGrid);
+assert(abs(vShareFraction'*vShareGrid-1)<1e-10); % Check that profit shares add up
+
 % Approximation dimensions
 nState = nz * nAssets;
 nStateFine = nz * nAssetsFine;
@@ -21,4 +25,4 @@ N_RepSS = (((1-ttau)*w_SS/ppsi)/((1-r_RepSS*vvarthetaB+vvarthetaT)*A_SS-ttau*w_S
 
 % Bounds on grid space
 assetsMin = bbBar;
-assetsMax = 15 * (-vvarthetaB)*A_SS*N_RepSS; % Multiple of steady state borrowing in repr agent model
+assetsMax = 20 * (-vvarthetaB)*A_SS*N_RepSS; % Multiple of steady state borrowing in repr agent model

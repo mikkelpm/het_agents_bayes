@@ -30,261 +30,281 @@ vvarthetaB = var_array{7};
 vvarthetaT = var_array{8};
 mzTransition = var_array{9};
 vzInvariant = var_array{10};
-nz = var_array{11};
-nAssets = var_array{12};
-nState = var_array{13};
-nStateFine = var_array{14};
-nAssetsFine = var_array{15};
-nAssetsQuadrature = var_array{16};
-nMeasure = var_array{17};
-assetsMin = var_array{18};
-assetsMax = var_array{19};
-vzGrid = var_array{20};
-mzGrid = var_array{21};
-mzGridFine = var_array{22};
-mzPrimeGrid = var_array{23};
-mzGridQuadrature = var_array{24};
-vAssetsGridFine = var_array{25};
-vAssetsGridQuadrature = var_array{26};
-vAssetsPoly = var_array{27};
-vAssetsPolySquared = var_array{28};
-vAssetsPolyFine = var_array{29};
-vAssetsPolyQuadrature = var_array{30};
-vAssetsPolyBC = var_array{31};
-mAssetsGrid = var_array{32};
-mAssetsGridFine = var_array{33};
-mAssetsGridQuadrature = var_array{34};
-vQuadratureWeights = var_array{35};
-maxIterations = var_array{36};
-tolerance = var_array{37};
-dampening = var_array{38};
-numNewton = var_array{39};
-A_SS = var_array{40};
-w_SS = var_array{41};
+vShareGrid = var_array{11};
+vShareFraction = var_array{12};
+nz = var_array{13};
+nAssets = var_array{14};
+nState = var_array{15};
+nStateFine = var_array{16};
+nAssetsFine = var_array{17};
+nAssetsQuadrature = var_array{18};
+nMeasure = var_array{19};
+nShare = var_array{20};
+assetsMin = var_array{21};
+assetsMax = var_array{22};
+vzGrid = var_array{23};
+mzGrid = var_array{24};
+mzGridFine = var_array{25};
+mzPrimeGrid = var_array{26};
+mzGridQuadrature = var_array{27};
+vAssetsGridFine = var_array{28};
+vAssetsGridQuadrature = var_array{29};
+vAssetsPoly = var_array{30};
+vAssetsPolySquared = var_array{31};
+vAssetsPolyFine = var_array{32};
+vAssetsPolyQuadrature = var_array{33};
+vAssetsPolyBC = var_array{34};
+mAssetsGrid = var_array{35};
+mAssetsGridFine = var_array{36};
+mAssetsGridQuadrature = var_array{37};
+vQuadratureWeights = var_array{38};
+maxIterations = var_array{39};
+tolerance = var_array{40};
+dampening = var_array{41};
+numNewton = var_array{42};
+A_SS = var_array{43};
+w_SS = var_array{44};
 
 
-%----------------------------------------------------------------
-% Compute individual decisions
-%----------------------------------------------------------------
+mCoefficientsOptional = nan(nShare,nz,nAssets);
+mParametersOptional = nan(nShare,nz,nMeasure+1);
+mMomentsOptional = nan(nShare,nz,nMeasure);
+mHatOptional = nan(nShare,nz);
+bond_demand = nan(nShare,1);
+labor_supply = nan(nShare,1);
 
-chidT_SS = (1/eepsilon + vvarthetaT)*A_SS*NN; % chi*d+T
+for iShare = 1:nShare
 
-% Initialize coefficients using rule of thumb savings rule that sets b'=b and z'=z
-% ASSUMES nnu=1!
-% aux = rr*mAssetsGrid + chidT_SS;
-% mGridInit = log(bbeta * (1+rr) * 2 ./ (aux + sqrt(aux.^2 + 4*((1-ttau)*w_SS*mzGrid).^2/ppsi)));
+    the_mMoments = reshape(mMoments(iShare,:,:),nz,nMeasure);
+    the_bGridMoments = reshape(bGridMoments(iShare,:,:,:),nz,nAssetsQuadrature,nMeasure);
+    the_mHat = mHat(iShare,:)';
+    
+    %----------------------------------------------------------------
+    % Compute individual decisions
+    %----------------------------------------------------------------
 
-% Initialize using histogram see
-mGridInit = log(mConditionalExpectation);
+    chidT_SS = (1/eepsilon*vShareGrid(iShare) + vvarthetaT)*A_SS*NN; % chi*d+T
 
-mCoefficients = zeros(nz,nAssets);
-for iz = 1:nz	% interpolate
-    vCoefficients = vAssetsPoly' * mGridInit(iz,:)';
-    mCoefficients(iz,:) = (vCoefficients ./ vAssetsPolySquared)';
-end
+    % Initialize coefficients using rule of thumb savings rule that sets b'=b and z'=z
+    % ASSUMES nnu=1!
+    % aux = rr*mAssetsGrid + chidT_SS;
+    % mGridInit = log(bbeta * (1+rr) * 2 ./ (aux + sqrt(aux.^2 + 4*((1-ttau)*w_SS*mzGrid).^2/ppsi)));
 
-% Iterate
-err = Inf; iteration = 1;
-while err > tolerance && iteration <= maxIterations
+    % Initialize using histogram see
+    mGridInit = log(reshape(mConditionalExpectation(iShare,:,:),nz,nAssets));
 
-    mCoefficientsNew = updateCoefficients_polynomials(mCoefficients,...
-        bbeta,ppsi,nnu,bbBar,eepsilon,ttau,vvarthetaT,mzTransition,nz,nAssets,nState,assetsMin,assetsMax,...
-        mzGrid,mAssetsGrid,vAssetsPoly,vAssetsPolySquared,mzPrimeGrid,...
-        A_SS,w_SS,rr,NN);
-    err = max(abs(mCoefficientsNew(:) - mCoefficients(:)));
-    iteration = iteration + 1;
-    mCoefficients = dampening * mCoefficients + (1 - dampening) * mCoefficientsNew;
+    mCoefficients = zeros(nz,nAssets);
+    for iz = 1:nz	% interpolate
+        vCoefficients = vAssetsPoly' * mGridInit(iz,:)';
+        mCoefficients(iz,:) = (vCoefficients ./ vAssetsPolySquared)';
+    end
 
-end
+    % Iterate
+    err = Inf; iteration = 1;
+    while err > tolerance && iteration <= maxIterations
 
-mCoefficientsOptional = mCoefficients;
+        mCoefficientsNew = updateCoefficients_polynomials(mCoefficients,...
+            bbeta,ppsi,nnu,bbBar,eepsilon,ttau,vvarthetaT,mzTransition,nz,nAssets,nState,assetsMin,assetsMax,...
+            mzGrid,mAssetsGrid,vAssetsPoly,vAssetsPolySquared,mzPrimeGrid,...
+            A_SS,w_SS,rr,NN);
+        err = max(abs(mCoefficientsNew(:) - mCoefficients(:)));
+        iteration = iteration + 1;
+        mCoefficients = dampening * mCoefficients + (1 - dampening) * mCoefficientsNew;
 
-
-%----------------------------------------------------------------
-% Compute policies over quadrature grid for integration
-%----------------------------------------------------------------
-
-% Compute conditional expectation
-mConditionalExpectation = exp(mCoefficients * vAssetsPolyQuadrature');
-
-% Compute savings policy
-mAssetsPrimeStar = ((1-ttau)*w_SS*mzGridQuadrature).^(1+1/nnu).*(mConditionalExpectation/ppsi).^(1/nnu) ...
-                    +(1+rr)*mAssetsGridQuadrature+chidT_SS-1./mConditionalExpectation;
-mAssetsPrimeQuadrature = max(mAssetsPrimeStar,bbBar);
+    end
 
 
-%----------------------------------------------------------------
-% Compute policies at borrowing constraint for integration
-%----------------------------------------------------------------
+    %----------------------------------------------------------------
+    % Compute policies over quadrature grid for integration
+    %----------------------------------------------------------------
 
-% Compute conditional expectation
-mConditionalExpectationBC = exp(mCoefficients * vAssetsPolyBC');
+    % Compute conditional expectation
+    the_mConditionalExpectation = exp(mCoefficients * vAssetsPolyQuadrature');
 
-% Compute savings policy
-mAssetsPrimeStarBC = ((1-ttau)*w_SS*vzGrid).^(1+1/nnu).*(mConditionalExpectationBC/ppsi).^(1/nnu) ...
-                    +(1+rr)*assetsMin+chidT_SS-1./mConditionalExpectationBC;
-mAssetsPrimeBC = max(mAssetsPrimeStarBC,bbBar);
+    % Compute savings policy
+    mAssetsPrimeStar = ((1-ttau)*w_SS*mzGridQuadrature).^(1+1/nnu).*(the_mConditionalExpectation/ppsi).^(1/nnu) ...
+                        +(1+rr)*mAssetsGridQuadrature+chidT_SS-1./the_mConditionalExpectation;
+    mAssetsPrimeQuadrature = max(mAssetsPrimeStar,bbBar);
 
 
-%----------------------------------------------------------------
-% Compute stationary distribution from these decision rules
-%----------------------------------------------------------------
+    %----------------------------------------------------------------
+    % Compute policies at borrowing constraint for integration
+    %----------------------------------------------------------------
 
-% Initialize iteration
-err = Inf; iteration = 1; 
-mParameters = zeros(nz,nMeasure+1);
+    % Compute conditional expectation
+    mConditionalExpectationBC = exp(mCoefficients * vAssetsPolyBC');
 
-% Iteration
-while err > tolerance && iteration <= maxIterations
-	
-	%%%
-	% Update density away from borrowing constraint
-	%%%
+    % Compute savings policy
+    mAssetsPrimeStarBC = ((1-ttau)*w_SS*vzGrid).^(1+1/nnu).*(mConditionalExpectationBC/ppsi).^(1/nnu) ...
+                        +(1+rr)*assetsMin+chidT_SS-1./mConditionalExpectationBC;
+    mAssetsPrimeBC = max(mAssetsPrimeStarBC,bbBar);
 
-    mParametersNew = zeros(nz,nMeasure+1);
 
-    for iz = 1 : nz
+    %----------------------------------------------------------------
+    % Compute stationary distribution from these decision rules
+    %----------------------------------------------------------------
 
-		vParameters = (1-dampening)*mParameters(iz,2:end)'; %zeros(nMeasure,1);
-		mGridMoments = reshape(bGridMoments(iz,:,:),nAssetsQuadrature,nMeasure);
-        
-        % Take Newton steps to minimize density
-        for istep=1:numNewton
-            aux = mGridMoments * vParameters;
-            dens_nonnormaliz = exp(aux-max(aux(:))); % Non-normalized density
-            DD = vQuadratureWeights' * (dens_nonnormaliz.*mGridMoments);
-            HH = 0.1*eye(nMeasure); %zeros(nMeasure);
-            for iH = 1:nAssetsQuadrature
-                HH = HH+vQuadratureWeights(iH)*dens_nonnormaliz(iH)*(mGridMoments(iH,:)'*mGridMoments(iH,:));
+    % Initialize iteration
+    err = Inf; iteration = 1; 
+    mParameters = zeros(nz,nMeasure+1);
+
+    % Iteration
+    while err > tolerance && iteration <= maxIterations
+
+        %%%
+        % Update density away from borrowing constraint
+        %%%
+
+        mParametersNew = zeros(nz,nMeasure+1);
+
+        for iz = 1 : nz
+
+            vParameters = (1-dampening)*mParameters(iz,2:end)'; %zeros(nMeasure,1);
+            mGridMoments = reshape(the_bGridMoments(iz,:,:),nAssetsQuadrature,nMeasure);
+
+            % Take Newton steps to minimize density
+            for istep=1:numNewton
+                aux = mGridMoments * vParameters;
+                dens_nonnormaliz = exp(aux-max(aux(:))); % Non-normalized density
+                DD = vQuadratureWeights' * (dens_nonnormaliz.*mGridMoments);
+                HH = 0.1*eye(nMeasure); %zeros(nMeasure);
+                for iH = 1:nAssetsQuadrature
+                    HH = HH+vQuadratureWeights(iH)*dens_nonnormaliz(iH)*(mGridMoments(iH,:)'*mGridMoments(iH,:));
+                end
+                vParameters = vParameters-HH\DD';
             end
-            vParameters = vParameters-HH\DD';
+
+            normalization = vQuadratureWeights' * exp(mGridMoments * vParameters); % New normalization constant
+            mParametersNew(iz,:) = [1 / normalization; vParameters]; % New parameters
+
         end
-        
-		normalization = vQuadratureWeights' * exp(mGridMoments * vParameters); % New normalization constant
-		mParametersNew(iz,:) = [1 / normalization; vParameters]; % New parameters
-        
-    end
-	
-	% Compute new moments and centered moments grid
-	mMomentsNew = zeros(nz,nMeasure);
-	bGridMomentsNew = zeros(nz,nAssetsQuadrature,nMeasure);
-	
-	for iz = 1 : nz
-		
-		% Compute first moment (uncentered)
-		mMomentsNew(iz,1) = 0;
-		for izTilde = 1 : nz
-		
-			mMomentsNew(iz,1) = mMomentsNew(iz,1) + (1 - mHat(izTilde,1)) * vzInvariant(izTilde) * mzTransition(...
-				izTilde,iz) * mParametersNew(izTilde,1) * vQuadratureWeights' * (mAssetsPrimeQuadrature(izTilde,:)' .* ...
-				exp(reshape(bGridMoments(izTilde,:,:),nAssetsQuadrature,nMeasure) * mParametersNew(izTilde,2:nMeasure+1)')) + mHat(izTilde,1) * ...
-				vzInvariant(izTilde) * mzTransition(izTilde,iz) * mAssetsPrimeBC(izTilde,1);	
-				
-		end
-		
-		mMomentsNew(iz,1) = mMomentsNew(iz,1) / vzInvariant(iz);
-		bGridMomentsNew(iz,:,1) = vAssetsGridQuadrature - mMomentsNew(iz,1);
-		
-		% Compute higher order moments (centered)
-		for iMoment = 2 : nMeasure
-		
-			mMomentsNew(iz,iMoment) = 0;
-			
-			for izTilde = 1 : nz
-			
-				mMomentsNew(iz,iMoment) = mMomentsNew(iz,iMoment) + (1 - mHat(izTilde,1)) * vzInvariant(izTilde) * mzTransition(...
-					izTilde,iz) * mParametersNew(izTilde,1) * vQuadratureWeights' * (((mAssetsPrimeQuadrature(izTilde,:)' - ...
-					mMomentsNew(iz,1)) .^ iMoment) .* exp(reshape(bGridMoments(izTilde,:,:),nAssetsQuadrature,nMeasure) * ...
-					mParametersNew(izTilde,2:nMeasure+1)')) + mHat(izTilde,1) * vzInvariant(izTilde) * ...
-					mzTransition(izTilde,iz) * ((mAssetsPrimeBC(izTilde,1) - mMomentsNew(iz,1)) .^ iMoment);
-					
-			end
-			
-			mMomentsNew(iz,iMoment) = mMomentsNew(iz,iMoment) / vzInvariant(iz);
-			bGridMomentsNew(iz,:,iMoment) = (vAssetsGridQuadrature' - mMomentsNew(iz,1)) .^ iMoment - ...
-				mMomentsNew(iz,iMoment);
-				
-		end
-		
-	end
 
-	%%%
-	% Update mass at borrowing constraint
-	%%%
-	
-	mHatNew = zeros(nz,1);
-	
-    for iz = 1 : nz
-	
-		for izTilde = 1 : nz
-		
-			mHatNew(iz,1) = mHatNew(iz,1) + (1 - mHat(izTilde,1)) * vzInvariant(izTilde) * ...
-				mzTransition(izTilde,iz) * mParametersNew(izTilde,1) * vQuadratureWeights' * ...
-				((mAssetsPrimeQuadrature(izTilde,:)' <= bbBar + 1e-8) .* exp(reshape(bGridMoments(izTilde,:,:),nAssetsQuadrature,nMeasure) * mParametersNew(izTilde,2:nMeasure+1)')) + ...
-				mHat(izTilde,1) * vzInvariant(izTilde) * mzTransition(izTilde,iz) * ...
-				(mAssetsPrimeBC(izTilde,1) <= bbBar + 1e-8);
-				
-		end
-		
-		mHatNew(iz,1) = mHatNew(iz,1) / vzInvariant(iz);
-	
+        % Compute new moments and centered moments grid
+        mMomentsNew = zeros(nz,nMeasure);
+        bGridMomentsNew = zeros(nz,nAssetsQuadrature,nMeasure);
+
+        for iz = 1 : nz
+
+            % Compute first moment (uncentered)
+            mMomentsNew(iz,1) = 0;
+            for izTilde = 1 : nz
+
+                mMomentsNew(iz,1) = mMomentsNew(iz,1) + (1 - the_mHat(izTilde,1)) * vzInvariant(izTilde) * mzTransition(...
+                    izTilde,iz) * mParametersNew(izTilde,1) * vQuadratureWeights' * (mAssetsPrimeQuadrature(izTilde,:)' .* ...
+                    exp(reshape(the_bGridMoments(izTilde,:,:),nAssetsQuadrature,nMeasure) * mParametersNew(izTilde,2:nMeasure+1)')) + the_mHat(izTilde,1) * ...
+                    vzInvariant(izTilde) * mzTransition(izTilde,iz) * mAssetsPrimeBC(izTilde,1);	
+
+            end
+
+            mMomentsNew(iz,1) = mMomentsNew(iz,1) / vzInvariant(iz);
+            bGridMomentsNew(iz,:,1) = vAssetsGridQuadrature - mMomentsNew(iz,1);
+
+            % Compute higher order moments (centered)
+            for iMoment = 2 : nMeasure
+
+                mMomentsNew(iz,iMoment) = 0;
+
+                for izTilde = 1 : nz
+
+                    mMomentsNew(iz,iMoment) = mMomentsNew(iz,iMoment) + (1 - the_mHat(izTilde,1)) * vzInvariant(izTilde) * mzTransition(...
+                        izTilde,iz) * mParametersNew(izTilde,1) * vQuadratureWeights' * (((mAssetsPrimeQuadrature(izTilde,:)' - ...
+                        mMomentsNew(iz,1)) .^ iMoment) .* exp(reshape(the_bGridMoments(izTilde,:,:),nAssetsQuadrature,nMeasure) * ...
+                        mParametersNew(izTilde,2:nMeasure+1)')) + the_mHat(izTilde,1) * vzInvariant(izTilde) * ...
+                        mzTransition(izTilde,iz) * ((mAssetsPrimeBC(izTilde,1) - mMomentsNew(iz,1)) .^ iMoment);
+
+                end
+
+                mMomentsNew(iz,iMoment) = mMomentsNew(iz,iMoment) / vzInvariant(iz);
+                bGridMomentsNew(iz,:,iMoment) = (vAssetsGridQuadrature' - mMomentsNew(iz,1)) .^ iMoment - ...
+                    mMomentsNew(iz,iMoment);
+
+            end
+
+        end
+
+        %%%
+        % Update mass at borrowing constraint
+        %%%
+
+        mHatNew = zeros(nz,1);
+
+        for iz = 1 : nz
+
+            for izTilde = 1 : nz
+
+                mHatNew(iz,1) = mHatNew(iz,1) + (1 - the_mHat(izTilde,1)) * vzInvariant(izTilde) * ...
+                    mzTransition(izTilde,iz) * mParametersNew(izTilde,1) * vQuadratureWeights' * ...
+                    ((mAssetsPrimeQuadrature(izTilde,:)' <= bbBar + 1e-8) .* exp(reshape(the_bGridMoments(izTilde,:,:),nAssetsQuadrature,nMeasure) * mParametersNew(izTilde,2:nMeasure+1)')) + ...
+                    the_mHat(izTilde,1) * vzInvariant(izTilde) * mzTransition(izTilde,iz) * ...
+                    (mAssetsPrimeBC(izTilde,1) <= bbBar + 1e-8);
+
+            end
+
+            mHatNew(iz,1) = mHatNew(iz,1) / vzInvariant(iz);
+
+        end
+
+        %%%
+        % Update iteration
+        %%%
+
+        err = max([max(abs(mMomentsNew(:) - the_mMoments(:))),max(abs(mHatNew(:) - the_mHat(:))),max(abs(mParametersNew(:) - mParameters(:)))]);
+        iteration = iteration + 1;
+        the_mMoments = mMomentsNew;
+        the_bGridMoments = bGridMomentsNew;
+        the_mHat = mHatNew;
+        mParameters = mParametersNew;
+
     end
-	
-	%%%
-	% Update iteration
-	%%%
-	
-	err = max([max(abs(mMomentsNew(:) - mMoments(:))),max(abs(mHatNew(:) - mHat(:))),max(abs(mParametersNew(:) - mParameters(:)))]);
-	iteration = iteration + 1;
-	mMoments = mMomentsNew;
-	bGridMoments = bGridMomentsNew;
-	mHat = mHatNew;
-    mParameters = mParametersNew;
-	
+
+    if iteration>maxIterations
+        warning('Did not converge');
+    end
+    
+    % Compute aggregate bond demand and labor supply
+    
+    % Household ss borrowing
+    bond_demand(iShare) = (vzInvariant .* (1 - the_mHat))' * the_mMoments(:,1) + bbBar * (vzInvariant' * the_mHat);
+
+    % Household ss effective labor supply (=z*n) for b>bbBar
+    mConstr = (mAssetsPrimeQuadrature==bbBar);
+    mLabor_times_z = (1-ttau)*w_SS*(vzGrid.^2).*the_mConditionalExpectation/ppsi;
+    aux = -bbBar + (1+rr)*mAssetsPrimeQuadrature(mConstr) + chidT_SS;
+    mLabor_times_z(mConstr) = (-aux + sqrt(aux.^2 + 4*((1-ttau)*w_SS*mzGridQuadrature(mConstr)).^2/ppsi)) ...
+                              ./ (2*(1-ttau)*w_SS); % If savings constrained
+
+    % Household ss effective labor supply for b=bbBar
+    mConstrBC = (mAssetsPrimeBC==bbBar);
+    mLabor_times_zBC = (1-ttau)*w_SS*(vzGrid.^2).*mConditionalExpectationBC/ppsi;
+    aux = -bbBar + (1+rr)*mAssetsPrimeBC(mConstrBC) + chidT_SS;
+    mLabor_times_zBC(mConstrBC) = (-aux + sqrt(aux.^2 + 4*((1-ttau)*w_SS*vzGrid(mConstrBC)).^2/ppsi)) ...
+                                  ./ (2*(1-ttau)*w_SS); % If savings constrained
+
+    % Log asset density away from constraint
+    logdens = zeros(nz,nAssetsQuadrature);
+    for iMoment=1:nMeasure
+        logdens = logdens + the_bGridMoments(:,:,iMoment).*mParameters(:,iMoment+1);
+    end
+    
+    % Aggregate effective labor supply
+    labor_supply(iShare) = (vzInvariant.*(1-the_mHat).*mParameters(:,1))'*(mLabor_times_z.*exp(logdens))*vQuadratureWeights ...
+        + (vzInvariant.*the_mHat)'*mLabor_times_zBC;
+    
+    % Store results
+    if nargout > 1
+        mCoefficientsOptional(iShare,:,:) = mCoefficients;
+        mParametersOptional(iShare,:,:) = mParameters;
+        mMomentsOptional(iShare,:,:) = the_mMoments;
+        mHatOptional(iShare,:) = the_mHat;
+    end
+    
 end
 
-if iteration>maxIterations
-    warning('Did not converge');
-end
 
 %----------------------------------------------------------------
 % Return market clearing residual
 %----------------------------------------------------------------
 
-% Household ss borrowing
-bbNew = (vzInvariant .* (1 - mHat))' * mMoments(:,1) + bbBar * (vzInvariant' * mHat);
+residual = [vvarthetaB*A_SS*NN + bond_demand'*vShareFraction; % Bonds
+            NN - labor_supply'*vShareFraction];               % Labor
 
-% Household ss effective labor supply (=z*n) for b>bbBar
-mConstr = (mAssetsPrimeQuadrature==bbBar);
-mLabor_times_z = (1-ttau)*w_SS*(vzGrid.^2).*mConditionalExpectation/ppsi;
-aux = -bbBar + (1+rr)*mAssetsPrimeQuadrature(mConstr) + chidT_SS;
-mLabor_times_z(mConstr) = (-aux + sqrt(aux.^2 + 4*((1-ttau)*w_SS*mzGridQuadrature(mConstr)).^2/ppsi)) ...
-                          ./ (2*(1-ttau)*w_SS); % If savings constrained
-
-% Household ss effective labor supply for b=bbBar
-mConstrBC = (mAssetsPrimeBC==bbBar);
-mLabor_times_zBC = (1-ttau)*w_SS*(vzGrid.^2).*mConditionalExpectationBC/ppsi;
-aux = -bbBar + (1+rr)*mAssetsPrimeBC(mConstrBC) + chidT_SS;
-mLabor_times_zBC(mConstrBC) = (-aux + sqrt(aux.^2 + 4*((1-ttau)*w_SS*vzGrid(mConstrBC)).^2/ppsi)) ...
-                              ./ (2*(1-ttau)*w_SS); % If savings constrained
-
-% Log asset density away from constraint
-logdens = zeros(nz,nAssetsQuadrature);
-for iMoment=1:nMeasure
-    logdens = logdens + bGridMoments(:,:,iMoment).*mParameters(:,iMoment+1);
-end
-
-NNNew = (vzInvariant.*(1-mHat).*mParameters(:,1))'*(mLabor_times_z.*exp(logdens))*vQuadratureWeights ...
-        + (vzInvariant.*mHat)'*mLabor_times_zBC; % Aggregate effective labor supply
-
-residual = [vvarthetaB*A_SS*NN + bbNew; % Bonds
-            NN - NNNew];                % Labor
-
-% Also return optional outputs if requested
-if nargout > 2
-
-    mParametersOptional = mParameters;
-    mMomentsOptional = mMoments;
-	mHatOptional = mHat;
-	
-end

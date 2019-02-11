@@ -24,37 +24,40 @@ var_array{7} = vvarthetaB;
 var_array{8} = vvarthetaT;
 var_array{9} = mzTransition;
 var_array{10} = vzInvariant;
-var_array{11} = nz;
-var_array{12} = nAssets;
-var_array{13} = nState;
-var_array{14} = nStateFine;
-var_array{15} = nAssetsFine;
-var_array{16} = nAssetsQuadrature;
-var_array{17} = nMeasure;
-var_array{18} = assetsMin;
-var_array{19} = assetsMax;
-var_array{20} = vzGrid;
-var_array{21} = mzGrid;
-var_array{22} = mzGridFine;
-var_array{23} = mzPrimeGrid;
-var_array{24} = mzGridQuadrature;
-var_array{25} = vAssetsGridFine;
-var_array{26} = vAssetsGridQuadrature;
-var_array{27} = vAssetsPoly;
-var_array{28} = vAssetsPolySquared;
-var_array{29} = vAssetsPolyFine;
-var_array{30} = vAssetsPolyQuadrature;
-var_array{31} = vAssetsPolyBC;
-var_array{32} = mAssetsGrid;
-var_array{33} = mAssetsGridFine;
-var_array{34} = mAssetsGridQuadrature;
-var_array{35} = vQuadratureWeights;
-var_array{36} = maxIterations;
-var_array{37} = tolerance;
-var_array{38} = dampening;
-var_array{39} = numNewton;
-var_array{40} = A_SS;
-var_array{41} = w_SS;
+var_array{11} = vShareGrid;
+var_array{12} = vShareFraction;
+var_array{13} = nz;
+var_array{14} = nAssets;
+var_array{15} = nState;
+var_array{16} = nStateFine;
+var_array{17} = nAssetsFine;
+var_array{18} = nAssetsQuadrature;
+var_array{19} = nMeasure;
+var_array{20} = nShare;
+var_array{21} = assetsMin;
+var_array{22} = assetsMax;
+var_array{23} = vzGrid;
+var_array{24} = mzGrid;
+var_array{25} = mzGridFine;
+var_array{26} = mzPrimeGrid;
+var_array{27} = mzGridQuadrature;
+var_array{28} = vAssetsGridFine;
+var_array{29} = vAssetsGridQuadrature;
+var_array{30} = vAssetsPoly;
+var_array{31} = vAssetsPolySquared;
+var_array{32} = vAssetsPolyFine;
+var_array{33} = vAssetsPolyQuadrature;
+var_array{34} = vAssetsPolyBC;
+var_array{35} = mAssetsGrid;
+var_array{36} = mAssetsGridFine;
+var_array{37} = mAssetsGridQuadrature;
+var_array{38} = vQuadratureWeights;
+var_array{39} = maxIterations;
+var_array{40} = tolerance;
+var_array{41} = dampening;
+var_array{42} = numNewton;
+var_array{43} = A_SS;
+var_array{44} = w_SS;
 
 
 %----------------------------------------------------------------
@@ -92,28 +95,28 @@ end
     = computeMCResidualHistogram(r_SS_hist,N_SS_hist,var_array);
 
 % Compute moments from histogram
-mMomentsHistogram = zeros(nz,nMeasure);
-bGridMoments = zeros(nz,nAssetsQuadrature,nMeasure); % grid for computing PDF
+mMomentsHistogram = zeros(nShare,nz,nMeasure);
+bGridMoments = zeros(nShare,nz,nAssetsQuadrature,nMeasure); % grid for computing PDF
 
 for iz = 1 : nz
 	
 	% First moment (uncentered)
-	mMomentsHistogram(iz,1) = sum(vAssetsGridFine' .* (mHistogram(iz,:) ./ ...
-		sum(mHistogram(iz,:))));
-	bGridMoments(iz,:,1) = vAssetsGridQuadrature - mMomentsHistogram(iz,1);
+	mMomentsHistogram(nShare,iz,1) = vAssetsGridFine' * reshape(mHistogram(nShare,iz,:),nAssetsFine,1) / ...
+		sum(mHistogram(nShare,iz,:));
+	bGridMoments(nShare,iz,:,1) = vAssetsGridQuadrature - mMomentsHistogram(nShare,iz,1);
 		
 	% Higher order moments (centered)
 	for iMoment = 2 : nMeasure
-		mMomentsHistogram(iz,iMoment) = sum(((vAssetsGridFine' - mMomentsHistogram(iz,1)) .^ iMoment) .* ...
-			(mHistogram(iz,:) ./ sum(mHistogram(iz,:))));
-		bGridMoments(iz,:,iMoment) = (vAssetsGridQuadrature' - mMomentsHistogram(iz,1)) .^ ...
-			iMoment - mMomentsHistogram(iz,iMoment);
+		mMomentsHistogram(nShare,iz,iMoment) = ((vAssetsGridFine' - mMomentsHistogram(nShare,iz,1)) .^ iMoment) * ...
+			reshape(mHistogram(nShare,iz,:),nAssetsFine,1) / sum(mHistogram(nShare,iz,:));
+		bGridMoments(nShare,iz,:,iMoment) = (vAssetsGridQuadrature' - mMomentsHistogram(nShare,iz,1)) .^ ...
+			iMoment - mMomentsHistogram(nShare,iz,iMoment);
 	end	
 	
 end
 
 % Mass at borrowing constraint
-mHat_hist = mHistogram(:,1)./sum(mHistogram,2);
+mHat_hist = mHistogram(:,:,1)./sum(mHistogram,3);
 
 %----------------------------------------------------------------
 % Compute market-clearing capital stock from parametric family
