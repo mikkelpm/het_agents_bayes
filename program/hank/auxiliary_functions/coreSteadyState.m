@@ -98,21 +98,23 @@ end
 mMomentsHistogram = zeros(nShare,nz,nMeasure);
 bGridMoments = zeros(nShare,nz,nAssetsQuadrature,nMeasure); % grid for computing PDF
 
-for iz = 1 : nz
-	
-	% First moment (uncentered)
-	mMomentsHistogram(nShare,iz,1) = vAssetsGridFine' * reshape(mHistogram(nShare,iz,:),nAssetsFine,1) / ...
-		sum(mHistogram(nShare,iz,:));
-	bGridMoments(nShare,iz,:,1) = vAssetsGridQuadrature - mMomentsHistogram(nShare,iz,1);
-		
-	% Higher order moments (centered)
-	for iMoment = 2 : nMeasure
-		mMomentsHistogram(nShare,iz,iMoment) = ((vAssetsGridFine' - mMomentsHistogram(nShare,iz,1)) .^ iMoment) * ...
-			reshape(mHistogram(nShare,iz,:),nAssetsFine,1) / sum(mHistogram(nShare,iz,:));
-		bGridMoments(nShare,iz,:,iMoment) = (vAssetsGridQuadrature' - mMomentsHistogram(nShare,iz,1)) .^ ...
-			iMoment - mMomentsHistogram(nShare,iz,iMoment);
-	end	
-	
+for iShare = 1:nShare
+    for iz = 1 : nz
+        
+        % First moment (uncentered)
+        mMomentsHistogram(iShare,iz,1) = vAssetsGridFine' * reshape(mHistogram(iShare,iz,:),nAssetsFine,1) / ...
+            sum(mHistogram(iShare,iz,:));
+        bGridMoments(iShare,iz,:,1) = vAssetsGridQuadrature - mMomentsHistogram(iShare,iz,1);
+        
+        % Higher order moments (centered)
+        for iMoment = 2 : nMeasure
+            mMomentsHistogram(iShare,iz,iMoment) = ((vAssetsGridFine' - mMomentsHistogram(iShare,iz,1)) .^ iMoment) * ...
+                reshape(mHistogram(iShare,iz,:),nAssetsFine,1) / sum(mHistogram(iShare,iz,:));
+            bGridMoments(iShare,iz,:,iMoment) = (vAssetsGridQuadrature' - mMomentsHistogram(iShare,iz,1)) .^ ...
+                iMoment - mMomentsHistogram(iShare,iz,iMoment);
+        end
+        
+    end
 end
 
 % Mass at borrowing constraint
