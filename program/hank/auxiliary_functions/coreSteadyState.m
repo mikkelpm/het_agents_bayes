@@ -95,23 +95,23 @@ end
     = computeMCResidualHistogram(r_SS_hist,N_SS_hist,var_array);
 
 % Compute moments from histogram
-mMomentsHistogram = zeros(nShare,nz,nMeasure);
-bGridMoments = zeros(nShare,nz,nAssetsQuadrature,nMeasure); % grid for computing PDF
+mMomentsHistogram = zeros(nz,nMeasure,nShare);
+bGridMoments = zeros(nz,nAssetsQuadrature,nMeasure,nShare); % grid for computing PDF
 
 for iShare = 1:nShare
     for iz = 1 : nz
         
         % First moment (uncentered)
-        mMomentsHistogram(iShare,iz,1) = vAssetsGridFine' * reshape(mHistogram(iShare,iz,:),nAssetsFine,1) / ...
-            sum(mHistogram(iShare,iz,:));
-        bGridMoments(iShare,iz,:,1) = vAssetsGridQuadrature - mMomentsHistogram(iShare,iz,1);
+        mMomentsHistogram(iz,1,iShare) = mHistogram(iz,:,iShare) * vAssetsGridFine / ...
+            sum(mHistogram(iz,:,iShare));
+        bGridMoments(iz,:,1,iShare) = vAssetsGridQuadrature - mMomentsHistogram(iz,1,iShare);
         
         % Higher order moments (centered)
         for iMoment = 2 : nMeasure
-            mMomentsHistogram(iShare,iz,iMoment) = ((vAssetsGridFine' - mMomentsHistogram(iShare,iz,1)) .^ iMoment) * ...
-                reshape(mHistogram(iShare,iz,:),nAssetsFine,1) / sum(mHistogram(iShare,iz,:));
-            bGridMoments(iShare,iz,:,iMoment) = (vAssetsGridQuadrature' - mMomentsHistogram(iShare,iz,1)) .^ ...
-                iMoment - mMomentsHistogram(iShare,iz,iMoment);
+            mMomentsHistogram(iShare,iz,iMoment) = mHistogram(iz,:,iShare) *...
+			((vAssetsGridFine - mMomentsHistogram(iz,1,iShare)) .^ iMoment) / sum(mHistogram(iz,:,iShare));
+            bGridMoments(iz,:,iMoment,iShare) = (vAssetsGridQuadrature' - mMomentsHistogram(iz,1,iShare)) .^ ...
+                iMoment - mMomentsHistogram(iz,iMoment,iShare);
         end
         
     end

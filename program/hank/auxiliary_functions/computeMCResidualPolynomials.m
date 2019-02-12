@@ -66,18 +66,18 @@ A_SS = var_array{43};
 w_SS = var_array{44};
 
 
-mCoefficientsOptional = nan(nShare,nz,nAssets);
-mParametersOptional = nan(nShare,nz,nMeasure+1);
-mMomentsOptional = nan(nShare,nz,nMeasure);
-mHatOptional = nan(nShare,nz);
+mCoefficientsOptional = nan(nz,nAssets,nShare);
+mParametersOptional = nan(nz,nMeasure+1,nShare);
+mMomentsOptional = nan(nz,nMeasure,nShare);
+mHatOptional = nan(nz,nShare);
 bond_demand = nan(nShare,1);
 labor_supply = nan(nShare,1);
 
 for iShare = 1:nShare
 
-    the_mMoments = reshape(mMoments(iShare,:,:),nz,nMeasure);
-    the_bGridMoments = reshape(bGridMoments(iShare,:,:,:),nz,nAssetsQuadrature,nMeasure);
-    the_mHat = mHat(iShare,:)';
+    the_mMoments = mMoments(:,:,iShare);
+    the_bGridMoments = bGridMoments(:,:,:,iShare);
+    the_mHat = mHat(:,iShare);
     
     %----------------------------------------------------------------
     % Compute individual decisions
@@ -91,7 +91,7 @@ for iShare = 1:nShare
     % mGridInit = log(bbeta * (1+rr) * 2 ./ (aux + sqrt(aux.^2 + 4*((1-ttau)*w_SS*mzGrid).^2/ppsi)));
 
     % Initialize using histogram see
-    mGridInit = log(reshape(mConditionalExpectation(iShare,:,:),nz,nAssets));
+    mGridInit = log(mConditionalExpectation(:,:,iShare));
 
     mCoefficients = zeros(nz,nAssets);
     for iz = 1:nz	% interpolate
@@ -292,10 +292,10 @@ for iShare = 1:nShare
     
     % Store results
     if nargout > 1
-        mCoefficientsOptional(iShare,:,:) = mCoefficients;
-        mParametersOptional(iShare,:,:) = mParameters;
-        mMomentsOptional(iShare,:,:) = the_mMoments;
-        mHatOptional(iShare,:) = the_mHat;
+        mCoefficientsOptional(:,:,iShare) = mCoefficients;
+        mParametersOptional(:,:,iShare) = mParameters;
+        mMomentsOptional(:,:,iShare) = the_mMoments;
+        mHatOptional(:,iShare) = the_mHat;
     end
     
 end

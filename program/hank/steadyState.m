@@ -86,22 +86,22 @@ indShare = 2; % Plot for this index of profit share
 % Grid for computing PDF
 bGridMoments_fine = zeros(nz,nAssetsFine,nMeasure);
 for iz = 1 : nz
-    bGridMoments_fine(iz,:,1) = vAssetsGridFine - mMoments(indShare,iz,1);
+    bGridMoments_fine(iz,:,1) = vAssetsGridFine - mMoments(iz,1,indShare);
 	for iMoment = 2 : nMeasure
-		bGridMoments_fine(iz,:,iMoment) = (vAssetsGridFine - mMoments(indShare,iz,1)) .^ ...
-			iMoment - mMoments(indShare,iz,iMoment);
+		bGridMoments_fine(iz,:,iMoment) = (vAssetsGridFine - mMoments(iz,1,indShare)) .^ ...
+			iMoment - mMoments(iz,iMoment,indShare);
 	end	
 end
 
 % Log asset density away from constraint
 logdens_fine = zeros(nz,nAssetsFine);
 for iMoment=1:nMeasure
-    logdens_fine = logdens_fine + bGridMoments_fine(:,:,iMoment).*mParameters(indShare,:,iMoment+1)';
+    logdens_fine = logdens_fine + bGridMoments_fine(:,:,iMoment).*mParameters(:,iMoment+1,indShare);
 end
 
 % Conditional expectation function, parametric SS
 chidT_SS = d_SS*vShareGrid(indShare)+T_SS;
-mConditionalExpectation = exp(reshape(mCoefficients(indShare,:,:),nz,nAssets) * computeChebyshev(nAssets,scaleDown(vAssetsGridFine,assetsMin,assetsMax))');
+mConditionalExpectation = exp(mCoefficients(:,:,indShare) * computeChebyshev(nAssets,scaleDown(vAssetsGridFine,assetsMin,assetsMax))');
 % Compute savings policy
 mAssetsPrimeStar = ((1-ttau)*w_SS*mzGridFine).^(1+1/nnu).*(mConditionalExpectation/ppsi).^(1/nnu) ...
                     +(1+r_SS)*mAssetsGridFine+chidT_SS-1./mConditionalExpectation;
@@ -118,22 +118,22 @@ mConsumption = (1-ttau)*w_SS*mzGridFine./(ppsi*mLabor); % Consumption
 
 % Plot asset histograms/densities
 figure('Units', 'normalize', 'Position', [0.1 0.2 0.8 0.6]);
-plot_fct(vAssetsGridFine,reshape(mHistogram(indShare,:,:),nz,nAssetsFine)./sum(mHistogram(indShare,:,:),3)',1,'Asset distribution: histogram');
-plot_fct(vAssetsGridFine,mParameters(indShare,:,1)'.*exp(logdens_fine),2,'Asset distribution: parametric');
+plot_fct(vAssetsGridFine,mHistogram(:,:,indShare)./sum(mHistogram(:,:,indShare),2),1,'Asset distribution: histogram');
+plot_fct(vAssetsGridFine,mParameters(:,1,indShare).*exp(logdens_fine),2,'Asset distribution: parametric');
 
 % Plot savings policy
 figure('Units', 'normalize', 'Position', [0.1 0.2 0.8 0.6]);
-plot_fct(vAssetsGridFine,reshape(mAssetsPrime_hist(indShare,:,:),nz,nAssetsFine),1,'Savings policy: histogram');
+plot_fct(vAssetsGridFine,mAssetsPrime_hist(:,:,indShare),1,'Savings policy: histogram');
 plot_fct(vAssetsGridFine,mAssetsPrime,2,'Savings policy: parametric');
 
 % Plot consumption policy
 figure('Units', 'normalize', 'Position', [0.1 0.2 0.8 0.6]);
-plot_fct(vAssetsGridFine,reshape(mConsumption_hist(indShare,:,:),nz,nAssetsFine),1,'Consumption policy: histogram');
+plot_fct(vAssetsGridFine,mConsumption_hist(:,:,indShare),1,'Consumption policy: histogram');
 plot_fct(vAssetsGridFine,mConsumption,2,'Consumption policy: parametric');
 
 % Plot labor supply policy
 figure('Units', 'normalize', 'Position', [0.1 0.2 0.8 0.6]);
-plot_fct(vAssetsGridFine,reshape(mLabor_hist(indShare,:,:),nz,nAssetsFine),1,'Labor supply policy: histogram');
+plot_fct(vAssetsGridFine,mLabor_hist(:,:,indShare),1,'Labor supply policy: histogram');
 plot_fct(vAssetsGridFine,mLabor,2,'Labor supply policy: parametric');
 
 

@@ -62,11 +62,11 @@ A_SS = var_array{43};
 w_SS = var_array{44};
 
 
-mHistogramOptional = nan(nShare,nz,nAssetsFine);
-mAssetsPrimeOptional = nan(nShare,nz,nAssetsFine);
-mConsumptionOptional = nan(nShare,nz,nAssetsFine);
-mLaborOptional = nan(nShare,nz,nAssetsFine);
-mConditionalExpectationOptional = nan(nShare,nz,nAssets);
+mHistogramOptional = nan(nz,nAssetsFine,nShare);
+mAssetsPrimeOptional = nan(nz,nAssetsFine,nShare);
+mConsumptionOptional = nan(nz,nAssetsFine,nShare);
+mLaborOptional = nan(nz,nAssetsFine,nShare);
+mConditionalExpectationOptional = nan(nz,nAssets,nShare);
 bond_demand = nan(nShare,1);
 labor_supply = nan(nShare,1);
 
@@ -172,11 +172,11 @@ for iShare = 1:nShare
     
     % Store results
     if nargout > 1
-        mHistogramOptional(iShare,:,:) = mHistogram;
-        mAssetsPrimeOptional(iShare,:,:) = mAssetsPrimeFine;
-        mConsumptionOptional(iShare,:,:) = mConsumptionFine;
-        mLaborOptional(iShare,:,:) = mLaborFine;
-        mConditionalExpectationOptional(iShare,:,:) = mConditionalExpectation_hist;
+        mHistogramOptional(:,:,iShare) = mHistogram;
+        mAssetsPrimeOptional(:,:,iShare) = mAssetsPrimeFine;
+        mConsumptionOptional(:,:,iShare) = mConsumptionFine;
+        mLaborOptional(:,:,iShare) = mLaborFine;
+        mConditionalExpectationOptional(:,:,iShare) = mConditionalExpectation_hist;
     end
     
 end
