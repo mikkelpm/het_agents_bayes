@@ -8,10 +8,10 @@
 %----------------------------------------------------------------
 
 % Grids
-computeGrids;
+load('grids.mat'); % computeGrids;
 
 % Polynomials over grids (only if using polynomials to approximate conditional expectation)
-computePolynomials;
+load('polynomials.mat'); % computePolynomials;
 
 % variables in array to pass on
 var_array{1} = bbeta;
