@@ -1,4 +1,4 @@
-function [ys,check] = firstOrderDynamics_polynomials_steadyState(ys,exo)
+function [ys,check] = firstOrderDynamics_polynomials_steadystate(ys,exo)
 
 % Computes stationary equilibrium of the model for Dynare; format is required
 % to be called by Dynare (follows example of NK_baseline.mod in Dynare examples)

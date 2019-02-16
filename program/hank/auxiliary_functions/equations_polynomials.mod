@@ -41,10 +41,15 @@
 					* ((expectationPrime_@{izPrime}_@{iz}_@{iAssets}_@{iShare} / ppsi) ^ (1/nnu))
 					+ (1 + r(+1)) * assetsPrime_@{iz}_@{iAssets}_@{iShare} + shareGrid_@{iShare} * d(+1) + T(+1)
 					- 1 / expectationPrime_@{izPrime}_@{iz}_@{iAssets}_@{iShare});
-				
-				# consumptionPrime_@{izPrime}_@{iz}_@{iAssets}_@{iShare} = (1-ttau) * w(+1) * zGrid_@{izPrime}
-					+ (1 + r(+1)) * assetsPrime_@{iz}_@{iAssets}_@{iShare} + shareGrid_@{iShare} * d(+1) + T(+1) 
-					- assetsPrime_@{izPrime}_@{iz}_@{iAssets}_@{iShare};
+					
+				# auxPrime_@{izPrime}_@{iz}_@{iAssets}_@{iShare} = 
+					-bbBar + (1 + r(+1)) * assetsPrime_@{iz}_@{iAssets}_@{iShare} + shareGrid_@{iShare} * d(+1) + T(+1);
+				# consumptionPrime_@{izPrime}_@{iz}_@{iAssets}_@{iShare} = 
+					1 / expectationPrime_@{izPrime}_@{iz}_@{iAssets}_@{iShare}
+					* (assetsPrime_@{izPrime}_@{iz}_@{iAssets}_@{iShare} > bbBar + 1e-8)
+					+ (auxPrime_@{izPrime}_@{iz}_@{iAssets}_@{iShare} + sqrt((auxPrime_@{izPrime}_@{iz}_@{iAssets}_@{iShare} ^ 2)
+					+ 4 * (((1-ttau) * w(+1) * zGrid_@{izPrime})^2) / ppsi))/ 2
+					* (assetsPrime_@{izPrime}_@{iz}_@{iAssets}_@{iShare} <= bbBar + 1e-8);
 					
 			@#endfor
 					
@@ -87,7 +92,7 @@
 				
 			// Compute labor supply
 			# aux_@{iz}_@{iAssets}_@{iShare} = -bbBar + (1 + r) * quadratureGrid_@{iAssets} + shareGrid_@{iShare} * d + T;
-			# laborQuadrature_@{iz}_@{iAssets}_@{iShare} = (1-ttau) * w * (zGrid_@{iz} ^ 2) 
+			# laborQuadrature_@{iz}_@{iAssets}_@{iShare} = (1-ttau) * w * zGrid_@{iz}
 				* expectationQuadrature_@{iz}_@{iAssets}_@{iShare} / ppsi 
 				* (assetsPrimeQuadrature_@{iz}_@{iAssets}_@{iShare} > bbBar + 1e-8) 
 				+ (-aux_@{iz}_@{iAssets}_@{iShare} + sqrt((aux_@{iz}_@{iAssets}_@{iShare} ^ 2)
@@ -139,11 +144,11 @@
 			- 1 / expectationBC_@{iz}_@{iShare});
 			
 		// Compute labor supply
-		# auxBC_@{iz}_@{iAssets}_@{iShare} = r * bbBar + shareGrid_@{iShare} * d + T;
-		# laborBC_@{iz}_@{iShare} = (1-ttau) * w * (zGrid_@{iz} ^ 2) 
+		# auxBC_@{iz}_@{iShare} = r * bbBar + shareGrid_@{iShare} * d + T;
+		# laborBC_@{iz}_@{iShare} = (1-ttau) * w * zGrid_@{iz}
 			* expectationBC_@{iz}_@{iShare} / ppsi 
 			* (assetsPrimeBC_@{iz}_@{iShare} > bbBar + 1e-8) 
-			+ (-auxBC_@{iz}_@{iAssets}_@{iShare} + sqrt((auxBC_@{iz}_@{iAssets}_@{iShare} ^ 2) + 4 * (((1-ttau) * w * zGrid_@{iz})^2) / ppsi))/ (2 * (1-ttau) * w)
+			+ (-auxBC_@{iz}_@{iShare} + sqrt((auxBC_@{iz}_@{iShare} ^ 2) + 4 * (((1-ttau) * w * zGrid_@{iz})^2) / ppsi))/ (2 * (1-ttau) * w)
 			* (assetsPrimeBC_@{iz}_@{iShare} <= bbBar + 1e-8);
 			
 	@#endfor
@@ -267,7 +272,7 @@ N = 0
 			@#for iAssets in 1 : nAssetsQuadrature
 				+ quadratureWeights_@{iAssets} * measurePDF_@{iz}_@{iAssets}_@{iShare} * laborQuadrature_@{iz}_@{iAssets}_@{iShare}
 			@#endfor
-			)+ mHat_@{iz}_@{iShare} * laborBC_@{iz}_@{iShare}) 
+			) / totalMass_@{iz}_@{iShare} + mHat_@{iz}_@{iShare} * laborBC_@{iz}_@{iShare}) 
 		@#endfor
 		)
 	@#endfor
@@ -293,5 +298,5 @@ B_SS = 0
 log(A) = rrhoTFP * log(A(-1)) + (1-rrhoTFP) * log(A_SS) + ssigmaTFP * epsilonA;
 
 // Monetary policy
-(1 + ppi) * (1 + r) = r_SS + pphi * ppi + epsilonM;
+(1 + ppi) * (1 + r) - 1 = r_SS + pphi * ppi + epsilonM;
 

@@ -268,14 +268,14 @@ for iShare = 1:nShare
 
     % Household ss effective labor supply (=z*n) for b>bbBar
     mConstr = (mAssetsPrimeQuadrature==bbBar);
-    mLabor_times_z = (1-ttau)*w_SS*(vzGrid.^2).*the_mConditionalExpectation/ppsi;
+    mLabor_times_z = (1-ttau)*w_SS*vzGrid.*the_mConditionalExpectation/ppsi;
     aux = -bbBar + (1+rr)*mAssetsPrimeQuadrature(mConstr) + chidT_SS;
     mLabor_times_z(mConstr) = (-aux + sqrt(aux.^2 + 4*((1-ttau)*w_SS*mzGridQuadrature(mConstr)).^2/ppsi)) ...
                               ./ (2*(1-ttau)*w_SS); % If savings constrained
 
     % Household ss effective labor supply for b=bbBar
     mConstrBC = (mAssetsPrimeBC==bbBar);
-    mLabor_times_zBC = (1-ttau)*w_SS*(vzGrid.^2).*mConditionalExpectationBC/ppsi;
+    mLabor_times_zBC = (1-ttau)*w_SS*vzGrid.*mConditionalExpectationBC/ppsi;
     aux = -bbBar + (1+rr)*mAssetsPrimeBC(mConstrBC) + chidT_SS;
     mLabor_times_zBC(mConstrBC) = (-aux + sqrt(aux.^2 + 4*((1-ttau)*w_SS*vzGrid(mConstrBC)).^2/ppsi)) ...
                                   ./ (2*(1-ttau)*w_SS); % If savings constrained
