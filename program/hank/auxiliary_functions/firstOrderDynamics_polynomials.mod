@@ -44,9 +44,9 @@ options_.steadystate.nocheck = 1;
 //steady(nocheck);
 
 // Check regularity conditions (turn on to check)
-//check;
-//model_diagnostics;
-//model_info;
+check;
+model_diagnostics;
+model_info;
 
 // Simulate
 stoch_simul(irf=0, order=1);

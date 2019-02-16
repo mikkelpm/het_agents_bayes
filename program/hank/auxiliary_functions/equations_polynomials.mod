@@ -90,9 +90,9 @@
                 + (1 + r) * quadratureGrid_@{iAssets} + shareGrid_@{iShare} * d + T
 				- 1 / expectationQuadrature_@{iz}_@{iAssets}_@{iShare});
 				
-			// Compute labor supply
+			// Compute labor supply (labor*z)
 			# aux_@{iz}_@{iAssets}_@{iShare} = -bbBar + (1 + r) * quadratureGrid_@{iAssets} + shareGrid_@{iShare} * d + T;
-			# laborQuadrature_@{iz}_@{iAssets}_@{iShare} = (1-ttau) * w * zGrid_@{iz}
+			# laborQuadrature_@{iz}_@{iAssets}_@{iShare} = (1-ttau) * w * (zGrid_@{iz} ^ 2)
 				* expectationQuadrature_@{iz}_@{iAssets}_@{iShare} / ppsi 
 				* (assetsPrimeQuadrature_@{iz}_@{iAssets}_@{iShare} > bbBar + 1e-8) 
 				+ (-aux_@{iz}_@{iAssets}_@{iShare} + sqrt((aux_@{iz}_@{iAssets}_@{iShare} ^ 2)
@@ -143,12 +143,13 @@
 			+ (1 + r) * bbBar + shareGrid_@{iShare} * d + T
 			- 1 / expectationBC_@{iz}_@{iShare});
 			
-		// Compute labor supply
+		// Compute labor supply (labor*z)
 		# auxBC_@{iz}_@{iShare} = r * bbBar + shareGrid_@{iShare} * d + T;
-		# laborBC_@{iz}_@{iShare} = (1-ttau) * w * zGrid_@{iz}
+		# laborBC_@{iz}_@{iShare} = (1-ttau) * w * (zGrid_@{iz} ^ 2)
 			* expectationBC_@{iz}_@{iShare} / ppsi 
 			* (assetsPrimeBC_@{iz}_@{iShare} > bbBar + 1e-8) 
-			+ (-auxBC_@{iz}_@{iShare} + sqrt((auxBC_@{iz}_@{iShare} ^ 2) + 4 * (((1-ttau) * w * zGrid_@{iz})^2) / ppsi))/ (2 * (1-ttau) * w)
+			+ (-auxBC_@{iz}_@{iShare} + sqrt((auxBC_@{iz}_@{iShare} ^ 2) 
+			+ 4 * (((1-ttau) * w * zGrid_@{iz})^2) / ppsi))/ (2 * (1-ttau) * w)
 			* (assetsPrimeBC_@{iz}_@{iShare} <= bbBar + 1e-8);
 			
 	@#endfor
@@ -268,27 +269,27 @@ N = 0
 	@#for iShare in 1 : nShare
 		+ shareMass_@{iShare}*(
 		@#for iz in 1 : nz
-			+ zMass_@{iz} * ((1 - mHat_@{iz}_@{iShare})*(
+			+ zMass_@{iz} * ((1 - mHat_@{iz}_@{iShare}(-1))*(
 			@#for iAssets in 1 : nAssetsQuadrature
 				+ quadratureWeights_@{iAssets} * measurePDF_@{iz}_@{iAssets}_@{iShare} * laborQuadrature_@{iz}_@{iAssets}_@{iShare}
 			@#endfor
-			) / totalMass_@{iz}_@{iShare} + mHat_@{iz}_@{iShare} * laborBC_@{iz}_@{iShare}) 
+			) / totalMass_@{iz}_@{iShare} + mHat_@{iz}_@{iShare}(-1) * laborBC_@{iz}_@{iShare}) 
 		@#endfor
 		)
 	@#endfor
 	;
 
 T = r * B_SS - G_SS + ttau * w * N;
-B_SS = 0
+B_SS + 
 	@#for iShare in 1 : nShare
 		+ shareMass_@{iShare}*(
 		@#for iz in 1 : nz
-			+ zMass_@{iz} * ((1 - mHat_@{iz}_@{iShare}) * moment_@{iz}_1_@{iShare}(-1)
-			+ mHat_@{iz}_@{iShare} * bbBar) 
+			+ zMass_@{iz} * ((1 - mHat_@{iz}_@{iShare}(-1)) * moment_@{iz}_1_@{iShare}(-1)
+			+ mHat_@{iz}_@{iShare}(-1) * bbBar) 
 		@#endfor
 		)
 	@#endfor
-	;
+	= 0;
 
 //----------------------------------------------------------------
 // Equations with shocks (# equations = 2)
