@@ -8,10 +8,12 @@
 %----------------------------------------------------------------
 
 % Grids
-load('grids.mat'); % computeGrids;
+load('grids.mat');
+% computeGrids;
 
 % Polynomials over grids (only if using polynomials to approximate conditional expectation)
-load('polynomials.mat'); % computePolynomials;
+load('polynomials.mat');
+% computePolynomials;
 
 % variables in array to pass on
 var_array{1} = bbeta;
@@ -118,7 +120,7 @@ for iShare = 1:nShare
 end
 
 % Mass at borrowing constraint
-mHat_hist = mHistogram(:,:,1)./sum(mHistogram,3);
+mHat_hist = reshape(mHistogram(:,1,:)./sum(mHistogram,2), nz, nShare);
 
 %----------------------------------------------------------------
 % Compute market-clearing capital stock from parametric family

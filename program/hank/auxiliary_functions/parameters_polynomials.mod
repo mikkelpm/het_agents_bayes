@@ -28,7 +28,7 @@ end
 
 // z transition matrix
 // Have to impose parameters used as counters directly
-@#define nz = 3
+@#define nz = 2
 @#for iz in 1 : nz
 	@#for izPrime in 1 : nz
 		parameters zTransition_@{iz}_@{izPrime};
@@ -43,7 +43,7 @@ end
 
 @#define nCounter = nCounter + nz*nz
 
-// Mass of invariant distrbution of idiosyncratic shocks 
+// Mass of invariant distribution of idiosyncratic shocks 
 // Define
 @#for iz in 1 : nz
 	parameters zMass_@{iz};
@@ -56,7 +56,7 @@ end
 
 // Equity shares
 // Have to impose parameters used as counters directly
-@#define nShare = 3
+@#define nShare = 2
 // Profit shares for each household type
 // Define
 @#for iShare in 1 : nShare
@@ -109,7 +109,7 @@ end
 //----------------------------------------------------------------
 
 // 
-// Employment
+// Idiosyncratic productivity
 //
 
 // Define the grids

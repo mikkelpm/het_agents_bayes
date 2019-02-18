@@ -46,10 +46,10 @@
 					-bbBar + (1 + r(+1)) * assetsPrime_@{iz}_@{iAssets}_@{iShare} + shareGrid_@{iShare} * d(+1) + T(+1);
 				# consumptionPrime_@{izPrime}_@{iz}_@{iAssets}_@{iShare} = 
 					1 / expectationPrime_@{izPrime}_@{iz}_@{iAssets}_@{iShare}
-					* (assetsPrime_@{izPrime}_@{iz}_@{iAssets}_@{iShare} > bbBar + 1e-8)
+					* (assetsPrime_@{izPrime}_@{iz}_@{iAssets}_@{iShare} >= bbBar + 1e-8)
 					+ (auxPrime_@{izPrime}_@{iz}_@{iAssets}_@{iShare} + sqrt((auxPrime_@{izPrime}_@{iz}_@{iAssets}_@{iShare} ^ 2)
-					+ 4 * (((1-ttau) * w(+1) * zGrid_@{izPrime})^2) / ppsi))/ 2
-					* (assetsPrime_@{izPrime}_@{iz}_@{iAssets}_@{iShare} <= bbBar + 1e-8);
+					+ 4 * (((1-ttau) * w(+1) * zGrid_@{izPrime})^2) / ppsi)) / 2
+					* (assetsPrime_@{izPrime}_@{iz}_@{iAssets}_@{iShare} < bbBar + 1e-8);
 					
 			@#endfor
 					
@@ -91,13 +91,13 @@
 				- 1 / expectationQuadrature_@{iz}_@{iAssets}_@{iShare});
 				
 			// Compute labor supply (labor*z)
-			# aux_@{iz}_@{iAssets}_@{iShare} = -bbBar + (1 + r) * quadratureGrid_@{iAssets} + shareGrid_@{iShare} * d + T;
+			# aux_@{iz}_@{iAssets}_@{iShare} = -bbBar + (1 + r) * assetsPrimeQuadrature_@{iz}_@{iAssets}_@{iShare} + shareGrid_@{iShare} * d + T;
 			# laborQuadrature_@{iz}_@{iAssets}_@{iShare} = (1-ttau) * w * (zGrid_@{iz} ^ 2)
 				* expectationQuadrature_@{iz}_@{iAssets}_@{iShare} / ppsi 
-				* (assetsPrimeQuadrature_@{iz}_@{iAssets}_@{iShare} > bbBar + 1e-8) 
+				* (assetsPrimeQuadrature_@{iz}_@{iAssets}_@{iShare} >= bbBar + 1e-8)
 				+ (-aux_@{iz}_@{iAssets}_@{iShare} + sqrt((aux_@{iz}_@{iAssets}_@{iShare} ^ 2)
 				+ 4 * (((1-ttau) * w * zGrid_@{iz})^2) / ppsi))/ (2 * (1-ttau) * w)
-				* (assetsPrimeQuadrature_@{iz}_@{iAssets}_@{iShare} <= bbBar + 1e-8);
+				* (assetsPrimeQuadrature_@{iz}_@{iAssets}_@{iShare} < bbBar + 1e-8);
 				
 			// PDF of distribution
 			# measurePDF_@{iz}_@{iAssets}_@{iShare} = exp(0 + measureCoefficient_@{iz}_1_@{iShare} * (quadratureGrid_@{iAssets} - 
@@ -144,13 +144,13 @@
 			- 1 / expectationBC_@{iz}_@{iShare});
 			
 		// Compute labor supply (labor*z)
-		# auxBC_@{iz}_@{iShare} = r * bbBar + shareGrid_@{iShare} * d + T;
+		# auxBC_@{iz}_@{iShare} = -bbBar + (1+r) * assetsPrimeBC_@{iz}_@{iShare} + shareGrid_@{iShare} * d + T;
 		# laborBC_@{iz}_@{iShare} = (1-ttau) * w * (zGrid_@{iz} ^ 2)
 			* expectationBC_@{iz}_@{iShare} / ppsi 
-			* (assetsPrimeBC_@{iz}_@{iShare} > bbBar + 1e-8) 
+			* (assetsPrimeBC_@{iz}_@{iShare} >= bbBar + 1e-8)
 			+ (-auxBC_@{iz}_@{iShare} + sqrt((auxBC_@{iz}_@{iShare} ^ 2) 
 			+ 4 * (((1-ttau) * w * zGrid_@{iz})^2) / ppsi))/ (2 * (1-ttau) * w)
-			* (assetsPrimeBC_@{iz}_@{iShare} <= bbBar + 1e-8);
+			* (assetsPrimeBC_@{iz}_@{iShare} < bbBar + 1e-8);
 			
 	@#endfor
 	
@@ -209,7 +209,7 @@
 		@#endfor
 		) / zMass_@{iz};
 		
-		// Higher order moments (uncentered)
+		// Higher order moments (centered)
 		@#for iMoment in 2 : nMeasure
 			moment_@{iz}_@{iMoment}_@{iShare} = (0
 			@#for izTilde in 1 : nz
@@ -259,10 +259,10 @@
 
 d = (1 - w / A - ttheta /2 * (ppi ^ 2)) * A * N;
 
-ppi = (eepsilon - 1) / ttheta * (w /w_SS - A / A_SS) + 1 / (1 + r_SS) * ppi(+1);
+ppi = (eepsilon - 1) / ttheta * (log(w / w_SS) - log(A / A_SS)) + 1 / (1 + r_SS) * ppi(+1);
 
 //----------------------------------------------------------------
-// Government budget constraint and market clear conditions (# equations = 3)
+// Market clearing conditions (# equations = 2)
 //----------------------------------------------------------------
 
 N = 0
@@ -279,7 +279,6 @@ N = 0
 	@#endfor
 	;
 
-T = r * B_SS - G_SS + ttau * w * N;
 B_SS + 
 	@#for iShare in 1 : nShare
 		+ shareMass_@{iShare}*(
@@ -292,12 +291,22 @@ B_SS +
 	= 0;
 
 //----------------------------------------------------------------
-// Equations with shocks (# equations = 2)
+// Policy equations (# equations = 2)
+//----------------------------------------------------------------
+
+// Fiscal policy
+T = r * B_SS - G_SS + ttau * w * N;
+
+// Monetary policy
+i = r_SS + pphi * ppi + epsilonM;
+
+// Fisher equation
+1 + r = (1 + i(-1)) / (1 + ppi);
+
+//----------------------------------------------------------------
+// Driving process equations (# equations = 1)
 //----------------------------------------------------------------
 
 // Law of motion for aggregate TFP
 log(A) = rrhoTFP * log(A(-1)) + (1-rrhoTFP) * log(A_SS) + ssigmaTFP * epsilonA;
-
-// Monetary policy
-(1 + ppi) * (1 + r) - 1 = r_SS + pphi * ppi + epsilonM;
 

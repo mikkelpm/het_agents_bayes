@@ -32,25 +32,30 @@ vvarthetaB = -0.233;
 vvarthetaT = 0.06;
 
 % Idiosyncratic productivity
-vzGrid = [0.5;1;1.5];
-mzTransition = [0.8 0.2 0;
-                0.1 0.8 0.1;
-                0   0.2 0.8]; % (i,j) element: P(z'=z_j | z=z_i)
+% vzGrid = [0.5;1;1.5];
+% mzTransition = [0.8 0.2 0;
+%                 0.1 0.8 0.1;
+%                 0   0.2 0.8]; % (i,j) element: P(z'=z_j | z=z_i)
+vzGrid = [0.5;1.5];
+mzTransition = [0.8 0.2;
+                0.2 0.8]; % (i,j) element: P(z'=z_j | z=z_i)
 
 % Aggregate productivity
 A_SS = 3; % Steady state aggr productivity level
 
 % Equity shares
-vShareGrid = [0; 1; 2]; % Profit shares for each household type
-vShareFraction = [1/3; 1/3; 1/3]; % Fractions of each household type
+% vShareGrid = [0; 1; 2]; % Profit shares for each household type
+% vShareFraction = [1/3; 1/3; 1/3]; % Fractions of each household type
+vShareGrid = [0.5; 1.5]; % Profit shares for each household type
+vShareFraction = [1/2; 1/2]; % Fractions of each household type
 
 % Aggregate Shocks (Winberry (2016))
-rrhoTFP = .859;										
-ssigmaTFP = .014;
+rrhoTFP = .859; % AR(1) coefficient for TFP
+ssigmaTFP = .014; % Std dev of innovation to TFP shock
 
 % Dynamic Parameters (KMV (2018))
-ttheta = 100;
-pphi = 1.25;
+ttheta = 100; % Rotemberg price stickiness parameter
+pphi = 1.25; % Taylor rule coefficient on inflation
 
 % APPROXIMATION PARAMETERS
 
@@ -118,7 +123,7 @@ save polynomials.mat vAssetsPoly vAssetsPolySquared vAssetsPolyFine vAssetsPolyQ
 % Run Dynare
 %----------------------------------------------------------------
 
-dynare firstOrderDynamics_polynomials
+dynare firstOrderDynamics_polynomials noclearall nopathchange;
 
 cd('../')
 

@@ -40,6 +40,7 @@ coreSteadyState;
 w = w_SS;
 A = A_SS;
 r = r_SS;
+i = r_SS;
 N = N_SS;
 d = d_SS;
 T = T_SS;
