@@ -56,7 +56,7 @@ end
 
 // Equity shares
 // Have to impose parameters used as counters directly
-@#define nShare = 1
+@#define nShare = 3
 // Profit shares for each household type
 // Define
 @#for iShare in 1 : nShare
