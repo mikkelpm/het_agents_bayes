@@ -43,8 +43,8 @@ A_SS = 3; % Steady state aggr productivity level
 % Equity shares
 % vShareGrid = [0; 1; 2]; % Profit shares for each household type
 % vShareFraction = [1/3; 1/3; 1/3]; % Fractions of each household type
-vShareGrid = [0.5; 1.5]; % Profit shares for each household type
-vShareFraction = [1/2; 1/2]; % Fractions of each household type
+vShareGrid = 1; %[0.5; 1.5]; % Profit shares for each household type
+vShareFraction = 1; %[1/2; 1/2]; % Fractions of each household type
 
 
 % APPROXIMATION PARAMETERS
@@ -86,7 +86,7 @@ coreSteadyState;
 
 %% Compare histogram and parametric steady states
 
-indShare = 2; % Plot for this index of profit share
+indShare = 1; % Plot for this index of profit share
 
 % Grid for computing PDF
 bGridMoments_fine = zeros(nz,nAssetsFine,nMeasure);

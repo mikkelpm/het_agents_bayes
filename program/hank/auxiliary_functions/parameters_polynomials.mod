@@ -14,9 +14,9 @@ polynomials = load('polynomials');
 
 // Define economic parameters 
 parameters bbeta ppsi nnu bbBar eepsilon ttau vvarthetaB vvarthetaT
-	A_SS w_SS r_RepSS N_RepSS rrhoTFP ssigmaTFP ttheta pphi;
+	A_SS w_SS r_RepSS N_RepSS rrhoTFP ssigmaTFP rrhoMP ssigmaMP ttheta pphi;
 //Load in their values
-@#define nEconomicParameters = 16
+@#define nEconomicParameters = 18
 for iParam = 1 : @{nEconomicParameters}
 	parameterName = deblank(M_.param_names(iParam,:));
 	if isfield(economicParameters,parameterName)
@@ -28,7 +28,7 @@ end
 
 // z transition matrix
 // Have to impose parameters used as counters directly
-@#define nz = 2
+@#define nz = 3
 @#for iz in 1 : nz
 	@#for izPrime in 1 : nz
 		parameters zTransition_@{iz}_@{izPrime};
@@ -56,7 +56,7 @@ end
 
 // Equity shares
 // Have to impose parameters used as counters directly
-@#define nShare = 2
+@#define nShare = 1
 // Profit shares for each household type
 // Define
 @#for iShare in 1 : nShare
@@ -240,11 +240,8 @@ end
 //----------------------------------------------------------------
 
 parameters r_SS B_SS G_SS;
-//Load in their values
+//Set to 0 for now to satisfy Dynare
 @#define nSSParameters = 3
 for iParam = 1 : @{nSSParameters}
-	parameterName = deblank(M_.param_names(@{nCounter} + iParam,:));
-	if isfield(economicParameters,parameterName)
-		M_.params(@{nCounter} + iParam) = 0;
-	end
+    M_.params(@{nCounter} + iParam) = 0;
 end

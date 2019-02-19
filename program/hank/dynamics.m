@@ -16,7 +16,7 @@ cd('./auxiliary_functions');
 % ECONOMIC PARAMETERS
 
 % Preferences
-bbeta = .96; % Discount factor
+bbeta = .99; % Discount factor (quarterly)
 ppsi = 1; % Coefficient on labor disutility
 nnu = 1; % Inverse Frisch elasticity, MUST be 1 at the moment!
 
@@ -32,13 +32,13 @@ vvarthetaB = -0.233;
 vvarthetaT = 0.06;
 
 % Idiosyncratic productivity
-% vzGrid = [0.5;1;1.5];
-% mzTransition = [0.8 0.2 0;
-%                 0.1 0.8 0.1;
-%                 0   0.2 0.8]; % (i,j) element: P(z'=z_j | z=z_i)
-vzGrid = [0.5;1.5];
-mzTransition = [0.8 0.2;
-                0.2 0.8]; % (i,j) element: P(z'=z_j | z=z_i)
+vzGrid = [0.5;1;1.5];
+mzTransition = [0.8 0.2 0;
+                0.1 0.8 0.1;
+                0   0.2 0.8]; % (i,j) element: P(z'=z_j | z=z_i)
+% vzGrid = [0.5;1.5];
+% mzTransition = [0.8 0.2;
+%                 0.2 0.8]; % (i,j) element: P(z'=z_j | z=z_i)
 
 % Aggregate productivity
 A_SS = 3; % Steady state aggr productivity level
@@ -46,12 +46,14 @@ A_SS = 3; % Steady state aggr productivity level
 % Equity shares
 % vShareGrid = [0; 1; 2]; % Profit shares for each household type
 % vShareFraction = [1/3; 1/3; 1/3]; % Fractions of each household type
-vShareGrid = [0.5; 1.5]; % Profit shares for each household type
-vShareFraction = [1/2; 1/2]; % Fractions of each household type
+vShareGrid = 1; %[0.5; 1.5]; % Profit shares for each household type
+vShareFraction = 1; %[1/2; 1/2]; % Fractions of each household type
 
-% Aggregate Shocks (Winberry (2016))
-rrhoTFP = .859; % AR(1) coefficient for TFP
-ssigmaTFP = .014; % Std dev of innovation to TFP shock
+% Aggregate Shocks
+rrhoTFP = .95; % Autocorrelation of TFP
+ssigmaTFP = .005; % Std dev of innovation to TFP shock
+rrhoMP = 0.9; % Autocorrelation of monetary policy shock
+ssigmaMP = 0.0025; % Std dev of innovation to monetary policy shock
 
 % Dynamic Parameters (KMV (2018))
 ttheta = 100; % Rotemberg price stickiness parameter
@@ -103,7 +105,7 @@ computePolynomials;
 % Economic parameters
 save economicParameters.mat bbeta ppsi nnu bbBar eepsilon ttau vvarthetaB vvarthetaT...
     vzGrid vzInvariant mzTransition A_SS w_SS r_RepSS N_RepSS vShareGrid vShareFraction...
-    rrhoTFP ssigmaTFP ttheta pphi
+    rrhoTFP ssigmaTFP rrhoMP ssigmaMP ttheta pphi
 
 % Approximation parameters
 save approximationParameters.mat nz nAssets nState nAssetsFine nStateFine...

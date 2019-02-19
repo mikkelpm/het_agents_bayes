@@ -43,7 +43,7 @@
 					- 1 / expectationPrime_@{izPrime}_@{iz}_@{iAssets}_@{iShare});
 					
 				# auxPrime_@{izPrime}_@{iz}_@{iAssets}_@{iShare} = 
-					-bbBar + (1 + r(+1)) * assetsPrime_@{iz}_@{iAssets}_@{iShare} + shareGrid_@{iShare} * d(+1) + T(+1);
+					-bbBar + (1 + r(+1)) * assetsGrid_@{iAssets} + shareGrid_@{iShare} * d(+1) + T(+1);
 				# consumptionPrime_@{izPrime}_@{iz}_@{iAssets}_@{iShare} = 
 					1 / expectationPrime_@{izPrime}_@{iz}_@{iAssets}_@{iShare}
 					* (assetsPrime_@{izPrime}_@{iz}_@{iAssets}_@{iShare} >= bbBar + 1e-8)
@@ -91,7 +91,7 @@
 				- 1 / expectationQuadrature_@{iz}_@{iAssets}_@{iShare});
 				
 			// Compute labor supply (labor*z)
-			# aux_@{iz}_@{iAssets}_@{iShare} = -bbBar + (1 + r) * assetsPrimeQuadrature_@{iz}_@{iAssets}_@{iShare} + shareGrid_@{iShare} * d + T;
+			# aux_@{iz}_@{iAssets}_@{iShare} = -bbBar + (1 + r) * quadratureGrid_@{iAssets} + shareGrid_@{iShare} * d + T;
 			# laborQuadrature_@{iz}_@{iAssets}_@{iShare} = (1-ttau) * w * (zGrid_@{iz} ^ 2)
 				* expectationQuadrature_@{iz}_@{iAssets}_@{iShare} / ppsi 
 				* (assetsPrimeQuadrature_@{iz}_@{iAssets}_@{iShare} >= bbBar + 1e-8)
@@ -144,7 +144,7 @@
 			- 1 / expectationBC_@{iz}_@{iShare});
 			
 		// Compute labor supply (labor*z)
-		# auxBC_@{iz}_@{iShare} = -bbBar + (1+r) * assetsPrimeBC_@{iz}_@{iShare} + shareGrid_@{iShare} * d + T;
+		# auxBC_@{iz}_@{iShare} = r * bbBar + shareGrid_@{iShare} * d + T;
 		# laborBC_@{iz}_@{iShare} = (1-ttau) * w * (zGrid_@{iz} ^ 2)
 			* expectationBC_@{iz}_@{iShare} / ppsi 
 			* (assetsPrimeBC_@{iz}_@{iShare} >= bbBar + 1e-8)
@@ -257,14 +257,15 @@
 // Firm conditions (# equations = 2)
 //----------------------------------------------------------------
 
-d = (1 - w / A - ttheta /2 * (ppi ^ 2)) * A * N;
+d = (1 - w / A - ttheta /2 * (ppi ^ 2)) * Y; // Profits
 
-ppi = (eepsilon - 1) / ttheta * (log(w / w_SS) - log(A / A_SS)) + 1 / (1 + r_SS) * ppi(+1);
+ppi = (eepsilon - 1) / ttheta * (log(w / w_SS) - log(A / A_SS)) + 1 / (1 + r_SS) * ppi(+1); // Phillips curve
 
 //----------------------------------------------------------------
 // Market clearing conditions (# equations = 2)
 //----------------------------------------------------------------
 
+// Labor
 N = 0
 	@#for iShare in 1 : nShare
 		+ shareMass_@{iShare}*(
@@ -279,12 +280,13 @@ N = 0
 	@#endfor
 	;
 
+// Bonds
 B_SS + 
 	@#for iShare in 1 : nShare
 		+ shareMass_@{iShare}*(
 		@#for iz in 1 : nz
-			+ zMass_@{iz} * ((1 - mHat_@{iz}_@{iShare}(-1)) * moment_@{iz}_1_@{iShare}(-1)
-			+ mHat_@{iz}_@{iShare}(-1) * bbBar) 
+			+ zMass_@{iz} * ((1 - mHat_@{iz}_@{iShare}) * moment_@{iz}_1_@{iShare}
+			+ mHat_@{iz}_@{iShare} * bbBar) 
 		@#endfor
 		)
 	@#endfor
@@ -298,15 +300,29 @@ B_SS +
 T = r * B_SS - G_SS + ttau * w * N;
 
 // Monetary policy
-i = r_SS + pphi * ppi + epsilonM;
+i = r_SS + pphi * ppi + uM;
 
-// Fisher equation
+//----------------------------------------------------------------
+// Real interest rate (# equations = 1)
+//----------------------------------------------------------------
+
 1 + r = (1 + i(-1)) / (1 + ppi);
+
+//----------------------------------------------------------------
+// Aggregates (# equations = 2)
+//----------------------------------------------------------------
+
+Y = A * N; // Output
+
+C = Y - G_SS - ttheta / 2 * (ppi ^ 2); // Consumption
 
 //----------------------------------------------------------------
 // Driving process equations (# equations = 1)
 //----------------------------------------------------------------
 
 // Law of motion for aggregate TFP
-log(A) = rrhoTFP * log(A(-1)) + (1-rrhoTFP) * log(A_SS) + ssigmaTFP * epsilonA;
+log(A / A_SS) = rrhoTFP * log(A(-1) / A_SS) + ssigmaTFP * epsilonA;
+
+// Law of motion for monetary policy shock
+uM = rrhoMP * uM(-1) + ssigmaMP * epsilonM;
 

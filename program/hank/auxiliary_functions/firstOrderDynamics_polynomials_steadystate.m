@@ -44,7 +44,10 @@ i = r_SS;
 N = N_SS;
 d = d_SS;
 T = T_SS;
+Y = A_SS*N_SS;
+C = Y-G_SS;
 ppi = 0;
+uM = 0;
 
 M_.params(M_.param_nbr-2) = r_SS;
 M_.params(M_.param_nbr-1) = G_SS;
