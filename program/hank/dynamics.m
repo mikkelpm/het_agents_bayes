@@ -6,10 +6,11 @@
 clear all
 close all
 clc
+addpath('auxiliary_functions/dynare', 'auxiliary_functions/likelihood', 'auxiliary_functions/sim');
 
 % profile on
 
-cd('./auxiliary_functions');
+cd('./auxiliary_functions/dynare');
 
 
 %% Define parameters
@@ -100,6 +101,7 @@ saveParameters;
 
 dynare firstOrderDynamics_polynomials noclearall nopathchange;
 
-cd('../')
+cd('../../');
+rmpath('auxiliary_functions/dynare', 'auxiliary_functions/likelihood', 'auxiliary_functions/sim');
 
 % profsave(profile('info'),['profile_results_' datestr(now,'yyyymmdd')]);
