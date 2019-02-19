@@ -27,15 +27,23 @@ model;
 end;
 
 //----------------------------------------------------------------
-// 4. Computation
+// Shocks
 //----------------------------------------------------------------
-
-// Specify shock process
 
 shocks;
     var epsilonA = 1;
 	var epsilonM = 1;
 end;
+
+//----------------------------------------------------------------
+// Observables
+//----------------------------------------------------------------
+
+varobs Y w;
+
+//----------------------------------------------------------------
+// Computation
+//----------------------------------------------------------------
 
 options_.steadystate.nocheck = 1;
 
@@ -49,5 +57,5 @@ options_.steadystate.nocheck = 1;
 //model_info;
 
 // Simulate
-//stoch_simul(irf=0, order=1);
-stoch_simul(irf=40, order=1) A i r w Y N C T d ppi;
+stoch_simul(irf=0, order=1);
+//stoch_simul(irf=40, order=1) A i r w Y N C T d ppi;
