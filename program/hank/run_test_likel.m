@@ -21,21 +21,20 @@ is_data_gen = 1; % whether simulate data:
                  % 1: simulation
 
 % Model/data settings
-T = 500;                        % Number of periods of simulated macro data
-ts_micro = [];                  % Time periods where we observe micro data
-N_micro = 0;                  % Number of households per non-missing time period
+T = 200;                        % Number of periods of simulated macro data
+ts_micro = 20:20:T;             % Time periods where we observe micro data
+N_micro = 1e3;                  % Number of households per non-missing time period
 
 % Parameter values to check
 param1_vals = [0.98 0.99 0.999];
 param2_vals = [50 100 200];
 
 % Likelihood settings
-num_smooth_draws = 0;         % Number of draws from the smoothing distribution (for unbiased likelihood estimate)
-% num_interp = 100;               % Number of interpolation grid points for calculating density integral
+num_smooth_draws = 500;         % Number of draws from the smoothing distribution (for unbiased likelihood estimate)
 
 % Numerical settings
 num_burnin_periods = 100;       % Number of burn-in periods for simulations
-rng_seed = 20190219;            % Random number generator seed for initial simulation
+rng_seed = 201902211;            % Random number generator seed for initial simulation
 
 
 %% Define parameters
@@ -128,13 +127,18 @@ if is_data_gen == 0
     
     % Load previous data
     load('simul.mat')
+    load('simul_micro.mat');
     
 else
     
-    % Simulate
+    % Simulate macro variables
     set_dynare_seed(rng_seed);                                          % Seed RNG
     sim_struct = simulate_model(T,num_burnin_periods,M_,oo_,options_);  % Simulate data
     save('simul.mat', '-struct', 'sim_struct');                         % Save simulated data
+    
+    % Simulate micro variables
+    sim_data_micro = simulate_micro(sim_struct, ts_micro, N_micro);
+    save('simul_micro.mat', 'sim_data_micro');
     
 end
 
@@ -142,15 +146,17 @@ end
 %% Compute likelihood
 
 loglikes = nan(length(param1_vals),length(param2_vals));
+loglikes_macro = nan(length(param1_vals),length(param2_vals));
+loglikes_micro = nan(length(param1_vals),length(param2_vals));
 
 disp('Computing likelihood...');
 timer_likelihood = tic;
 
-% if contains(pwd,'Laura')
-%     poolobj = parpool(2);
-% else
-%     poolobj = parpool;
-% end
+if contains(pwd,'Laura')
+    poolobj = parpool(2);
+else
+    poolobj = parpool;
+end
 
 for iter_i=1:length(param1_vals) % For each parameter...
     
@@ -172,16 +178,16 @@ for iter_i=1:length(param1_vals) % For each parameter...
         computeSteadyState;     % Compute steady state
 
         % Log likelihood of proposal
-        loglikes(iter_i,iter_j) = ...
-            loglike_compute('simul.mat', [], ts_micro, ...
-                            num_smooth_draws, [], num_burnin_periods, ...
+        [loglikes(iter_i,iter_j),loglikes_macro(iter_i,iter_j),loglikes_micro(iter_i,iter_j)] = ...
+            loglike_compute('simul.mat', sim_data_micro, ts_micro, ...
+                            num_smooth_draws, num_burnin_periods, ...
                             M_, oo_, options_);
     
     end
     
 end
 
-% delete(poolobj);
+delete(poolobj);
 
 likelihood_elapsed = toc(timer_likelihood);
 fprintf('%s%8.2f\n', 'Done. Elapsed minutes: ', likelihood_elapsed/60);
