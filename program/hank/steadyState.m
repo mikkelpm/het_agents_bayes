@@ -5,7 +5,7 @@ clear all;
 close all;
 
 % profile on
-oldFolder = cd('./auxiliary_functions');
+oldFolder = cd('./auxiliary_functions/dynare');
 
 
 %% Define parameters
@@ -13,8 +13,8 @@ oldFolder = cd('./auxiliary_functions');
 % ECONOMIC PARAMETERS
 
 % Preferences
-bbeta = .96; % Discount factor
-ppsi = 1; % Coefficient on labor disutility
+bbeta = .99; % Discount factor
+ppsi = 3; % Coefficient on labor disutility
 nnu = 1; % Inverse Frisch elasticity, MUST be 1 at the moment!
 
 % Borrowing limit
@@ -29,22 +29,24 @@ vvarthetaB = -0.233;
 vvarthetaT = 0.06;
 
 % Idiosyncratic productivity
-% vzGrid = [0.5;1;1.5];
-% mzTransition = [0.8 0.2 0;
-%                 0.1 0.8 0.1;
-%                 0   0.2 0.8]; % (i,j) element: P(z'=z_j | z=z_i)
-vzGrid = [0.5;1.5];
-mzTransition = [0.8 0.2;
-                0.2 0.8]; % (i,j) element: P(z'=z_j | z=z_i)
+vzGrid = [0.5;1;1.5];
+mzTransition = [0.8 0.2 0;
+                0.1 0.8 0.1;
+                0   0.2 0.8]; % (i,j) element: P(z'=z_j | z=z_i)
+% vzGrid = [0.5;1.5];
+% mzTransition = [0.8 0.2;
+%                 0.2 0.8]; % (i,j) element: P(z'=z_j | z=z_i)
 
 % Aggregate productivity
-A_SS = 3; % Steady state aggr productivity level
+A_SS = 1; % Steady state aggr productivity level
 
 % Equity shares
 % vShareGrid = [0; 1; 2]; % Profit shares for each household type
 % vShareFraction = [1/3; 1/3; 1/3]; % Fractions of each household type
-vShareGrid = 1; %[0.5; 1.5]; % Profit shares for each household type
-vShareFraction = 1; %[1/2; 1/2]; % Fractions of each household type
+% vShareGrid = [0; 2];
+% vShareFraction = [1/2; 1/2];
+vShareGrid = 1;
+vShareFraction = 1;
 
 
 % APPROXIMATION PARAMETERS
@@ -71,9 +73,16 @@ dampening = .5;%.95;
 numNewton = 10; % Number of Newton steps per iteration in parametric ss calculation
 
 
-%% Set remaining parameters
+%% Compute remaining parameters
 
+% Set additional parameters
 setParameters;
+
+% Grids
+computeGrids;
+
+% Polynomials over grids (use polynomials to approximate conditional expectation)
+computePolynomials;
 
 
 %% Compute Steady State

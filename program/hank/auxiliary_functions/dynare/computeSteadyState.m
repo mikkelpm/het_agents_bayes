@@ -8,6 +8,8 @@ fprintf('\nComputing steady state...\n')
 %----------------------------------------------------------------
 load('economicParameters.mat')
 load('approximationParameters.mat')
+load('grids.mat');
+load('polynomials.mat');
 
 %----------------------------------------------------------------
 % Read in parameters from Dynare declaration

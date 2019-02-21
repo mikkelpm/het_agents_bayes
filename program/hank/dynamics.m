@@ -6,7 +6,6 @@
 clear all
 close all
 clc
-addpath('auxiliary_functions/dynare', 'auxiliary_functions/likelihood', 'auxiliary_functions/sim');
 
 % profile on
 
@@ -43,16 +42,18 @@ mzTransition = [0.8 0.2 0;
 A_SS = 3; % Steady state aggr productivity level
 
 % Equity shares
-vShareGrid = [0; 1; 2]; % Profit shares for each household type
-vShareFraction = [1/3; 1/3; 1/3]; % Fractions of each household type
-% vShareGrid = 1;
-% vShareFraction = 1;
+% vShareGrid = [0; 1; 2]; % Profit shares for each household type
+% vShareFraction = [1/3; 1/3; 1/3]; % Fractions of each household type
+% vShareGrid = [0.5; 1.5];
+% vShareFraction = [1/2; 1/2];
+vShareGrid = 1;
+vShareFraction = 1;
 
 % Aggregate shocks
 rrhoTFP = .95; % Autocorrelation of TFP
-ssigmaTFP = .005; % Std dev of innovation to TFP shock
+ssigmaTFP = 5e-4; % Std dev of innovation to TFP shock
 rrhoMP = 0.9; % Autocorrelation of monetary policy shock
-ssigmaMP = 0.0025; % Std dev of innovation to monetary policy shock
+ssigmaMP = 5e-4; % Std dev of innovation to monetary policy shock
 
 % Dynamic parameters (KMV (2018))
 ttheta = 100; % Rotemberg price stickiness parameter
@@ -84,13 +85,9 @@ numNewton = 10; % Number of Newton steps per iteration in parametric ss calculat
 
 %% Set parameters
 
-% Set additional parameters
+% Set parameters and grids
 setParameters;
-
-% Grids
 computeGrids;
-
-% Polynomials over grids (use polynomials to approximate conditional expectation)
 computePolynomials;
 
 % Save all parameters
@@ -99,9 +96,9 @@ saveParameters;
 
 %% Run Dynare
 
+delete steady_vars.mat;
 dynare firstOrderDynamics_polynomials noclearall nopathchange;
 
 cd('../../');
-rmpath('auxiliary_functions/dynare', 'auxiliary_functions/likelihood', 'auxiliary_functions/sim');
 
 % profsave(profile('info'),['profile_results_' datestr(now,'yyyymmdd')]);
