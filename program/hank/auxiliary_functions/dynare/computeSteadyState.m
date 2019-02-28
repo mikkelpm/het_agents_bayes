@@ -6,8 +6,6 @@ fprintf('\nComputing steady state...\n')
 %----------------------------------------------------------------
 % Call parameters (the next set of commands will overwrite some)
 %----------------------------------------------------------------
-load('economicParameters.mat')
-load('approximationParameters.mat')
 load('grids.mat');
 load('polynomials.mat');
 

@@ -4,8 +4,9 @@ function [loglike, loglike_macro, loglike_micro]...
 
 % Compute likelihood for HANK model
 
-load('economicParameters', 'bbBar', 'vzInvariant', 'vShareGrid', 'vShareFraction');
-load('approximationParameters.mat', 'nz', 'nMeasure', 'nShare');
+load('economicParameters.mat', 'bbBar');
+load('approximationParameters', 'nz', 'nMeasure', 'nShare');
+load('grids.mat','vzInvariant', 'vShareGrid', 'vShareFraction');
 
 
 

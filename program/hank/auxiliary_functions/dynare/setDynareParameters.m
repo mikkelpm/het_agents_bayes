@@ -3,6 +3,8 @@
 
 economicParameters = load('economicParameters');
 approximationParameters = load('approximationParameters');
+grids = load('grids');
+polynomials = load('polynomials');
 
 
 %% Economic parameters
@@ -16,37 +18,6 @@ for iParam = 1 : nEconomicParameters
 end
 
 nCounter = nEconomicParameters;
-
-%% z transition matrix
-for iz = 1 : nz
-	for izPrime = 1 : nz
-		M_.params(nCounter + nz * (iz - 1) + izPrime) = ...
-			economicParameters.mzTransition(iz,izPrime);
-	end
-end
-
-nCounter = nCounter + nz*nz;
-
-%% Mass of invariant distribution of idiosyncratic shocks 
-for iz = 1 : nz
-	M_.params(nCounter + iz) = economicParameters.vzInvariant(iz);
-end
-
-nCounter = nCounter + nz;
-
-%% Equity shares
-for iShare = 1 : nShare
-	M_.params(nCounter + iShare) = economicParameters.vShareGrid(iShare);
-end
-
-nCounter = nCounter + nShare;
-
-%% Fractions of each household type
-for iShare = 1 : nShare
-	M_.params(nCounter + iShare) = economicParameters.vShareFraction(iShare);
-end
-
-nCounter = nCounter + nShare;
 
 %% Define some of the approximation parameters
 nApproximationParameters = 18;
@@ -64,10 +35,41 @@ nCounter = nCounter + nApproximationParameters;
 
 % Idiosyncratic productivity
 for iz = 1 : nz
-	M_.params(nCounter + iz) = economicParameters.vzGrid(iz);
+	M_.params(nCounter + iz) = grids.vzGrid(iz);
 end
 
 nCounter = nCounter + nz;
+
+% z transition matrix
+for iz = 1 : nz
+	for izPrime = 1 : nz
+		M_.params(nCounter + nz * (iz - 1) + izPrime) = ...
+			grids.mzTransition(iz,izPrime);
+	end
+end
+
+nCounter = nCounter + nz*nz;
+
+% Mass of invariant distribution of idiosyncratic shocks 
+for iz = 1 : nz
+	M_.params(nCounter + iz) = grids.vzInvariant(iz);
+end
+
+nCounter = nCounter + nz;
+
+% Equity shares
+for iShare = 1 : nShare
+	M_.params(nCounter + iShare) = grids.vShareGrid(iShare);
+end
+
+nCounter = nCounter + nShare;
+
+% Fractions of each household type
+for iShare = 1 : nShare
+	M_.params(nCounter + iShare) = grids.vShareFraction(iShare);
+end
+
+nCounter = nCounter + nShare;
 
 % Assets
 for iAssets = 1 : nAssets

@@ -34,7 +34,6 @@ vAssetsGridFineZeros = scaleDown(vAssetsGridFine,assetsMin,assetsMax);
 % Make matrix versions of grids
 mzGridFine = repmat(vzGrid,[1 nAssetsFine]);
 mAssetsGridFine = repmat(vAssetsGridFine',[nz 1]);
-mzPrimeGridFine = repmat(vzGrid,[1 nStateFine]);
 
 %---------------------------------------------------------------
 % Quadrature grid, to integrate density (away from borrowing constraint)

@@ -26,59 +26,6 @@ end
 
 @#define nCounter = nEconomicParameters
 
-// z transition matrix
-// Have to impose parameters used as counters directly
-@#define nz = 3
-@#for iz in 1 : nz
-	@#for izPrime in 1 : nz
-		parameters zTransition_@{iz}_@{izPrime};
-	@#endfor
-@#endfor
-for iz = 1 : nz
-	for izPrime = 1 : nz
-		M_.params(@{nCounter} + @{nz} * (iz - 1) + izPrime) = ...
-			economicParameters.mzTransition(iz,izPrime);
-	end
-end
-
-@#define nCounter = nCounter + nz*nz
-
-// Mass of invariant distribution of idiosyncratic shocks 
-// Define
-@#for iz in 1 : nz
-	parameters zMass_@{iz};
-@#endfor
-// Assign values
-for iz = 1 : @{nz}
-	M_.params(@{nCounter} + iz) = economicParameters.vzInvariant(iz);
-end
-@#define nCounter = nCounter + nz
-
-// Equity shares
-// Have to impose parameters used as counters directly
-@#define nShare = 1
-// Profit shares for each household type
-// Define
-@#for iShare in 1 : nShare
-	parameters shareGrid_@{iShare};
-@#endfor
-// Assign values
-for iShare = 1 : @{nShare}
-	M_.params(@{nCounter} + iShare) = economicParameters.vShareGrid(iShare);
-end
-@#define nCounter = nCounter + nShare
-
-// Fractions of each household type
-// Define
-@#for iShare in 1 : nShare
-	parameters shareMass_@{iShare};
-@#endfor
-// Assign values
-for iShare = 1 : @{nShare}
-	M_.params(@{nCounter} + iShare) = economicParameters.vShareFraction(iShare);
-end
-@#define nCounter = nCounter + nShare
-
 // Define some of the approximation parameters
 parameters nz nAssets nState nAssetsFine nStateFine
     nAssetsQuadrature nStateQuadrature nMeasure nMeasureCoefficients nShare
@@ -96,6 +43,8 @@ end
 @#define nCounter = nCounter + nApproximationParameters
 
 // Have to impose parameters used as counters directly
+@#define nz = 3
+@#define nShare = 1
 @#define nAssets = 25
 @#define nMeasure = 3
 @#define nAssetsQuadrature = 8
@@ -119,10 +68,59 @@ end
 
 // Assign values
 for iz = 1 : @{nz}
-	M_.params(@{nCounter} + iz) = economicParameters.vzGrid(iz);
+	M_.params(@{nCounter} + iz) = grids.vzGrid(iz);
 end
 
 @#define nCounter = nCounter + nz
+
+// z transition matrix
+@#for iz in 1 : nz
+	@#for izPrime in 1 : nz
+		parameters zTransition_@{iz}_@{izPrime};
+	@#endfor
+@#endfor
+for iz = 1 : nz
+	for izPrime = 1 : nz
+		M_.params(@{nCounter} + @{nz} * (iz - 1) + izPrime) = ...
+			grids.mzTransition(iz,izPrime);
+	end
+end
+
+@#define nCounter = nCounter + nz*nz
+
+// Mass of invariant distribution of idiosyncratic shocks 
+// Define
+@#for iz in 1 : nz
+	parameters zMass_@{iz};
+@#endfor
+// Assign values
+for iz = 1 : @{nz}
+	M_.params(@{nCounter} + iz) = grids.vzInvariant(iz);
+end
+@#define nCounter = nCounter + nz
+
+// Equity shares
+// Profit shares for each household type
+// Define
+@#for iShare in 1 : nShare
+	parameters shareGrid_@{iShare};
+@#endfor
+// Assign values
+for iShare = 1 : @{nShare}
+	M_.params(@{nCounter} + iShare) = grids.vShareGrid(iShare);
+end
+@#define nCounter = nCounter + nShare
+
+// Fractions of each household type
+// Define
+@#for iShare in 1 : nShare
+	parameters shareMass_@{iShare};
+@#endfor
+// Assign values
+for iShare = 1 : @{nShare}
+	M_.params(@{nCounter} + iShare) = grids.vShareFraction(iShare);
+end
+@#define nCounter = nCounter + nShare
 
 //
 // Assets

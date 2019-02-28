@@ -2,8 +2,9 @@ function sim_data_micro = simulate_micro(sim_struct, ts_micro, N_micro)
 
 % Simulate household employment and income
 
-load('economicParameters', 'bbBar', 'vzInvariant', 'vShareGrid', 'vShareFraction');
+load('economicParameters.mat', 'bbBar');
 load('approximationParameters', 'nz', 'nMeasure', 'nShare');
+load('grids.mat','vzInvariant', 'vShareGrid', 'vShareFraction');
 
 T_micro = length(ts_micro);
 sim_data_micro = nan(T_micro,N_micro,2);
