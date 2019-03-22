@@ -20,7 +20,7 @@ for it=1:T_micro
 %     measureCoefficient = nan(1,nMeasure_all);
     for i_Measure = 1:nMeasure_all
         moment(i_Measure) = sim_struct.(['moment_' num2str(i_Measure)])(t-1);
-%         measureCoefficient(i_Measure) = sim_struct.(['measureCoefficient_' num2str(i_Measure)])(t-1);
+%         measureCoefficient(i_Measure) = sim_struct.(['measureCoefficient_' num2str(i_Measure)])(t);
     end
     
     % draw (prod,logk)

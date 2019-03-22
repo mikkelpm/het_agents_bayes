@@ -71,7 +71,7 @@ parfor i_draw = 1:num_smooth_draws
 %         measureCoefficient = nan(1,nMeasure_all);
         for i_Measure = 1:nMeasure_all
             moment(i_Measure) = the_smooth_draw.(['moment_' num2str(i_Measure)])(t-1);
-%             measureCoefficient(i_Measure) = the_smooth_draw.(['measureCoefficient_' num2str(i_Measure)])(t-1);
+%             measureCoefficient(i_Measure) = the_smooth_draw.(['measureCoefficient_' num2str(i_Measure)])(t);
         end
         
 %         % Compute normalization constant

@@ -25,7 +25,7 @@ for it=1:T_hh
         measureCoefficient = nan(1,nMeasure);
         for i_Measure = 1:nMeasure
             moment(i_Measure) = sim_struct.(['moment_' num2str(eepsilon+1) '_' num2str(i_Measure)])(t-1);
-            measureCoefficient(i_Measure) = sim_struct.(['measureCoefficient_' num2str(eepsilon+1) '_' num2str(i_Measure)])(t-1);
+            measureCoefficient(i_Measure) = sim_struct.(['measureCoefficient_' num2str(eepsilon+1) '_' num2str(i_Measure)])(t);
         end
 
         % draw asset
