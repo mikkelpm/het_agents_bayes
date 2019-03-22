@@ -43,7 +43,7 @@ rng_seed = 201902211;            % Random number generator seed for initial simu
 
 % Preferences
 bbeta = .99; % Discount factor (quarterly)
-ppsi = 1; % Coefficient on labor disutility
+ppsi = 5; % Coefficient on labor disutility
 nnu = 1; % Inverse Frisch elasticity, MUST be 1 at the moment!
 
 % Borrowing limit
