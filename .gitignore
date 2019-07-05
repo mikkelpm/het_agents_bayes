@@ -24,7 +24,7 @@
 !program/winberryAlgorithmCodes_speedup/Auxiliary Functions/codegen/mex/updateCoefficients_polynomials/html/resources/jQuery/*
 !program/winberryAlgorithmCodes_speedup/Auxiliary Functions/codegen/mex/updateCoefficients_polynomials/html/resources/js/*
 
-!*.mexw64
+*.mexw64
 program/winberry_test/auxiliary_functions/dynare/firstOrderDynamics_polynomials*.*
 !program/winberry_test/auxiliary_functions/dynare/firstOrderDynamics_polynomials.mod
 !program/winberry_test/auxiliary_functions/dynare/firstOrderDynamics_polynomials_steadystate.m
@@ -38,3 +38,4 @@ program/winberryAlgorithmCodes_speedup/Auxiliary Functions/firstOrderDynamics_po
 program/hank/auxiliary_functions/dynare/firstOrderDynamics_polynomials*.*
 !program/hank/auxiliary_functions/dynare/firstOrderDynamics_polynomials.mod
 !program/hank/auxiliary_functions/dynare/firstOrderDynamics_polynomials_steadystate.m
+program/winberry_test/auxiliary_functions/dynare/+firstOrderDynamics_polynomials/*.*
