@@ -11,24 +11,24 @@ is_data_gen = 1; % whether simulate data:
 
 % Model/data settings
 T = 50;                                % Number of periods of simulated macro data
-ts_micro = 10:10:T;                        % Time periods where we observe micro data
-N_micro = 1e4;                             % Number of micro entities per non-missing time period
+ts_micro = 1:T;                        % Time periods where we observe micro data
+N_micro = 1e3;                             % Number of micro entities per non-missing time period
 
 % Parameter transformation
 transf_to_param = @(x) [1/(1+exp(-x(1))) exp(x(2:end))]; % Function mapping transformed parameters into parameters of interest
 
 % Prior
 prior_logdens_transf = @(x) sum(x) - 2*log(1+exp(x(1)));    % Log prior density of transformed parameters
-prior_init_transf = @() [log(0.53)-log(1-0.53) log(0.0364) log(.011) log(.0083)];  % Distribution of initial transformed draw
+prior_init_transf = @() [log(0.7)-log(1-0.7) log(0.02)];  % Distribution of initial transformed draw
 
 % MCMC settings
 mcmc_num_iter = 1e4;                  % Number of MCMC steps (total)
-mcmc_thin = 2;                         % Store every X draws
+mcmc_thin = 1;                         % Store every X draws
 mcmc_stepsize_init = 1e-2;              % Initial MCMC step size
 mcmc_adapt_iter = [50 200 500 1000];          % Iterations at which to update the variance/covariance matrix for RWMH proposal; first iteration in list is start of adaptation phase
 mcmc_adapt_diag = false;                 % =true: Adapt only to posterior std devs of parameters, =false: adapt to full var/cov matrix
 mcmc_adapt_param = 10;                  % Shrinkage parameter for adapting to var/cov matrix (higher values: more shrinkage)
-mcmc_filename = 'mcmc.mat';             % File name of MCMC output
+mcmc_filename = 'mcmc_moments.mat';             % File name of MCMC output
 
 % for adaptive RWMH
 mcmc_c = 0.55;
@@ -119,29 +119,29 @@ dynare dynamicModel noclearall nopathchange; % Run Dynare once to process model 
 
 %% Simulate data
 
-if is_data_gen == 0
+% if is_data_gen == 0
     
     % Load previous data
-    load('simul.mat')
-    load('simul_data_micro.mat');
+    load('simul_moments.mat')
+%     load('simul_data_micro.mat');
 %     load('simul_data_micro_indv_param.mat');
     
-else
+% else
     
-    % Simulate
-    set_dynare_seed(rng_seed);                                          % Seed RNG
-    sim_struct = simulate_model(T,num_burnin_periods,M_,oo_,options_);  % Simulate data
-    save('simul.mat', '-struct', 'sim_struct');                         % Save simulated data
+       % Simulate
+%     set_dynare_seed(rng_seed);                                          % Seed RNG
+%     sim_struct = simulate_model(T,num_burnin_periods,M_,oo_,options_);  % Simulate data
+%     save('simul.mat', '-struct', 'sim_struct');                         % Save simulated data
     
-    % draw micro data
-    simul_data_micro = simulate_micro(sim_struct, ts_micro, N_micro, num_interp);
-    save('simul_data_micro.mat','simul_data_micro');
+%     % draw micro data
+%     simul_data_micro = simulate_micro(sim_struct, ts_micro, N_micro, num_interp);
+%     save('simul_data_micro.mat','simul_data_micro');
     
 %     % draw individual productivities and incomes
 %     simul_data_micro_indv_param = simulate_micro_indv_param(simul_data_micro);
 %     save('simul_data_micro_indv_param.mat','simul_data_micro_indv_param');
     
-end
+% end
 
 
 %% MCMC
@@ -165,11 +165,11 @@ the_chol = eye(length(curr_draw));      % Initial RWMH proposal var-cov matrix
 disp('MCMC...');
 timer_mcmc = tic;
 
-poolobj = parpool;
+% poolobj = parpool;
 
 for i_mcmc=1:mcmc_num_iter % For each MCMC step...
     
-    fprintf(['%s' repmat('%6.4f ',1,length(curr_draw)),'%s\n'], 'current  [rrhoProd,ssigmaProd,aaUpper,ppsiCapital] = [',...
+    fprintf(['%s' repmat('%6.4f ',1,length(curr_draw)),'%s\n'], 'current  [rrhoProd,ssigmaProd] = [',...
         transf_to_param(curr_draw),']');
     
     % Proposed draw (modified to always start with initial draw)
@@ -177,11 +177,10 @@ for i_mcmc=1:mcmc_num_iter % For each MCMC step...
     
     % Set new parameters
     the_transf = num2cell(transf_to_param(prop_draw));
-    [rrhoProd,ssigmaProd,aaUpper,ppsiCapital] = deal(the_transf{:});
-    aaLower = -aaUpper;
+    [rrhoProd,ssigmaProd] = deal(the_transf{:});
 
-    fprintf(['%s' repmat('%6.4f ',1,length(curr_draw)),'%s\n'], 'proposed [rrhoProd,ssigmaProd,aaUpper,ppsiCapital] = [',...
-        [rrhoProd,ssigmaProd,aaUpper,ppsiCapital],']');
+    fprintf(['%s' repmat('%6.4f ',1,length(curr_draw)),'%s\n'], 'proposed [rrhoProd,ssigmaProd] = [',...
+        [rrhoProd,ssigmaProd],']');
     
     try
         
@@ -191,9 +190,7 @@ for i_mcmc=1:mcmc_num_iter % For each MCMC step...
 
         % Log likelihood of proposal
         [the_loglike_prop, the_loglike_prop_macro, the_loglike_prop_micro] = ...
-            loglike_compute('simul.mat', simul_data_micro, ts_micro, ...
-                                       num_smooth_draws, num_interp, num_burnin_periods, ...
-                                       M_, oo_, options_);
+            loglike_compute('simul_moments.mat', M_, oo_, options_);
         
         % Log prior density of proposal
         logprior_prop = prior_logdens_transf(prop_draw);
@@ -232,7 +229,7 @@ for i_mcmc=1:mcmc_num_iter % For each MCMC step...
     
 end
 
-delete(poolobj);
+% delete(poolobj);
 
 mcmc_elapsed = toc(timer_mcmc);
 fprintf('%s%8.2f\n', 'MCMC done. Elapsed minutes: ', mcmc_elapsed/60);

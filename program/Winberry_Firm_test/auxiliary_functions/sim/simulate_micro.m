@@ -19,7 +19,7 @@ for it=1:T_micro
     moment = nan(1,nMeasure_all);
 %     measureCoefficient = nan(1,nMeasure_all);
     for i_Measure = 1:nMeasure_all
-        moment(i_Measure) = sim_struct.(['moment_' num2str(i_Measure)])(t-1);
+        moment(i_Measure) = sim_struct.(['lag_moment_' num2str(i_Measure)])(t);
 %         measureCoefficient(i_Measure) = sim_struct.(['measureCoefficient_' num2str(i_Measure)])(t);
     end
     

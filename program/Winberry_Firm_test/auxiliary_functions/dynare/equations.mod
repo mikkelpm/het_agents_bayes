@@ -328,3 +328,11 @@ logMarginalUtility	= log(marginalUtility);
 // Risk-free interest rate
 expectedMarginalUtilityPrime = marginalUtility(+1);
 realInterestRate = 100 * ((marginalUtility / (bbeta * expectedMarginalUtilityPrime)) - 1);
+
+// sample moments
+// NEED to change for different nMeasure
+smpl_m1 = (moment_1(-1)-log(wage)+log(nnu)+ttheta*moment_2(-1)+aggregateTFP)/(nnu-1);
+smpl_m2 = moment_2(-1);
+smpl_m3 = (moment_3(-1)+ttheta^2*moment_5(-1)+2*ttheta*moment_4(-1))/(nnu-1)^2;
+smpl_m4 = (ttheta*moment_5(-1)+moment_4(-1))/(nnu-1);
+smpl_m5 = moment_5(-1);

@@ -1,4 +1,4 @@
-function [ll, smooth_means, M_new, oo_new, options_new, dataset_, dataset_info, xparam1, estim_params_, bayestopt_] = likelihood_smoother(dat_file, smooth_vars, M_, oo_, options_)
+function ll = likelihood_smoother(dat_file, M_, oo_, options_)
   
     % Likelihood and mean smoother
 
@@ -13,24 +13,16 @@ function [ll, smooth_means, M_new, oo_new, options_new, dataset_, dataset_info, 
     options_.mode_compute = 0;                      % Don't compute mode when "estimating"
     options_.selected_variables_only = 1;           % Smooth selected variables (suppresses a prompt)
     
-    % Parameter, model, and data information
-    [dataset_, dataset_info, xparam1, ~, M_new, options_new, oo_new, estim_params_,bayestopt_, bounds] = dynare_estimation_init(smooth_vars, options_.dirname, 0, M_, options_, oo_, [], []);
+    % Parameter, model, and data information 
+    % NEED to better handle smooth_var
+    [dataset_, dataset_info, xparam1, ~, M_new, options_new, oo_new, estim_params_,bayestopt_, bounds] = dynare_estimation_init('aggregateTFP', options_.dirname, 0, M_, options_, oo_, [], []);
     
     
     %% Likelihood
     
     % Compute likelihood (also re-solves model)
     disp('Computing likelihood...');
-    [nll,~,~,~,~,~,~,~,~,~,oo_new] = dsge_likelihood(xparam1,dataset_,dataset_info,options_new,M_new,estim_params_,bayestopt_,bounds,oo_new,[]);
+    [nll,~,~,~,~,~,~,~,~,~,~] = dsge_likelihood(xparam1,dataset_,dataset_info,options_new,M_new,estim_params_,bayestopt_,bounds,oo_new,[]);
     ll = -nll; % Log likelihood
-    
-    
-    %% Conditional mean smoothing
-    
-    % Run smoother
-    disp('Mean smoother...');
-    oo_smooth = mean_smoother(dataset_.data',xparam1,dataset_,dataset_info,M_new,oo_new,options_new,bayestopt_,estim_params_);
-    smooth_means = oo_smooth.SmoothedVariables;
-
-
+   
 end

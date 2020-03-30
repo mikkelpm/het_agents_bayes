@@ -26,8 +26,11 @@ model;
 
 end;
 
-varobs logAggregateOutput logAggregateInvestment;
-
+varobs logAggregateOutput logAggregateInvestment
+@#for iMoment in 1 : nMeasureCoefficients
+ smpl_m@{iMoment} 
+@#endfor
+;
 //----------------------------------------------------------------
 // Set options
 //----------------------------------------------------------------
