@@ -65,4 +65,8 @@ var aggregateConsumption aggregateHours expectedMarginalUtilityPrime realInteres
 // Innovations to aggregate shocks
 //----------------------------------------------------------------
 
-varexo aggregateTFPShock aggregateQShock;
+varexo aggregateTFPShock aggregateQShock
+@#for iMoment in 1 : nMeasureCoefficients
+ smpl_m@{iMoment}_shock 
+@#endfor
+;

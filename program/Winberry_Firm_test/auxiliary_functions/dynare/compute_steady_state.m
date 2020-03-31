@@ -110,10 +110,10 @@ for iMoment = 1 : nMeasureCoefficients
 end
 
 % NEED to change for different nMeasure
-smpl_m1 = (moment_1-log(wage)+log(nnu)+ttheta*moment_2)/(nnu-1);
+smpl_m1 = -(moment_1-log(wage)+log(nnu)+ttheta*moment_2)/(nnu-1);
 smpl_m2 = moment_2;
 smpl_m3 = (moment_3+ttheta^2*moment_5+2*ttheta*moment_4)/(nnu-1)^2;
-smpl_m4 = (ttheta*moment_5+moment_4)/(nnu-1);
+smpl_m4 = -(ttheta*moment_5+moment_4)/(nnu-1);
 smpl_m5 = moment_5;
 
 % Parameters
@@ -124,6 +124,11 @@ end
 % Aggregate shocks
 aggregateTFP    	= 0;
 aggregateQ      	= 0;
+smpl_m1_shock = 0;
+smpl_m2_shock = 0;
+smpl_m3_shock = 0;
+smpl_m4_shock = 0;
+smpl_m5_shock = 0;
 
 % Other auxiliary variables of interest
 expectedMarginalUtilityPrime 	= marginalUtility;
