@@ -1,7 +1,5 @@
 % Compute and save steady state 
 
-global M_;
-
 tStart = tic;
 fprintf('\nComputing steady state...\n')
 
@@ -13,11 +11,10 @@ check = 0;
 
 % Read out parameters to access them with their name
 for iParameter = 1:M_.param_nbr
-  paramname = deblank(M_.param_names(iParameter,:));
+  paramname = deblank(M_.param_names{iParameter});
 %   eval(['global ' paramname]);
   eval([ paramname ' = M_.params(' int2str(iParameter) ');']);
 end
-
 
 %----------------------------------------------------------------
 % Solve for steady state wage
@@ -104,9 +101,10 @@ for iState = 1 : nState
 	eval(sprintf('capitalAdjust_%d = vCapitalAdjust(iState);',iState));
 end
 
-% Moments
+% Moments and lagged moments
 for iMoment = 1 : nMeasureCoefficients
 	eval(sprintf('moment_%d = vMoments(iMoment);',iMoment));
+    eval(sprintf('lag_moment_%d = moment_%d;',iMoment,iMoment));
 end
 
 % NEED to change for different nMeasure
@@ -157,7 +155,7 @@ save('steady_vars.mat', save_vars{:}, 'save_vars');
 
 % Update parameters which were changed in the steady state file
 for iParameter = 18:length(M_.params)                               % start at 18 ( = cchi) so don't reset other parameters, in case those are reset elsewhere
-  eval([ 'M_.params(' num2str(iParameter) ') = ' M_.param_names(iParameter,:) ';' ])
+  eval([ 'M_.params(' num2str(iParameter) ') = ' M_.param_names{iParameter} ';' ])
 end
 
 % Print elapsed time

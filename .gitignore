@@ -29,6 +29,7 @@ program/winberry_test/auxiliary_functions/dynare/firstOrderDynamics_polynomials*
 !program/winberry_test/auxiliary_functions/dynare/firstOrderDynamics_polynomials.mod
 !program/winberry_test/auxiliary_functions/dynare/firstOrderDynamics_polynomials_steadystate.m
 program/Winberry_Firm_test/auxiliary_functions/dynare/dynamicModel*.*
+program/Winberry_Firm_test/auxiliary_functions/dynare/+dynamicModel/*.*
 !program/winberry_Firm_test/auxiliary_functions/dynare/dynamicModel.mod
 !program/winberry_Firm_test/auxiliary_functions/dynare/dynamicModel_steadystate.m
 program/winberryAlgorithmCodes_speedup/Auxiliary Functions/firstOrderDynamics_polynomials*.*

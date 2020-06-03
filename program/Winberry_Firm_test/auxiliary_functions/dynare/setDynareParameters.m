@@ -143,3 +143,12 @@ for iState = 1 : nStateQuadrature
 end
 
 nCounter = nCounter + nStateQuadrature * nShocks * nProd;
+
+
+% Sample moment var-cov matrix
+for iCov = 1 : 9
+    M_.params(nCounter + iCov) = 0; % Placeholder (will be set in steady state file)
+end
+
+nCounter = nCounter + 9;
+

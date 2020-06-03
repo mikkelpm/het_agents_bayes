@@ -25,7 +25,7 @@
 //----------------------------------------------------------------
 
 @#for iMoment in 1 : nMeasureCoefficients
-    var moment_@{iMoment} smpl_m@{iMoment}; 
+    var moment_@{iMoment} smpl_m@{iMoment} lag_moment_@{iMoment}; 
 @#endfor
 
 

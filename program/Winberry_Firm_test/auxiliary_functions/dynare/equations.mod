@@ -329,6 +329,11 @@ logMarginalUtility	= log(marginalUtility);
 expectedMarginalUtilityPrime = marginalUtility(+1);
 realInterestRate = 100 * ((marginalUtility / (bbeta * expectedMarginalUtilityPrime)) - 1);
 
+// Lagged moments
+@#for iMoment in 1 : nMeasureCoefficients
+    lag_moment_@{iMoment} = moment_@{iMoment}(-1);
+@#endfor
+
 // sample moments
 // NEED to change for different nMeasure
 smpl_m1 = -(moment_1(-1)-logWage+log(nnu)+ttheta*moment_2(-1)+aggregateTFP)/(nnu-1)+smpl_m1_shock;

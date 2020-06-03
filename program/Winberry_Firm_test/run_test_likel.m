@@ -8,7 +8,7 @@ addpath('auxiliary_functions/dynare', 'auxiliary_functions/likelihood', 'auxilia
 is_data_gen = 0; % whether simulate data:  
                  % 0: no simulation
                  % 1: simulation
-is_profile = 1; %whether run profiler for execution time
+is_profile = 0; %whether run profiler for execution time
 if is_profile == 1
     profile on
 end
@@ -16,7 +16,7 @@ end
 % Model/data settings
 T = 50;                                % Number of periods of simulated macro data
 ts_micro = 10:10:T;                        % Time periods where we observe micro data
-N_micro = 1e4;                             % Number of micro entities per non-missing time period
+N_micro = 1e2;                             % Number of micro entities per non-missing time period
 
 % Parameter values to check (prod dynamics)
 param1_vals = 0.011*[0.5 1 2]; %.53*[0.9 1 1.1]; %.53*[0.5 1 2];
@@ -34,7 +34,7 @@ rng_seed = 201810011;                    % Random number generator seed for init
 %% Set economic parameters 
 
 global ttheta nnu ddelta rrhoProd ssigmaProd aaUpper aaLower ppsiCapital ...
-	bbeta ssigma pphi nSS rrhoTFP ssigmaTFP rrhoQ ssigmaQ corrTFPQ  cchi
+	bbeta ssigma pphi nSS rrhoTFP ssigmaTFP rrhoQ ssigmaQ corrTFPQ  cchi Nmicro
 
 % Technology
 ttheta 			= .256;								% capital coefficient
@@ -104,7 +104,8 @@ saveParameters;
 
 rng(rng_seed);
 dynare dynamicModel noclearall nopathchange; % Run Dynare once to process model file
-% return;
+compute_Sigma_e;
+return;
 
 
 %% Simulate data
@@ -166,6 +167,7 @@ for iter_i=1:length(param1_vals) % For each parameter...
         saveParameters;         % Save parameter values to files
         setDynareParameters;    % Update Dynare parameters in model struct
         compute_steady_state;   % Compute steady state, no need for parameters of agg dynamics
+        compute_Sigma_e;        % Update measurement error var-cov matrix
 
         % Log likelihood of proposal
         [loglikes(iter_i,iter_j), loglikes_macro(iter_i,iter_j), loglikes_micro(iter_i,iter_j)] = ...
