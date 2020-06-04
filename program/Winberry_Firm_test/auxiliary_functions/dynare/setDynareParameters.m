@@ -9,7 +9,7 @@ polynomials = load('polynomials');
 %% Economic parameters
 nEconomicParameters = 18;
 for iParam = 1 : nEconomicParameters
-	parameterName = deblank(M_.param_names(iParam,:));
+	parameterName = deblank(M_.param_names{iParam});
 	if isfield(economicParameters,parameterName)
 		M_.params(iParam) = eval(['economicParameters.' parameterName]);
 	end
@@ -18,7 +18,7 @@ end
 %% Some of the approximation parameters
 nApproximationParameters = 13;
 for iParam = 1 : nApproximationParameters
-	parameterName = deblank(M_.param_names(nEconomicParameters + iParam,:));	
+	parameterName = deblank(M_.param_names{nEconomicParameters + iParam});	
 	if isfield(approximationParameters,parameterName)
 		M_.params(nEconomicParameters + iParam) = eval(['approximationParameters.' parameterName]);
 	end	
@@ -143,12 +143,3 @@ for iState = 1 : nStateQuadrature
 end
 
 nCounter = nCounter + nStateQuadrature * nShocks * nProd;
-
-
-% Sample moment var-cov matrix
-for iCov = 1 : 9
-    M_.params(nCounter + iCov) = 0; % Placeholder (will be set in steady state file)
-end
-
-nCounter = nCounter + 9;
-

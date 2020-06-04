@@ -311,20 +311,3 @@ for iState = 1 : @{nStateQuadrature}
 end
 
 @#define nCounter = nCounter + nStateQuadrature * nShocks * nProd
-
-
-//
-// Sample moment var-cov matrix
-//
-
-// Define the parameters
-@#for iCov in 1 : 9
-    parameters cov_smpl_@{iCov};
-@#endfor
-
-// Assign values
-for iCov = 1 : 9
-    M_.params(@{nCounter} + iCov) = 0; // Placeholder (will be set in steady state file)
-end
-
-@#define nCounter = nCounter + 9
