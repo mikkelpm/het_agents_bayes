@@ -39,6 +39,16 @@ varobs logAggregateOutput logAggregateInvestment
 shocks;
     var aggregateTFPShock 	= 1;
     var aggregateQShock   	= 1;
+    // Placeholder values for measurement error
+    var smpl_m1 = 1;
+    var smpl_m2 = 1;
+    var smpl_m3 = 1;
+    var smpl_m4 = 1;
+    var smpl_m5 = 1;
+    var smpl_m1, smpl_m2 = 0.1;
+    var smpl_m3, smpl_m4 = 0.1;
+    var smpl_m3, smpl_m5 = 0.1;
+    var smpl_m4, smpl_m5 = 0.1;
 end;
 
 

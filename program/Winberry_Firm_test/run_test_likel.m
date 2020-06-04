@@ -104,7 +104,7 @@ saveParameters;
 
 rng(rng_seed);
 dynare dynamicModel noclearall nopathchange; % Run Dynare once to process model file
-compute_Sigma_e;
+compute_meas_err;
 return;
 
 

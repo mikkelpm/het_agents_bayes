@@ -336,8 +336,8 @@ realInterestRate = 100 * ((marginalUtility / (bbeta * expectedMarginalUtilityPri
 
 // sample moments
 // NEED to change for different nMeasure
-smpl_m1 = -(moment_1(-1)-logWage+log(nnu)+ttheta*moment_2(-1)+aggregateTFP)/(nnu-1)+smpl_m1_shock;
-smpl_m2 = moment_2(-1)+smpl_m2_shock;
-smpl_m3 = (moment_3(-1)+ttheta^2*moment_5(-1)+2*ttheta*moment_4(-1))/(nnu-1)^2+smpl_m3_shock;
-smpl_m4 = -(ttheta*moment_5(-1)+moment_4(-1))/(nnu-1)+smpl_m4_shock;
-smpl_m5 = moment_5(-1)+smpl_m5_shock;
+smpl_m1 = -(moment_1(-1)-logWage+log(nnu)+ttheta*moment_2(-1)+aggregateTFP)/(nnu-1);
+smpl_m2 = moment_2(-1);
+smpl_m3 = (moment_3(-1)+ttheta^2*moment_5(-1)+2*ttheta*moment_4(-1))/(nnu-1)^2;
+smpl_m4 = -(ttheta*moment_5(-1)+moment_4(-1))/(nnu-1);
+smpl_m5 = moment_5(-1);
