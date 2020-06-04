@@ -19,8 +19,8 @@ ts_micro = 10:10:T;                        % Time periods where we observe micro
 N_micro = 1e2;                             % Number of micro entities per non-missing time period
 
 % Parameter values to check (prod dynamics)
-param1_vals = .53*[0.8 0.9 1 1.1 1.2]; %0.011*[0.5 0.75 1 1.5 2];
-param2_vals = .0364;%*[0.5 1 2]; %.0364*[0.9 1 1.1]; %.0364*[0.5 1 2];
+param_plot = 'rrhoProd';
+param_vals_mult = unique([1 linspace(0.75,1.25,50)]);
 
 % Likelihood settings
 num_smooth_draws = 500;                 % Number of draws from the smoothing distribution (for unbiased likelihood estimate)
@@ -143,9 +143,11 @@ end
 
 %% Compute likelihood
 
-loglikes = nan(length(param1_vals),length(param2_vals),3);
-loglikes_macro = nan(length(param1_vals),length(param2_vals),3);
-loglikes_micro = nan(length(param1_vals),length(param2_vals),3);
+eval(['param_true = ' param_plot ';']);
+param_vals = param_true*param_vals_mult;
+loglikes = nan(length(param_vals),3);
+loglikes_macro = nan(length(param_vals),3);
+loglikes_micro = nan(length(param_vals),3);
 
 disp('Computing likelihood...');
 timer_likelihood = tic;
@@ -156,45 +158,35 @@ else
     poolobj = parpool;
 end
 
-for iter_i=1:length(param1_vals) % For each parameter...
-    
-    for iter_j=1:length(param2_vals) % For each parameter...
+for iter_i=1:length(param_vals) % For each parameter value...
         
-        % Set new parameters
-%         aaUpper = param1_vals(iter_i);
-%         aaLower = -aaUpper;
-%         ppsiCapital = param2_vals(iter_j);
-        rrhoProd = param1_vals(iter_i);
-        ssigmaProd = param2_vals(iter_j);
+    % Set new parameter
+    eval([param_plot ' = param_vals(iter_i);']);
+    fprintf('%d%s%d%s%s%s%6.4f\n', iter_i, '/', length(param_vals), ': ', param_plot, ' = ', eval(param_plot));
 
-%         fprintf(['%s' repmat('%6.4f ',1,2),'%s\n'], '[aaUpper,ppsiCapital] = [',aaUpper,ppsiCapital,']');
-        fprintf(['%s' repmat('%6.4f ',1,2),'%s\n'], '[rrhoProd,ssigmaProd] = [',rrhoProd,ssigmaProd,']');
+    saveParameters;         % Save parameter values to files
+    setDynareParameters;    % Update Dynare parameters in model struct
+    compute_steady_state;   % Compute steady state, no need for parameters of agg dynamics
+    compute_meas_err;       % Update measurement error var-cov matrix
 
-        saveParameters;         % Save parameter values to files
-        setDynareParameters;    % Update Dynare parameters in model struct
-        compute_steady_state;   % Compute steady state, no need for parameters of agg dynamics
-        compute_meas_err;       % Update measurement error var-cov matrix
+    % Log likelihood
 
-        % Log likelihood
-        
-        % Macro + full info micro
-        [loglikes(iter_i,iter_j,1), loglikes_macro(iter_i,iter_j,1), loglikes_micro(iter_i,iter_j,1)] = ...
-            loglike_compute('simul.mat', simul_data_micro, ts_micro, ...
-                                       num_smooth_draws, num_interp, num_burnin_periods, ...
-                                       M_, oo_, options_);
-        % Macro + moments w/ SS meas. err.
-        [loglikes(iter_i,iter_j,2), loglikes_macro(iter_i,iter_j,2), loglikes_micro(iter_i,iter_j,2)] = ...
-            loglike_compute('simul_moments.mat', [], ts_micro, ...
-                                       0, num_interp, num_burnin_periods, ...
-                                       M_, oo_, options_);
-        % Macro + moments w/o meas. err.
-        M_.H(3:end,3:end) = 1e-8*eye(5); % Only a little bit of meas. err. to avoid singularity
-        [loglikes(iter_i,iter_j,3), loglikes_macro(iter_i,iter_j,3), loglikes_micro(iter_i,iter_j,3)] = ...
-            loglike_compute('simul_moments.mat', [], ts_micro, ...
-                                       0, num_interp, num_burnin_periods, ...
-                                       M_, oo_, options_);
-    
-    end
+    % Macro + full info micro
+    [loglikes(iter_i,1), loglikes_macro(iter_i,1), loglikes_micro(iter_i,1)] = ...
+        loglike_compute('simul.mat', simul_data_micro, ts_micro, ...
+                                   num_smooth_draws, num_interp, num_burnin_periods, ...
+                                   M_, oo_, options_);
+    % Macro + moments w/ SS meas. err.
+    [loglikes(iter_i,2), loglikes_macro(iter_i,2), loglikes_micro(iter_i,2)] = ...
+        loglike_compute('simul_moments.mat', [], ts_micro, ...
+                                   0, num_interp, num_burnin_periods, ...
+                                   M_, oo_, options_);
+    % Macro + moments w/o meas. err.
+    M_.H(3:end,3:end) = 1e-8*eye(5); % Only a little bit of meas. err. to avoid singularity
+    [loglikes(iter_i,3), loglikes_macro(iter_i,3), loglikes_micro(iter_i,3)] = ...
+        loglike_compute('simul_moments.mat', [], ts_micro, ...
+                                   0, num_interp, num_burnin_periods, ...
+                                   M_, oo_, options_);
     
 end
 
@@ -205,6 +197,17 @@ fprintf('%s%8.2f\n', 'Done. Elapsed minutes: ', likelihood_elapsed/60);
 
 cd('../../');
 rmpath('auxiliary_functions/dynare', 'auxiliary_functions/likelihood', 'auxiliary_functions/sim');
+
+
+%% Plot
+
+loglikes_plot = [loglikes(:,1:2) loglikes_macro(:,1)];
+plot(param_vals,loglikes_plot-max(loglikes_plot,[],1));
+the_ylim = ylim;
+line(param_true*ones(1,2), the_ylim, 'Color', 'k', 'LineStyle', ':');
+ylim(the_ylim);
+legend({'FI micro', 'moments micro', 'macro'}, 'Location', 'SouthWest');
+
 
 if is_profile
     profsave(profile('info'),['profile_results_' datestr(now,'yyyymmdd')]);
