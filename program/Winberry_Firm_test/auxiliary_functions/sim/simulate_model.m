@@ -8,7 +8,7 @@ function [sim_struct, sim_array] = simulate_model(num_sim_periods,num_burnin_per
     % Return structure with variable names
     sim_struct = struct;
     for j=1:M_.endo_nbr
-        sim_struct.(deblank(M_.endo_names(j,:))) = sim_array(:,j);
+        sim_struct.(deblank(M_.endo_names{j})) = sim_array(:,j);
     end
 
 end

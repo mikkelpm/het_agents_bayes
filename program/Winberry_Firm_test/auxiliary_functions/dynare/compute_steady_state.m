@@ -122,11 +122,6 @@ end
 % Aggregate shocks
 aggregateTFP    	= 0;
 aggregateQ      	= 0;
-smpl_m1_shock = 0;
-smpl_m2_shock = 0;
-smpl_m3_shock = 0;
-smpl_m4_shock = 0;
-smpl_m5_shock = 0;
 
 % Other auxiliary variables of interest
 expectedMarginalUtilityPrime 	= marginalUtility;
