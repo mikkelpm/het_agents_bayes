@@ -5,7 +5,7 @@ addpath('auxiliary_functions/dynare', 'auxiliary_functions/likelihood', 'auxilia
 %% Settings
 
 % Decide what to do
-is_data_gen = 0; % whether simulate data:  
+is_data_gen = 1; % whether simulate data:  
                  % 0: no simulation
                  % 1: simulation
 is_profile = 0; %whether run profiler for execution time
@@ -19,8 +19,8 @@ ts_micro = 10:10:T;                        % Time periods where we observe micro
 N_micro = 1e2;                             % Number of micro entities per non-missing time period
 
 % Parameter values to check (prod dynamics)
-param1_vals = 0.011*[0.5 1 2]; %.53*[0.9 1 1.1]; %.53*[0.5 1 2];
-param2_vals = 0.0083;%*[0.5 1 2]; %.0364*[0.9 1 1.1]; %.0364*[0.5 1 2];
+param1_vals = .53*[0.8 0.9 1 1.1 1.2]; %0.011*[0.5 0.75 1 1.5 2];
+param2_vals = .0364;%*[0.5 1 2]; %.0364*[0.9 1 1.1]; %.0364*[0.5 1 2];
 
 % Likelihood settings
 num_smooth_draws = 500;                 % Number of draws from the smoothing distribution (for unbiased likelihood estimate)
@@ -28,13 +28,13 @@ num_interp = 100;                       % Number of interpolation grid points fo
 
 % Numerical settings
 num_burnin_periods = 100;               % Number of burn-in periods for simulations
-rng_seed = 201810011;                    % Random number generator seed for initial simulation
+rng_seed = 20200604;                    % Random number generator seed for initial simulation
 
 
 %% Set economic parameters 
 
 global ttheta nnu ddelta rrhoProd ssigmaProd aaUpper aaLower ppsiCapital ...
-	bbeta ssigma pphi nSS rrhoTFP ssigmaTFP rrhoQ ssigmaQ corrTFPQ  cchi Nmicro
+	bbeta ssigma pphi nSS rrhoTFP ssigmaTFP rrhoQ ssigmaQ corrTFPQ  cchi
 
 % Technology
 ttheta 			= .256;								% capital coefficient
@@ -104,8 +104,7 @@ saveParameters;
 
 rng(rng_seed);
 dynare dynamicModel noclearall nopathchange; % Run Dynare once to process model file
-compute_meas_err;
-return;
+% return;
 
 
 %% Simulate data
@@ -113,7 +112,7 @@ return;
 if is_data_gen == 0
     
     % Load previous data
-    load('simul.mat')
+%     load('simul.mat')
     load('simul_data_micro.mat');
 %     load('simul_data_micro_indv_param.mat');
     
@@ -122,11 +121,18 @@ else
     % Simulate
     set_dynare_seed(rng_seed);                                          % Seed RNG
     sim_struct = simulate_model(T,num_burnin_periods,M_,oo_,options_);  % Simulate data
+    for j=1:nMeasureCoefficients
+        sim_struct.(sprintf('%s%d', 'smpl_m', j)) = nan(T,1); % Set sample moments to missing everywhere
+    end
     save('simul.mat', '-struct', 'sim_struct');                         % Save simulated data
     
     % draw micro data
     simul_data_micro = simulate_micro(sim_struct, ts_micro, N_micro, num_interp);
     save('simul_data_micro.mat','simul_data_micro');
+    
+    % Compute cross-sectional moments from micro data
+    sim_struct_moments = simulate_micro_moments(sim_struct, simul_data_micro, T, ts_micro);
+    save('simul_moments.mat', '-struct', 'sim_struct_moments');
     
 %     % draw individual productivities and incomes
 %     simul_data_micro_indv_param = simulate_micro_indv_param(simul_data_micro);
@@ -137,9 +143,9 @@ end
 
 %% Compute likelihood
 
-loglikes = nan(length(param1_vals),length(param2_vals));
-loglikes_macro = nan(length(param1_vals),length(param2_vals));
-loglikes_micro = nan(length(param1_vals),length(param2_vals));
+loglikes = nan(length(param1_vals),length(param2_vals),3);
+loglikes_macro = nan(length(param1_vals),length(param2_vals),3);
+loglikes_micro = nan(length(param1_vals),length(param2_vals),3);
 
 disp('Computing likelihood...');
 timer_likelihood = tic;
@@ -155,24 +161,37 @@ for iter_i=1:length(param1_vals) % For each parameter...
     for iter_j=1:length(param2_vals) % For each parameter...
         
         % Set new parameters
-        aaUpper = param1_vals(iter_i);
-        aaLower = -aaUpper;
-        ppsiCapital = param2_vals(iter_j);
-%         rrhoProd = param1_vals(iter_i);
-%         ssigmaProd = param2_vals(iter_j);
+%         aaUpper = param1_vals(iter_i);
+%         aaLower = -aaUpper;
+%         ppsiCapital = param2_vals(iter_j);
+        rrhoProd = param1_vals(iter_i);
+        ssigmaProd = param2_vals(iter_j);
 
-        fprintf(['%s' repmat('%6.4f ',1,2),'%s\n'], '[aaUpper,ppsiCapital] = [',aaUpper,ppsiCapital,']');
-%         fprintf(['%s' repmat('%6.4f ',1,2),'%s\n'], '[rrhoProd,ssigmaProd] = [',rrhoProd,ssigmaProd,']');
+%         fprintf(['%s' repmat('%6.4f ',1,2),'%s\n'], '[aaUpper,ppsiCapital] = [',aaUpper,ppsiCapital,']');
+        fprintf(['%s' repmat('%6.4f ',1,2),'%s\n'], '[rrhoProd,ssigmaProd] = [',rrhoProd,ssigmaProd,']');
 
         saveParameters;         % Save parameter values to files
         setDynareParameters;    % Update Dynare parameters in model struct
         compute_steady_state;   % Compute steady state, no need for parameters of agg dynamics
-        compute_Sigma_e;        % Update measurement error var-cov matrix
+        compute_meas_err;       % Update measurement error var-cov matrix
 
-        % Log likelihood of proposal
-        [loglikes(iter_i,iter_j), loglikes_macro(iter_i,iter_j), loglikes_micro(iter_i,iter_j)] = ...
+        % Log likelihood
+        
+        % Macro + full info micro
+        [loglikes(iter_i,iter_j,1), loglikes_macro(iter_i,iter_j,1), loglikes_micro(iter_i,iter_j,1)] = ...
             loglike_compute('simul.mat', simul_data_micro, ts_micro, ...
                                        num_smooth_draws, num_interp, num_burnin_periods, ...
+                                       M_, oo_, options_);
+        % Macro + moments w/ SS meas. err.
+        [loglikes(iter_i,iter_j,2), loglikes_macro(iter_i,iter_j,2), loglikes_micro(iter_i,iter_j,2)] = ...
+            loglike_compute('simul_moments.mat', [], ts_micro, ...
+                                       0, num_interp, num_burnin_periods, ...
+                                       M_, oo_, options_);
+        % Macro + moments w/o meas. err.
+        M_.H(3:end,3:end) = 1e-8*eye(5); % Only a little bit of meas. err. to avoid singularity
+        [loglikes(iter_i,iter_j,3), loglikes_macro(iter_i,iter_j,3), loglikes_micro(iter_i,iter_j,3)] = ...
+            loglike_compute('simul_moments.mat', [], ts_micro, ...
+                                       0, num_interp, num_burnin_periods, ...
                                        M_, oo_, options_);
     
     end
