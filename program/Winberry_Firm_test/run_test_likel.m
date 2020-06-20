@@ -19,8 +19,8 @@ ts_micro = 10:10:T;                        % Time periods where we observe micro
 N_micro = 1e2;                             % Number of micro entities per non-missing time period
 
 % Parameter values to check (prod dynamics)
-param_plot = 'rrhoProd';
-param_vals_mult = unique([1 linspace(0.75,1.25,50)]);
+param_plot = 'rrhoProd'; %'ssigmaProd'; %'ppsiCapital'; %'aaUpper'; % Parameter to vary when plotting likelihood
+param_vals_mult = unique([1 linspace(0.75,1.25,50)]); % Multiples of true parameter to compute
 
 % Likelihood settings
 num_smooth_draws = 500;                 % Number of draws from the smoothing distribution (for unbiased likelihood estimate)
@@ -28,7 +28,7 @@ num_interp = 100;                       % Number of interpolation grid points fo
 
 % Numerical settings
 num_burnin_periods = 100;               % Number of burn-in periods for simulations
-rng_seed = 20200604;                    % Random number generator seed for initial simulation
+rng_seed = 202006171;                   % Random number generator seed for initial simulation
 
 
 %% Set economic parameters 
