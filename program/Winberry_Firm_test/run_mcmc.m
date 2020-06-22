@@ -8,11 +8,13 @@ addpath('auxiliary_functions/dynare', 'auxiliary_functions/likelihood', 'auxilia
 is_data_gen = 1; % whether simulate data:  
                  % 0: no simulation
                  % 1: simulation
+likelihood_type = 1; % =1: Macro + full-info micro; =2: macro + full-info micro, no truncation; =3: macro + moments micro
 
 % Model/data settings
-T = 50;                                % Number of periods of simulated macro data
-ts_micro = 1:T;                        % Time periods where we observe micro data
-N_micro = 1e3;                             % Number of micro entities per non-missing time period
+T = 50;                                 % Number of periods of simulated macro data
+ts_micro = 10:10:T;                         % Time periods where we observe micro data
+N_micro = 1e2;                          % Number of micro entities per non-missing time period
+trunc_logn = -1.1271;                   % Micro sample selection: Lower truncation point for log(n)
 
 % Parameter transformation
 transf_to_param = @(x) [1/(1+exp(-x(1))) exp(x(2:end))]; % Function mapping transformed parameters into parameters of interest
@@ -40,7 +42,7 @@ num_interp = 100;                       % Number of interpolation grid points fo
 
 % Numerical settings
 num_burnin_periods = 100;               % Number of burn-in periods for simulations
-rng_seed = 201810011;                    % Random number generator seed for initial simulation
+rng_seed = 202006221;                    % Random number generator seed for initial simulation
 
 %% Set economic parameters 
 
@@ -119,29 +121,20 @@ dynare dynamicModel noclearall nopathchange; % Run Dynare once to process model 
 
 %% Simulate data
 
-% if is_data_gen == 0
+if is_data_gen == 0
     
     % Load previous data
-    load('simul_moments.mat')
-%     load('simul_data_micro.mat');
+%     load('simul_moments.mat')
+    load('simul_data_micro.mat');
 %     load('simul_data_micro_indv_param.mat');
     
-% else
+else
     
-       % Simulate
-%     set_dynare_seed(rng_seed);                                          % Seed RNG
-%     sim_struct = simulate_model(T,num_burnin_periods,M_,oo_,options_);  % Simulate data
-%     save('simul.mat', '-struct', 'sim_struct');                         % Save simulated data
+    % Simulate
+    set_dynare_seed(rng_seed);                                          % Seed RNG
+    simul_data;
     
-%     % draw micro data
-%     simul_data_micro = simulate_micro(sim_struct, ts_micro, N_micro, num_interp);
-%     save('simul_data_micro.mat','simul_data_micro');
-    
-%     % draw individual productivities and incomes
-%     simul_data_micro_indv_param = simulate_micro_indv_param(simul_data_micro);
-%     save('simul_data_micro_indv_param.mat','simul_data_micro_indv_param');
-    
-% end
+end
 
 
 %% MCMC
@@ -165,7 +158,7 @@ the_chol = eye(length(curr_draw));      % Initial RWMH proposal var-cov matrix
 disp('MCMC...');
 timer_mcmc = tic;
 
-% poolobj = parpool;
+poolobj = parpool;
 
 for i_mcmc=1:mcmc_num_iter % For each MCMC step...
     
@@ -187,10 +180,26 @@ for i_mcmc=1:mcmc_num_iter % For each MCMC step...
         saveParameters;         % Save parameter values to files
         setDynareParameters;    % Update Dynare parameters in model struct
         compute_steady_state;   % Compute steady state, no need for parameters of agg dynamics
+        compute_meas_err;       % Update measurement error var-cov matrix
 
         % Log likelihood of proposal
-        [the_loglike_prop, the_loglike_prop_macro, the_loglike_prop_micro] = ...
-            loglike_compute('simul_moments.mat', M_, oo_, options_);
+        switch likelihood_type
+            case 1 % Macro + full info micro
+                [the_loglike_prop, the_loglike_prop_macro, the_loglike_prop_micro] = ...
+                    loglike_compute('simul.mat', simul_data_micro, ts_micro, ...
+                                   num_smooth_draws, trunc_logn, num_burnin_periods, ...
+                                   M_, oo_, options_);
+            case 2 % Macro + full info micro, ignore truncation
+                [the_loglike_prop, the_loglike_prop_macro, the_loglike_prop_micro] = ...
+                    loglike_compute('simul.mat', simul_data_micro, ts_micro, ...
+                                   num_smooth_draws, -Inf, num_burnin_periods, ...
+                                   M_, oo_, options_);
+            case 3 % Macro + moments w/ SS meas. err.
+                [the_loglike_prop, the_loglike_prop_macro, the_loglike_prop_micro] = ...
+                    loglike_compute('simul_moments.mat', [], ts_micro, ...
+                                   0, [], num_burnin_periods, ...
+                                   M_, oo_, options_);
+        end
         
         % Log prior density of proposal
         logprior_prop = prior_logdens_transf(prop_draw);
@@ -229,7 +238,7 @@ for i_mcmc=1:mcmc_num_iter % For each MCMC step...
     
 end
 
-% delete(poolobj);
+delete(poolobj);
 
 mcmc_elapsed = toc(timer_mcmc);
 fprintf('%s%8.2f\n', 'MCMC done. Elapsed minutes: ', mcmc_elapsed/60);

@@ -75,7 +75,7 @@ parfor i_draw = 1:num_smooth_draws
         moment = nan(1,nMeasure_all);
 %         measureCoefficient = nan(1,nMeasure_all);
         for i_Measure = 1:nMeasure_all
-            moment(i_Measure) = the_smooth_draw.(['lag_moment_' num2str(i_Measure)])(t-1);
+            moment(i_Measure) = the_smooth_draw.(['lag_moment_' num2str(i_Measure)])(t);
 %             measureCoefficient(i_Measure) = the_smooth_draw.(['measureCoefficient_' num2str(i_Measure)])(t);
         end
         
