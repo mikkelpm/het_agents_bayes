@@ -12,7 +12,7 @@ polynomials = load('polynomials');
 nEconomicParameters = 11; % MPM: account for ssigmaMeas
 
 for iParam = 1 : nEconomicParameters
-	parameterName = deblank(M_.param_names(iParam,:));
+	parameterName = deblank(M_.param_names{iParam});
 	if isfield(economicParameters,parameterName)
 		M_.params(iParam) = eval(['economicParameters.' parameterName]);
 	end
@@ -39,7 +39,7 @@ set_param_value('epsilonMass_2', aggEmployment);
 
 nApproximationParameters = 15;
 for iParam = 1 : nApproximationParameters
-	parameterName = deblank(M_.param_names(nEconomicParameters + 6 + iParam,:));
+	parameterName = deblank(M_.param_names{nEconomicParameters + 6 + iParam});
 	if isfield(approximationParameters,parameterName)
 		M_.params(nEconomicParameters + 6 + iParam) = eval(['approximationParameters.' parameterName]);
 	end

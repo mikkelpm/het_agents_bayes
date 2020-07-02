@@ -1,7 +1,5 @@
 % Compute and save steady state
 
-global M_;
-
 tStart = tic;
 fprintf('\nComputing steady state...\n');
 
@@ -13,7 +11,7 @@ check = 0;
 
 % Read out parameters to access them with their name
 for iParameter = 1:M_.param_nbr
-  paramname = deblank(M_.param_names(iParameter,:));
+  paramname = deblank(M_.param_names{iParameter});
 %   eval(['global ' paramname]);
   eval([ paramname ' = M_.params(' int2str(iParameter) ');']);
 end
@@ -44,10 +42,12 @@ for iEpsilon = 1 : nEpsilon
     end
 end
 
-% Moments and parameters of density away from borrowing constraint
+% Moments, lagged moments, and parameters of density away from borrowing constraint
 for iEpsilon = 1 : nEpsilon
     for iMoment = 1 : nMeasure
         eval(sprintf('moment_%d_%d = mMoments(iEpsilon,iMoment);',iEpsilon,iMoment));
+        eval(sprintf('lag_moment_%d_%d = moment_%d_%d;',iEpsilon,iMoment,iEpsilon,iMoment));
+        eval(sprintf('smpl_m%d%d = moment_%d_%d;',iEpsilon,iMoment,iEpsilon,iMoment));
         eval(sprintf('measureCoefficient_%d_%d = mParameters(iEpsilon,iMoment+1);',iEpsilon,iMoment));
     end
 end

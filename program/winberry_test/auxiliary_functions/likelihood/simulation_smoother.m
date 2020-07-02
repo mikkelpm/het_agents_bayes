@@ -20,7 +20,7 @@ function smooth_draw = simulation_smoother(smooth_means, smooth_vars, num_burnin
     % See Durbin & Koopman, 2012, 2nd ed, ch. 4.9.1
     smooth_draw = struct;
     for iter_j=1:size(smooth_vars,1)
-        the_var = deblank(smooth_vars(iter_j,:));
+        the_var = deblank(smooth_vars{iter_j});
         smooth_draw.(the_var) = smooth_means.(the_var) + sim_results.(the_var) - sim_smooth_means.(the_var);
     end
 

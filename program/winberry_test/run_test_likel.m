@@ -1,22 +1,23 @@
 clear all;
 addpath('auxiliary_functions/dynare', 'auxiliary_functions/likelihood', 'auxiliary_functions/sim');
 
-
 %% Settings
 
 % Decide what to do
-is_data_gen = 1; % whether simulate data:  
+is_data_gen = 0; % whether simulate data:  
                  % 0: no simulation
                  % 1: simulation
 
 % Model/data settings
 T = 100;                                % Number of periods of simulated macro data
-ts_hh = 20:20:T;                        % Time periods where we observe micro data
-N_hh = 1e3;                             % Number of households per non-missing time period
+ts_micro = 10:10:T;                        % Time periods where we observe micro data
+N_micro = 1e2;                             % Number of households per non-missing time period
 
 % Parameter values to check
-param1_vals = [0.93 0.96 0.99];
-param2_vals = [-0.5 -0.25 -0.1]; % [0.01 0.02 0.03];
+l_param = {'bbeta','ssigmaMeas','mu_l'};
+tex_param = {'\beta','\sigma_e','\mu_\lambda'};
+n_param = length(l_param);
+param_vals_mult = unique([1 linspace(0.75,1.25,51)]); % Multiples of true parameter to compute
 
 % Likelihood settings
 num_smooth_draws = 500;                 % Number of draws from the smoothing distribution (for unbiased likelihood estimate)
@@ -25,12 +26,14 @@ num_interp = 100;                       % Number of interpolation grid points fo
 % Numerical settings
 num_burnin_periods = 100;               % Number of burn-in periods for simulations
 rng_seed = 20180727;                    % Random number generator seed for initial simulation
+rng('default');
 
-%% Set economic parameters 
+
+%% Set economic parameters
 
 global bbeta ssigma aaBar aalpha ddelta vEpsilonGrid aggEmployment uDuration ...
-	mmu rrhoTFP ssigmaTFP ttau mu_l ssigmaMeas;
-	
+    mmu rrhoTFP ssigmaTFP ttau mu_l ssigmaMeas;
+
 % Preferences
 bbeta = .96;										% discount factor (annual calibration)
 ssigma = 1;											% coefficient of relative risk aversion
@@ -50,10 +53,10 @@ mmu = .15;
 ttau = mmu*(1-aggEmployment)/aggEmployment;
 
 % Aggregate Shocks
-rrhoTFP = .859;										
+rrhoTFP = .859;
 ssigmaTFP = .014;
 
-% Distribution of indv params log(lambda_i) ~ N(mu_l,-2*mu_l), 
+% Distribution of indv params log(lambda_i) ~ N(mu_l,-2*mu_l),
 % so lambda_i > 0 and E(lambda_i) = 1
 mu_l = -.25; % Roughly calibrated to Piketty, Saez & Zucman (QJE 2018) Table I, log of P90-P20 ratio, post-tax
 
@@ -64,7 +67,7 @@ ssigmaMeas = 0.02;
 %% Set approximation parameters
 
 global nEpsilon nAssets nAssetsFine nAssetsQuadrature ...
-	nMeasure maxIterations tolerance dampening splineOpt displayOpt;
+    nMeasure maxIterations tolerance dampening splineOpt displayOpt;
 
 % Whether approximating decision rule with splines or polynomials
 splineOpt = 0;	% MUST BE SET TO 0
@@ -88,91 +91,161 @@ maxIterations = 2e4;
 tolerance = 1e-5;
 dampening = .95;
 
-
-%% Save parameters
+%% Setup environment
 
 cd('./auxiliary_functions/dynare');
-delete steady_vars.mat;
-saveParameters;
 
-
-%% Initial Dynare run
-
-rng(rng_seed);
-dynare firstOrderDynamics_polynomials noclearall nopathchange; % Run Dynare once to process model file
-
-
-%% Simulate data
-
-if is_data_gen == 0
-    
-    % Load previous data
-    load('simul.mat')
-    load('simul_data_hh_indv_param.mat');
-    
-else
-    
-    % Simulate
-    set_dynare_seed(rng_seed);                                          % Seed RNG
-    sim_struct = simulate_model(T,num_burnin_periods,M_,oo_,options_);  % Simulate data
-    save('simul.mat', '-struct', 'sim_struct');                         % Save simulated data
-    
-    % draw normalized individual incomes
-    simul_data_hh = simulate_hh(sim_struct, ts_hh, N_hh);
-    save('simul_data_hh.mat','simul_data_hh');
-    
-    % draw individual productivities and incomes
-    simul_data_hh_indv_param = simulate_hh_indv_param(simul_data_hh);
-    save('simul_data_hh_indv_param.mat','simul_data_hh_indv_param');
-    
+if isempty(gcp)
+    parpool;
 end
 
-
-%% Compute likelihood
-
-loglikes = nan(length(param1_vals),length(param2_vals));
-loglikes_macro = nan(length(param1_vals),length(param2_vals));
-loglikes_hh = nan(length(param1_vals),length(param2_vals));
-
-disp('Computing likelihood...');
-timer_likelihood = tic;
-
-if contains(pwd,'Laura')
-    poolobj = parpool(2);
-else
-    poolobj = parpool;
-end
-
-for iter_i=1:length(param1_vals) % For each parameter...
+%% Loop over parameters to estimate
+for i_param = 1:n_param
     
-    for iter_j=1:length(param2_vals) % For each parameter...
+    param_plot = l_param{i_param}; % Parameter to vary when plotting likelihood
+  
+    %% Save parameters
+    
+    delete steady_vars.mat;
+    saveParameters;
+    
+    
+    %% Initial Dynare run
+    
+    rng(rng_seed);
+    dynare firstOrderDynamics_polynomials noclearall nopathchange; % Run Dynare once to process model file
+    
+    
+    %% Simulate data
+    
+    if is_data_gen == 1 && i_param == 1 
         
-        % Set new parameters
-        bbeta = param1_vals(iter_i);
-%         ssigmaMeas = param2_vals(iter_j);
-        mu_l = param2_vals(iter_j);
+        % Simulate
+        set_dynare_seed(rng_seed);                                          % Seed RNG
+        sim_struct = simulate_model(T,num_burnin_periods,M_,oo_,options_);  % Simulate data
+        for i_Epsilon = 1:nEpsilon
+            for i_Measure = 1:nMeasure
+                sim_struct.(sprintf('%s%d%d', 'smpl_m', i_Epsilon, i_Measure)) = nan(T,1); 
+                    % Set sample moments to missing everywhere
+            end
+        end
+        for i = 1:nEpsilon
+            for j = 1:nMeasure
+                sim_struct.(sprintf('%s%d', 'smpl_m', j)) = nan(T,1); % Set sample moments to missing everywhere
+            end
+        end
+        save('simul.mat', '-struct', 'sim_struct');                         % Save simulated data
+        
+        % draw normalized individual incomes
+        simul_data_micro_aux = simulate_micro_aux(sim_struct, ts_micro, N_micro);
+        
+        % draw individual productivities and incomes
+        simul_data_micro = simulate_micro(simul_data_micro_aux);
+        save('simul_data_micro.mat','simul_data_micro');
+        
+        % Compute cross-sectional moments from micro data
+        sim_struct_moments = simulate_micro_moments(sim_struct, simul_data_micro_aux, T, ts_micro);
+        save('simul_moments.mat', '-struct', 'sim_struct_moments');
+        
+    else
+        
+        % Load previous data
+%         load('simul.mat')
+        load('simul_data_micro.mat');
+        
+    end
+    
+    
+    %% Compute likelihood
+    
+    eval(['param_true = ' param_plot ';']);
+    param_vals = param_true*param_vals_mult;
+    loglikes = nan(length(param_vals),3);
+    loglikes_macro = nan(length(param_vals),3);
+    loglikes_micro = nan(length(param_vals),3);
+    
+    disp('Computing likelihood...');
+    timer_likelihood = tic;
+    
+    for iter_i=1:length(param_vals) % For each parameter value...
+            
+        % Set new parameter
+        eval([param_plot ' = param_vals(iter_i);']);
 
-%         fprintf(['%s' repmat('%6.4f ',1,2),'%s\n'], '[bbeta,ssigmaMeas] = [',bbeta,ssigmaMeas,']');
-        fprintf(['%s' repmat('%6.4f ',1,2),'%s\n'], '[bbeta,mu_l] = [',bbeta,mu_l,']');
+        fprintf('%d%s%d%s%s%s%6.4f\n', iter_i, '/', length(param_vals), ': ', param_plot, ' = ', eval(param_plot));
 
         saveParameters;         % Save parameter values to files
         setDynareParameters;    % Update Dynare parameters in model struct
-        compute_steady_state;   % Compute steady state
-
-        % Log likelihood of proposal
-        [loglikes(iter_i,iter_j), loglikes_macro(iter_i,iter_j), loglikes_hh(iter_i,iter_j)] = ...
-            loglike_compute_indv_param('simul.mat', simul_data_hh_indv_param, ts_hh, ...
-                                       num_smooth_draws, num_interp, num_burnin_periods, ...
-                                       M_, oo_, options_);
-    
+        try
+            
+            compute_steady_state;   % Compute steady state
+            compute_meas_err;       % Update measurement error var-cov matrix
+        
+        catch ME
+            
+            disp('Error encountered. Message:');
+            disp(ME.message);
+            continue
+            
+        end
+        
+        for i_setup = 1:3
+            try
+                if i_setup == 1
+                    % Macro + full info micro
+                    [loglikes(iter_i,1), loglikes_macro(iter_i,1), loglikes_micro(iter_i,1)] = ...
+                        loglike_compute('simul.mat', simul_data_micro, ts_micro, ...
+                        num_smooth_draws, num_interp, num_burnin_periods, ...
+                        M_, oo_, options_);
+                elseif i_setup == 2
+                    % Macro + moments w/ SS meas. err.
+                    [loglikes(iter_i,2), loglikes_macro(iter_i,2), loglikes_micro(iter_i,2)] = ...
+                        loglike_compute('simul_moments.mat', [], ts_micro, ...
+                        0, num_interp, num_burnin_periods, ...
+                        M_, oo_, options_);
+                else
+                    % Macro + moments w/o meas. err.
+                    M_.H(2:end,2:end) = 1e-8*eye(nMeasure*nEpsilon); % Only a little bit of meas. err. to avoid singularity
+                    [loglikes(iter_i,3), loglikes_macro(iter_i,3), loglikes_micro(iter_i,3)] = ...
+                        loglike_compute('simul_moments.mat', [], ts_micro, ...
+                        0, num_interp, num_burnin_periods, ...
+                        M_, oo_, options_);
+                end
+            catch ME
+                
+                disp('Error encountered. Message:');
+                disp(ME.message);
+                
+            end
+        end
+        
     end
+    
+    likelihood_elapsed = toc(timer_likelihood);
+    fprintf('%s%8.2f\n', 'Done. Elapsed minutes: ', likelihood_elapsed/60);
+    
+    %% Plot
+
+    loglikes_plot = [loglikes(:,[1 2]) loglikes_macro(:,1)];
+    plot(param_vals,loglikes_plot-max(loglikes_plot,[],1),'o-');
+    the_ylim = ylim;
+    line(param_true*ones(1,2), the_ylim, 'Color', 'k', 'LineStyle', ':');
+    ylim(the_ylim);
+    legend({'FI micro', 'moments micro', 'macro'}, 'Location', 'SouthWest');
+    title(tex_param{i_param})
+    savefig(l_param{i_param})
+    
+    %% Change back to true parameter value
+    
+    eval([param_plot ' = param_true;']);
+    
+    %% Save
+    
+    save([l_param{i_param} '.mat'],'loglikes','loglikes_micro','loglikes_macro','param_vals')
     
 end
 
-delete(poolobj);
-
-likelihood_elapsed = toc(timer_likelihood);
-fprintf('%s%8.2f\n', 'Done. Elapsed minutes: ', likelihood_elapsed/60);
+delete(gcp('nocreate'));
 
 cd('../../');
 rmpath('auxiliary_functions/dynare', 'auxiliary_functions/likelihood', 'auxiliary_functions/sim');

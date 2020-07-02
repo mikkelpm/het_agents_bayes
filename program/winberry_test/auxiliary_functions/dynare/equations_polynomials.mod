@@ -229,3 +229,15 @@ logAggregateConsumption = log(exp(logAggregateOutput) - exp(logAggregateInvestme
 
 // Wage
 logWage = log(w);
+
+// Lagged moments
+@#for iMoment in 1 : nMeasure
+    lag_moment_1_@{iMoment} = moment_1_@{iMoment}(-1);
+    lag_moment_2_@{iMoment} = moment_2_@{iMoment}(-1);
+@#endfor
+
+// sample moments
+@#for iMoment in 1 : nMeasure
+    smpl_m1@{iMoment} = lag_moment_1_@{iMoment};
+    smpl_m2@{iMoment} = lag_moment_2_@{iMoment};
+@#endfor

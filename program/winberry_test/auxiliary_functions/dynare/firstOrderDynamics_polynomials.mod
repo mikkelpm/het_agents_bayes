@@ -34,7 +34,11 @@ end;
 // MPM: Observables
 //----------------------------------------------------------------
 
-varobs logAggregateOutputObs;
+varobs logAggregateOutputObs
+@#for iMoment in 1 : nMeasure
+    smpl_m1@{iMoment} smpl_m2@{iMoment}
+@#endfor
+;
 
 //----------------------------------------------------------------
 // 4. Computation
@@ -46,6 +50,15 @@ shocks;
     var aggregateTFPShock = 1;
     // MPM: Measurement error
     var measErr = 1;
+
+    // Placeholder values for measurement error
+    @#for iMoment in 1 : nMeasure
+        var smpl_m1@{iMoment} = 1;
+        var smpl_m2@{iMoment} = 1;
+    @#endfor
+    // NEED to change if change nMeasure
+    var smpl_m11, smpl_m13 = 0.1;
+    var smpl_m21, smpl_m23 = 0.1;
 end;
 
 options_.steadystate.nocheck = 1;

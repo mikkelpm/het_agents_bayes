@@ -1,4 +1,4 @@
-function [ll, smooth_means, M_new, oo_new, options_new, dataset_, dataset_info, xparam1, estim_params_, bayestopt_] = likelihood_smoother(dat_file, smooth_vars, M_, oo_, options_)
+function [ll, smooth_means, M_new, oo_new, options_new, dataset_, dataset_info, xparam1, estim_params_, bayestopt_] = likelihood_smoother(dat_file, smooth_vars, M_, oo_, options_, do_smooth)
   
     % Likelihood and mean smoother
 
@@ -27,10 +27,13 @@ function [ll, smooth_means, M_new, oo_new, options_new, dataset_, dataset_info, 
     
     %% Conditional mean smoothing
     
-    % Run smoother
-    disp('Mean smoother...');
-    oo_smooth = mean_smoother(dataset_.data',xparam1,dataset_,dataset_info,M_new,oo_new,options_new,bayestopt_,estim_params_);
-    smooth_means = oo_smooth.SmoothedVariables;
+    smooth_means = [];
+    if do_smooth
+        % Run smoother
+        disp('Mean smoother...');
+        oo_smooth = mean_smoother(dataset_.data',xparam1,dataset_,dataset_info,M_new,oo_new,options_new,bayestopt_,estim_params_);
+        smooth_means = oo_smooth.SmoothedVariables;
+    end
 
 
 end

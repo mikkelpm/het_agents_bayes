@@ -8,11 +8,13 @@ addpath('auxiliary_functions/dynare', 'auxiliary_functions/likelihood', 'auxilia
 is_data_gen = 1; % whether simulate data:  
                  % 0: no simulation
                  % 1: simulation
+likelihood_type = 1; % =1: Macro + full-info micro; =2: macro + full-info micro, no truncation; =3: macro + moments micro
+
 
 % Model/data settings
 T = 100;                                % Number of periods of simulated macro data
-ts_hh = 10:10:T;                        % Time periods where we observe micro data
-N_hh = 1e3;                             % Number of households per non-missing time period
+ts_micro = 10:10:T;                        % Time periods where we observe micro data
+N_micro = 1e3;                             % Number of households per non-missing time period
 
 % Parameter transformation
 transf_to_param = @(x) [1/(1+exp(-x(1))) exp(x(2)) -exp(x(3))]; % Function mapping transformed parameters into parameters of interest
@@ -40,6 +42,7 @@ num_interp = 100;                       % Number of interpolation grid points fo
 % Numerical settings
 num_burnin_periods = 100;               % Number of burn-in periods for simulations
 rng_seed = 201807271;                    % Random number generator seed for initial simulation
+rng('default');
 
 %% Set economic parameters 
 
@@ -122,23 +125,37 @@ dynare firstOrderDynamics_polynomials noclearall nopathchange; % Run Dynare once
 if is_data_gen == 0
     
     % Load previous data
-    load('simul.mat')
-    load('simul_data_hh_indv_param.mat');
+%     load('simul.mat')
+    load('simul_data_micro.mat');
     
 else
     
-    % Simulate
-    set_dynare_seed(rng_seed);                                          % Seed RNG
-    sim_struct = simulate_model(T,num_burnin_periods,M_,oo_,options_);  % Simulate data
-    save('simul.mat', '-struct', 'sim_struct');                         % Save simulated data
-    
-    % draw normalized individual incomes
-    simul_data_hh = simulate_hh(sim_struct, ts_hh, N_hh);
-    save('simul_data_hh.mat','simul_data_hh');
-    
-    % draw individual productivities and incomes
-    simul_data_hh_indv_param = simulate_hh_indv_param(simul_data_hh);
-    save('simul_data_hh_indv_param.mat','simul_data_hh_indv_param');
+     % Simulate
+        set_dynare_seed(rng_seed);                                          % Seed RNG
+        sim_struct = simulate_model(T,num_burnin_periods,M_,oo_,options_);  % Simulate data
+        for i_Epsilon = 1:nEpsilon
+            for i_Measure = 1:nMeasure
+                sim_struct.(sprintf('%s%d%d', 'smpl_m', i_Epsilon, i_Measure)) = nan(T,1); 
+                    % Set sample moments to missing everywhere
+            end
+        end
+        for i = 1:nEpsilon
+            for j = 1:nMeasure
+                sim_struct.(sprintf('%s%d', 'smpl_m', j)) = nan(T,1); % Set sample moments to missing everywhere
+            end
+        end
+        save('simul.mat', '-struct', 'sim_struct');                         % Save simulated data
+        
+        % draw normalized individual incomes
+        simul_data_micro_aux = simulate_micro_aux(sim_struct, ts_micro, N_micro);
+        
+        % draw individual productivities and incomes
+        simul_data_micro = simulate_micro(simul_data_micro_aux);
+        save('simul_data_micro.mat','simul_data_micro');
+        
+        % Compute cross-sectional moments from micro data
+        sim_struct_moments = simulate_micro_moments(sim_struct, simul_data_micro_aux, T, ts_micro);
+        save('simul_moments.mat', '-struct', 'sim_struct_moments');
     
 end
 
@@ -152,7 +169,7 @@ accepts = zeros(mcmc_num_draws,1);
 curr_logpost = -Inf;
 loglikes_prop = nan(mcmc_num_draws,1);
 loglikes_prop_macro = nan(mcmc_num_draws,1);
-loglikes_prop_hh = nan(mcmc_num_draws,1);
+loglikes_prop_micro = nan(mcmc_num_draws,1);
 
 the_stepsize = mcmc_stepsize_init;      % Initial RWMH step size
 the_stepsize_iter = 1;
@@ -183,12 +200,27 @@ for i_mcmc=1:mcmc_num_draws % For each MCMC step...
         saveParameters;         % Save parameter values to files
         setDynareParameters;    % Update Dynare parameters in model struct
         compute_steady_state;   % Compute steady state once and for all
+        compute_meas_err;       % Update measurement error var-cov matrix
         
         % Log likelihood of proposal
-        [loglikes_prop(i_mcmc), loglikes_prop_macro(i_mcmc), loglikes_prop_hh(i_mcmc)] = ...
-            loglike_compute_indv_param('simul.mat', simul_data_hh_indv_param, ts_hh, ...
-                                       num_smooth_draws, num_interp, num_burnin_periods, ...
-                                       M_, oo_, options_);
+        switch likelihood_type
+            case 1 % Macro + full info micro
+                [loglikes_prop(i_mcmc), loglikes_prop_macro(i_mcmc), loglikes_prop_micro(i_mcmc)] = ...
+                    loglike_compute('simul.mat', simul_data_micro, ts_micro, ...
+                    num_smooth_draws, num_interp, num_burnin_periods, ...
+                    M_, oo_, options_);
+            case 2 % Macro + moments w/ SS meas. err.
+                [loglikes_prop(i_mcmc), loglikes_prop_macro(i_mcmc), loglikes_prop_micro(i_mcmc)] = ...
+                    loglike_compute('simul_moments.mat', [], ts_micro, ...
+                    num_smooth_draws, -Inf, num_burnin_periods, ...
+                    M_, oo_, options_);
+            case 3 % Macro + moments w/o meas. err.
+                M_.H(2:end,2:end) = 1e-8*eye(nMeasure*2); % Only a little bit of meas. err. to avoid singularity
+                [loglikes_prop(i_mcmc), loglikes_prop_macro(i_mcmc), loglikes_prop_micro(i_mcmc)] = ...
+                    loglike_compute('simul_moments.mat', [], ts_micro, ...
+                    0, [], num_burnin_periods, ...
+                    M_, oo_, options_);
+        end
 
         % Log prior density of proposal
         logprior_prop = prior_logdens_transf(prop_draw);
@@ -218,7 +250,7 @@ for i_mcmc=1:mcmc_num_draws % For each MCMC step...
     
 end
 
-delete(poolobj);
+delete(gcp('nocreate'));
 
 mcmc_elapsed = toc(timer_mcmc);
 fprintf('%s%8.2f\n', 'MCMC done. Elapsed minutes: ', mcmc_elapsed/60);
