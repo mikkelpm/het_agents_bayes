@@ -10,7 +10,8 @@ function sim_struct = simulate_micro_moments(sim_struct, simul_data_micro_aux, T
     vN0 = sum(ix0,2);
     ix1 = the_simul(:,:,1)==1;
     vN1 = sum(ix1,2);
-    
+
+    % OK for nMeasure = 2 or 3, NEED to change if nMeasure takes other values
     sim_struct.smpl_m11 = sum(the_simul(:,:,2).*ix0,2)./vN0;
     sim_struct.smpl_m12 = sum((the_simul(:,:,2)-sim_struct.smpl_m11).^2.*ix0,2)./vN0;
     sim_struct.smpl_m13 = sum((the_simul(:,:,2)-sim_struct.smpl_m11).^3.*ix0,2)./vN0;
