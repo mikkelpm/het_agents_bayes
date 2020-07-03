@@ -2,8 +2,9 @@ function sim_struct = simulate_micro_moments(sim_struct, simul_data_micro_aux, T
 
     % Compute cross-sectional moments
     
-    the_simul = nan(T,size(simul_data_micro_aux,2),size(simul_data_micro_aux,3)-1);
-    the_simul(ts_micro,:,:) = simul_data_micro_aux(:,:,[1 3]); % Fill in non-missing obs.
+    the_simul = nan(T,size(simul_data_micro_aux,2),2);
+    the_simul(ts_micro,:,1) = simul_data_micro_aux(:,:,1); % Fill in non-missing obs.
+    the_simul(ts_micro,:,2) = simul_data_micro_aux(:,:,2);
     
     % Add moments to simulation struct
     ix0 = the_simul(:,:,1)==0;

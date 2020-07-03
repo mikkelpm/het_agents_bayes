@@ -231,13 +231,25 @@ logAggregateConsumption = log(exp(logAggregateOutput) - exp(logAggregateInvestme
 logWage = log(w);
 
 // Lagged moments
-@#for iMoment in 1 : nMeasure
-    lag_moment_1_@{iMoment} = moment_1_@{iMoment}(-1);
-    lag_moment_2_@{iMoment} = moment_2_@{iMoment}(-1);
+@#for iEpsilon in 1 : nEpsilon
+    lag_mHat_@{iEpsilon} = mHat_@{iEpsilon}(-1);
+    @#for iMoment in 1 : nMeasure
+    lag_moment_@{iEpsilon}_@{iMoment} = moment_@{iEpsilon}_@{iMoment}(-1);
+    @#endfor
 @#endfor
 
 // sample moments
-@#for iMoment in 1 : nMeasure
-    smpl_m1@{iMoment} = lag_moment_1_@{iMoment};
-    smpl_m2@{iMoment} = lag_moment_2_@{iMoment};
+# mom_lambda_2 = exp(2*mu_l + 0.5*2^2*(-2*mu_l));
+# mom_lambda_3 = exp(3*mu_l + 0.5*3^2*(-2*mu_l));
+
+@#for iEpsilon in 1 : nEpsilon
+
+    # c_@{iEpsilon} = w * (mmu * (1 - epsilonGrid_@{iEpsilon}) + (1 - ttau) * epsilonGrid_@{iEpsilon});
+    smpl_m@{iEpsilon}1 = c_@{iEpsilon} + r * lag_moment_@{iEpsilon}_1; // First moment
+    smpl_m@{iEpsilon}2 = r^2 * lag_moment_@{iEpsilon}_2 * mom_lambda_2 + smpl_m@{iEpsilon}1^2 * (mom_lambda_2 - 1); // Second central moment
+
+    @#if nMeasure>2               
+        smpl_m@{iEpsilon}3 = r^3 * lag_moment_@{iEpsilon}_3 * mom_lambda_3 + 3 * r^2 * lag_moment_@{iEpsilon}_2 * smpl_m@{iEpsilon}1 * (mom_lambda_3 - mom_lambda_2) + smpl_m@{iEpsilon}1^3 * (mom_lambda_3 - 3*mom_lambda_2 + 2); // Third central moment
+    @#endif
+
 @#endfor

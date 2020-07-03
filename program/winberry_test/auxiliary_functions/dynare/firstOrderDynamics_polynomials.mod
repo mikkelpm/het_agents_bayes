@@ -15,9 +15,6 @@
 //----------------------------------------------------------------
 
 @#include "variables_polynomials.mod"
-// MPM: include observation with measurement error
-var logAggregateOutputObs;
-varexo measErr;
 
 //----------------------------------------------------------------
 // Model equations
@@ -26,7 +23,6 @@ varexo measErr;
 model;
 
 @#include "equations_polynomials.mod"
-logAggregateOutputObs = logAggregateOutput + ssigmaMeas*measErr; // MPM: measurement error
 
 end;
 
@@ -34,7 +30,7 @@ end;
 // MPM: Observables
 //----------------------------------------------------------------
 
-varobs logAggregateOutputObs
+varobs logAggregateOutput
 @#for iMoment in 1 : nMeasure
     smpl_m1@{iMoment} smpl_m2@{iMoment}
 @#endfor
@@ -48,10 +44,9 @@ varobs logAggregateOutputObs
 
 shocks;
     var aggregateTFPShock = 1;
-    // MPM: Measurement error
-    var measErr = 1;
 
     // Placeholder values for measurement error
+    var logAggregateOutput = 1;
     @#for iMoment in 1 : nMeasure
         var smpl_m1@{iMoment} = 1;
         var smpl_m2@{iMoment} = 1;

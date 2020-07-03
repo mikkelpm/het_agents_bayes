@@ -13,9 +13,9 @@ grids = load('grids');
 polynomials = load('polynomials');
 
 // Define economic parameters
-// MPM: Add ssigmaMeas
+// MPM: Add mu_l
 parameters bbeta ssigma aaBar aalpha ddelta aggEmployment
-	mmu ttau rrhoTFP ssigmaTFP ssigmaMeas;
+	mmu ttau rrhoTFP ssigmaTFP mu_l;
 //Load in their values
 // MPM: Account for ssigmaMeas
 @#define nEconomicParameters = 11

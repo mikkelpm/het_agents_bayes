@@ -15,8 +15,11 @@
 //----------------------------------------------------------------
 
 // Moments of the distribution
-@#for iMoment in 1 : nMeasure
-    var moment_1_@{iMoment} moment_2_@{iMoment} smpl_m1@{iMoment} smpl_m2@{iMoment} lag_moment_1_@{iMoment} lag_moment_2_@{iMoment};
+@#for iEpsilon in 1 : nEpsilon
+    var lag_mHat_@{iEpsilon};
+    @#for iMoment in 1 : nMeasure
+        var moment_@{iEpsilon}_@{iMoment} smpl_m@{iEpsilon}@{iMoment} lag_moment_@{iEpsilon}_@{iMoment};
+    @#endfor
 @#endfor
 
 // Parameters of the distribution

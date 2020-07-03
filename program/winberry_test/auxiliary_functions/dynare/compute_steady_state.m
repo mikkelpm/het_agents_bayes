@@ -42,12 +42,19 @@ for iEpsilon = 1 : nEpsilon
     end
 end
 
+% Sample moments of income
+mom_lambda = exp((1:nMeasure)*mu_l + 0.5*(1:nMeasure).^2*(-2*mu_l)); % Moments E[lambda^j]
+smpl_m = zeros(nEpsilon,nMeasure);
+smpl_m(:,1) = w * (mmu * (1-vEpsilonGrid) + (1-ttau)*vEpsilonGrid) + r * mMoments(:,1); % First moment
+smpl_m(:,2) = r^2 * mMoments(:,2) * mom_lambda(2) + smpl_m(:,1).^2 * (mom_lambda(2)-1); % Second central moment
+smpl_m(:,3) = r^3 * mMoments(:,3) * mom_lambda(3) + 3 * r^2 * mMoments(:,2) .* smpl_m(:,1) * (mom_lambda(3) - mom_lambda(2)) + smpl_m(:,1).^3 * (mom_lambda(3) - 3*mom_lambda(2) + 2); % Third central moment
+
 % Moments, lagged moments, and parameters of density away from borrowing constraint
 for iEpsilon = 1 : nEpsilon
     for iMoment = 1 : nMeasure
         eval(sprintf('moment_%d_%d = mMoments(iEpsilon,iMoment);',iEpsilon,iMoment));
         eval(sprintf('lag_moment_%d_%d = moment_%d_%d;',iEpsilon,iMoment,iEpsilon,iMoment));
-        eval(sprintf('smpl_m%d%d = moment_%d_%d;',iEpsilon,iMoment,iEpsilon,iMoment));
+        eval(sprintf('smpl_m%d%d = smpl_m(iEpsilon,iMoment);',iEpsilon,iMoment,iEpsilon,iMoment));
         eval(sprintf('measureCoefficient_%d_%d = mParameters(iEpsilon,iMoment+1);',iEpsilon,iMoment));
     end
 end
@@ -55,6 +62,7 @@ end
 % Mass at borrowing constraint
 for iEpsilon = 1 : nEpsilon
     eval(sprintf('mHat_%d = mHat(iEpsilon);',iEpsilon));
+    eval(sprintf('lag_mHat_%d = mHat_%d;',iEpsilon,iEpsilon));
 end
 
 % Other variables
