@@ -125,37 +125,31 @@ dynare firstOrderDynamics_polynomials noclearall nopathchange; % Run Dynare once
 if is_data_gen == 0
     
     % Load previous data
-%     load('simul.mat')
+    %     load('simul.mat')
     load('simul_data_micro.mat');
     
 else
     
-     % Simulate
-        set_dynare_seed(rng_seed);                                          % Seed RNG
-        sim_struct = simulate_model(T,num_burnin_periods,M_,oo_,options_);  % Simulate data
-        for i_Epsilon = 1:nEpsilon
-            for i_Measure = 1:nMeasure
-                sim_struct.(sprintf('%s%d%d', 'smpl_m', i_Epsilon, i_Measure)) = nan(T,1); 
-                    % Set sample moments to missing everywhere
-            end
+    % Simulate
+    set_dynare_seed(rng_seed);                                          % Seed RNG
+    sim_struct = simulate_model(T,num_burnin_periods,M_,oo_,options_);  % Simulate data
+    for i_Epsilon = 1:nEpsilon
+        for i_Measure = 1:nMeasure
+            sim_struct.(sprintf('%s%d%d', 'smpl_m', i_Epsilon, i_Measure)) = nan(T,1);
+            % Set sample moments to missing everywhere
         end
-        for i = 1:nEpsilon
-            for j = 1:nMeasure
-                sim_struct.(sprintf('%s%d', 'smpl_m', j)) = nan(T,1); % Set sample moments to missing everywhere
-            end
-        end
-        save('simul.mat', '-struct', 'sim_struct');                         % Save simulated data
-        
-        % draw normalized individual incomes
-        simul_data_micro_aux = simulate_micro_aux(sim_struct, ts_micro, N_micro);
-        
-        % draw individual productivities and incomes
-        simul_data_micro = simulate_micro(simul_data_micro_aux);
-        save('simul_data_micro.mat','simul_data_micro');
-        
-        % Compute cross-sectional moments from micro data
-        sim_struct_moments = simulate_micro_moments(sim_struct, simul_data_micro_aux, T, ts_micro);
-        save('simul_moments.mat', '-struct', 'sim_struct_moments');
+    end
+    
+    % draw normalized individual incomes
+    simul_data_micro_aux = simulate_micro_aux(sim_struct, ts_micro, N_micro);
+    
+    % draw individual productivities and incomes
+    simul_data_micro = simulate_micro(simul_data_micro_aux);
+    save('simul_data_micro.mat','simul_data_micro');
+    
+    % Compute cross-sectional moments from micro data
+    sim_struct_moments = simulate_micro_moments(sim_struct, simul_data_micro_aux, T, ts_micro);
+    save('simul_moments.mat', '-struct', 'sim_struct_moments');
     
 end
 

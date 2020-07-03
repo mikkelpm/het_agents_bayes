@@ -129,11 +129,6 @@ for i_param = 1:n_param
                     % Set sample moments to missing everywhere
             end
         end
-        for i = 1:nEpsilon
-            for j = 1:nMeasure
-                sim_struct.(sprintf('%s%d', 'smpl_m', j)) = nan(T,1); % Set sample moments to missing everywhere
-            end
-        end
         save('simul.mat', '-struct', 'sim_struct');                         % Save simulated data
         
         % draw normalized individual incomes
