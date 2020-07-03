@@ -18,7 +18,7 @@ for i_Measure = 1:nMeasure
         smooth_vars_aux2{i_Epsilon,i_Measure} = ['measureCoefficient_' num2str(i_Epsilon) '_' num2str(i_Measure)];
     end
 end
-smooth_vars = [{'w'; 'r'; 'mHat_1' ; 'mHat_2'}; smooth_vars_aux1(:); smooth_vars_aux2(:)];
+smooth_vars = [{'w'; 'r'; 'lag_mHat_1' ; 'lag_mHat_2'}; smooth_vars_aux1(:); smooth_vars_aux2(:)];
 
 % Run mean smoother and compute macro log likelihood
 timer = tic;
@@ -80,7 +80,7 @@ parfor i_draw = 1:num_smooth_draws
                 ix = find(data_micro(it,:,1)==eepsilon);
                 
                 % Prepare smoothed draws
-                mHat = the_smooth_draw.(['mHat_' num2str(eepsilon+1)])(t-1);
+                mHat = the_smooth_draw.(['lag_mHat_' num2str(eepsilon+1)])(t);
                 moment = nan(1,nMeasure_local);
                 measureCoefficient = nan(1,nMeasure_local);
                 for i_Measure = 1:nMeasure_local
