@@ -4,7 +4,7 @@ addpath('auxiliary_functions/dynare', 'auxiliary_functions/likelihood', 'auxilia
 %% Settings
 
 % Decide what to do
-is_data_gen = 0; % whether simulate data:  
+is_data_gen = 1; % whether simulate data:  
                  % 0: no simulation
                  % 1: simulation
 
@@ -17,7 +17,7 @@ N_micro = 1e2;                             % Number of households per non-missin
 l_param = {'bbeta','ssigmaMeas','mu_l'};
 tex_param = {'\beta','\sigma_e','\mu_\lambda'};
 n_param = length(l_param);
-param_vals_mult = unique([1 linspace(0.75,1.25,51)]); % Multiples of true parameter to compute
+param_vals_mult = unique([1 linspace(0.9,1.1,51)]); % Multiples of true parameter to compute
 
 % Likelihood settings
 num_smooth_draws = 500;                 % Number of draws from the smoothing distribution (for unbiased likelihood estimate)
@@ -26,7 +26,7 @@ num_interp = 100;                       % Number of interpolation grid points fo
 % Numerical settings
 num_burnin_periods = 100;               % Number of burn-in periods for simulations
 rng_seed = 20180727;                    % Random number generator seed for initial simulation
-rng('default');
+rng(rng_seed);
 
 
 %% Set economic parameters
@@ -91,64 +91,65 @@ maxIterations = 2e4;
 tolerance = 1e-5;
 dampening = .95;
 
-%% Setup environment
+
+%% Save parameters
 
 cd('./auxiliary_functions/dynare');
+
+delete steady_vars.mat;
+saveParameters;
+    
+    
+%% Initial Dynare run
+
+rng(rng_seed);
+dynare firstOrderDynamics_polynomials noclearall nopathchange; % Run Dynare once to process model file
+
+
+%% Simulate data
+
+if is_data_gen == 1
+
+    % Simulate
+    set_dynare_seed(rng_seed);                                          % Seed RNG
+    sim_struct = simulate_model(T,num_burnin_periods,M_,oo_,options_);  % Simulate data
+    for i_Epsilon = 1:nEpsilon
+        for i_Measure = 1:nMeasure
+            sim_struct.(sprintf('%s%d%d', 'smpl_m', i_Epsilon, i_Measure)) = nan(T,1); 
+                % Set sample moments to missing everywhere
+        end
+    end
+    save('simul.mat', '-struct', 'sim_struct');                         % Save simulated data
+
+    % draw normalized individual incomes
+    simul_data_micro_aux = simulate_micro_aux(sim_struct, ts_micro, N_micro);
+
+    % draw individual productivities and incomes
+    simul_data_micro = simulate_micro(simul_data_micro_aux);
+    save('simul_data_micro.mat','simul_data_micro');
+
+    % Compute cross-sectional moments from micro data
+    sim_struct_moments = simulate_micro_moments(sim_struct, simul_data_micro, T, ts_micro);
+    save('simul_moments.mat', '-struct', 'sim_struct_moments');
+
+else
+
+    % Load previous data
+%         load('simul.mat')
+    load('simul_data_micro.mat');
+
+end
+
+
+%% Loop over parameters to estimate
 
 if isempty(gcp)
     parpool;
 end
 
-%% Loop over parameters to estimate
 for i_param = 1:n_param
     
     param_plot = l_param{i_param}; % Parameter to vary when plotting likelihood
-  
-    %% Save parameters
-    
-    delete steady_vars.mat;
-    saveParameters;
-    
-    
-    %% Initial Dynare run
-    
-    rng(rng_seed);
-    dynare firstOrderDynamics_polynomials noclearall nopathchange; % Run Dynare once to process model file
-    
-    
-    %% Simulate data
-    
-    if is_data_gen == 1 && i_param == 1 
-        
-        % Simulate
-        set_dynare_seed(rng_seed);                                          % Seed RNG
-        sim_struct = simulate_model(T,num_burnin_periods,M_,oo_,options_);  % Simulate data
-        for i_Epsilon = 1:nEpsilon
-            for i_Measure = 1:nMeasure
-                sim_struct.(sprintf('%s%d%d', 'smpl_m', i_Epsilon, i_Measure)) = nan(T,1); 
-                    % Set sample moments to missing everywhere
-            end
-        end
-        save('simul.mat', '-struct', 'sim_struct');                         % Save simulated data
-        
-        % draw normalized individual incomes
-        simul_data_micro_aux = simulate_micro_aux(sim_struct, ts_micro, N_micro);
-        
-        % draw individual productivities and incomes
-        simul_data_micro = simulate_micro(simul_data_micro_aux);
-        save('simul_data_micro.mat','simul_data_micro');
-        
-        % Compute cross-sectional moments from micro data
-        sim_struct_moments = simulate_micro_moments(sim_struct, simul_data_micro_aux, T, ts_micro);
-        save('simul_moments.mat', '-struct', 'sim_struct_moments');
-        
-    else
-        
-        % Load previous data
-%         load('simul.mat')
-        load('simul_data_micro.mat');
-        
-    end
     
     
     %% Compute likelihood
@@ -221,7 +222,7 @@ for i_param = 1:n_param
     
     %% Plot
 
-    loglikes_plot = [loglikes(:,[1 2]) loglikes_macro(:,1)];
+    loglikes_plot = real([loglikes(:,[1 2]) loglikes_macro(:,1)]);
     plot(param_vals,loglikes_plot-max(loglikes_plot,[],1),'o-');
     the_ylim = ylim;
     line(param_true*ones(1,2), the_ylim, 'Color', 'k', 'LineStyle', ':');
