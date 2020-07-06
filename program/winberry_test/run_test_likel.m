@@ -12,6 +12,7 @@ is_data_gen = 1; % whether simulate data:
 T = 100;                                % Number of periods of simulated macro data
 ts_micro = 10:10:T;                        % Time periods where we observe micro data
 N_micro = 1e2;                             % Number of households per non-missing time period
+micro_mom_order = 2;                    % Observe micro moments up to this order for inference
 
 % Parameter values to check
 l_param = {'bbeta','ssigmaMeas','mu_l'};
@@ -133,6 +134,11 @@ if is_data_gen == 1
 
     % Compute cross-sectional moments from micro data
     sim_struct_moments = simulate_micro_moments(sim_struct, simul_data_micro, T, ts_micro);
+    for im=micro_mom_order+1:nMeasure
+        % Set higher-order sample moments to missing
+        sim_struct_moments.(sprintf('%s%d', 'smpl_m1', im)) = nan(T,1);
+        sim_struct_moments.(sprintf('%s%d', 'smpl_m2', im)) = nan(T,1);
+    end
     save('simul_moments.mat', '-struct', 'sim_struct_moments');
 
 else
