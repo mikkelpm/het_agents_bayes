@@ -17,7 +17,7 @@ N_micro = 1e2;                             % Number of households per non-missin
 l_param = {'bbeta','ssigmaMeas','mu_l'};
 tex_param = {'\beta','\sigma_e','\mu_\lambda'};
 n_param = length(l_param);
-param_vals_mult = unique([1 linspace(0.9,1.1,51)]); % Multiples of true parameter to compute
+param_vals_mult = unique([1 linspace(0.75,1.25,51)]); % Multiples of true parameter to compute
 
 % Likelihood settings
 num_smooth_draws = 500;                 % Number of draws from the smoothing distribution (for unbiased likelihood estimate)
@@ -119,6 +119,9 @@ if is_data_gen == 1
                 % Set sample moments to missing everywhere
         end
     end
+    % Add measurement error to aggregate output
+    sim_struct.logAggregateOutput_noerror = sim_struct.logAggregateOutput;
+    sim_struct.logAggregateOutput = sim_struct.logAggregateOutput + ssigmaMeas*randn(T,1);
     save('simul.mat', '-struct', 'sim_struct');                         % Save simulated data
 
     % draw normalized individual incomes
