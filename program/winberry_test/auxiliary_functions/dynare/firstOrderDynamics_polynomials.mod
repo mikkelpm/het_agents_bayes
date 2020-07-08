@@ -51,11 +51,6 @@ shocks;
         var smpl_m1@{iMoment} = 1;
         var smpl_m2@{iMoment} = 1;
     @#endfor
-    // OK for nMeasure = 2 or 3, NEED to change if nMeasure takes other values
-    @#if nMeasure <= 3
-        var smpl_m11, smpl_m13 = 0.1;
-        var smpl_m21, smpl_m23 = 0.1;
-    @#endif
 end;
 
 options_.steadystate.nocheck = 1;
