@@ -245,7 +245,7 @@ for i_param = 1:n_param
     F1 = figure;
     plot(param_vals,loglikes_plot-max(loglikes_plot,[],1),'o-');
     xline(param_true,'k:');
-    legend({'FI micro', '3rd mom, Normal ', '2nd mom, Normal', 'macro', ...
+    legend({'FI micro', '3rd mom, Normal', '2nd mom, Normal', 'macro', ...
         '3rd mom, flex ', '2nd mom, flex'}, 'Location', 'eastoutside');
     legend boxoff
     title(tex_param{i_param})
