@@ -31,10 +31,12 @@ end;
 //----------------------------------------------------------------
 
 varobs logAggregateOutput
-@#for iMoment in 1 : nMeasure
-    smpl_m1@{iMoment} smpl_m2@{iMoment}
+@#for iEpsilon in 1 : nEpsilon
+    @#for iMoment in 1 : nMeasure
+        smpl_m@{iEpsilon}@{iMoment}
+    @#endfor
 @#endfor
-;
+; // order matters
 
 //----------------------------------------------------------------
 // 4. Computation
