@@ -51,6 +51,12 @@ shocks;
         var smpl_m1@{iMoment} = 1;
         var smpl_m2@{iMoment} = 1;
     @#endfor
+	@#for iMoment in 1 : nMeasure
+        @#for jMoment in iMoment+1 : nMeasure
+			var smpl_m1@{iMoment},smpl_m1@{jMoment} = .1;
+			var smpl_m2@{iMoment},smpl_m2@{jMoment} = .1;
+		@#endfor
+    @#endfor
 end;
 
 options_.steadystate.nocheck = 1;
