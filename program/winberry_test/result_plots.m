@@ -1,16 +1,16 @@
 %% Settings
 
-B_draw = 500;
-N_draw = 500;
+B_draw = 1000;
+N_draw = 8000;
 ix_out = B_draw+(1:N_draw);
 acf_lags = 50;
 
 n_model = 4;
 model_mcmc = cell(1,n_model);
-model_mcmc{1} = load('mcmc_long.mat','post_draws');
-model_mcmc{2} = load('mcmc2.mat','post_draws');
-model_mcmc{3} = load('mcmc3.mat','post_draws');
-model_mcmc{4} = load('mcmc_nomicro.mat','post_draws');
+model_mcmc{1} = load('temp/mcmc_long.mat','post_draws');
+model_mcmc{2} = load('temp/mcmc_long2.mat','post_draws');
+model_mcmc{3} = load('temp/mcmc_long3.mat','post_draws');
+model_mcmc{4} = load('temp/mcmc_nomicro.mat','post_draws');
 
 l_model = {'FIMicro', '3rdMoment', '2ndMoment', 'Macro'};
 tex_param = {'\beta','\sigma_e','\mu_\lambda'};
@@ -30,7 +30,7 @@ for i_model = 1:n_model
         xline(B_draw,'k--');
         title(tex_param{j}, 'FontSize', 14);
     end
-    savefig(F1,[l_model{i_model} '_traceplot'])
+    savefig(F1,['temp/' l_model{i_model} '_traceplot'])
     
     % ACF
     F1 = figure('Units', 'normalize', 'Position', [0.2 0.1 0.6 0.8]);
@@ -44,7 +44,7 @@ for i_model = 1:n_model
         yline(0, 'k--');
         title(tex_param{j}, 'FontSize', 14);
     end
-    savefig(F1,[l_model{i_model} '_acf'])
+    savefig(F1,['temp/' l_model{i_model} '_acf'])
 end
 
 %% Posterior densities
@@ -77,5 +77,5 @@ for j=1:n_param
     end
 end
 
-savefig(F1,'post_dens')
+savefig(F1,'temp/post_dens')
 

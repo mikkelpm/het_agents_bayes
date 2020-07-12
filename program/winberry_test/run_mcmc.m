@@ -5,7 +5,7 @@ addpath('auxiliary_functions/dynare', 'auxiliary_functions/likelihood', 'auxilia
 %% Settings
 
 % Decide what to do
-is_data_gen = 1; % whether simulate data:  
+is_data_gen = 0; % whether simulate data:  
                  % 0: no simulation
                  % 1: simulation
 likelihood_type = 2; % =1: Macro + full-info micro; =2: macro + full-info micro, no truncation; =3: macro + moments micro
@@ -24,12 +24,12 @@ prior_logdens_transf = @(x) sum(x) - 2*log(1+exp(x(1)));    % Log prior density 
 prior_init_transf = @() [log(0.96)-log(1-0.96) log(0.02) log(.25)];  % Distribution of initial log(beta) draw
 
 % MCMC settings
-mcmc_num_draws = 1000;                  % Number of MCMC steps (total)
+mcmc_num_draws = 9000;                  % Number of MCMC steps (total)
 mcmc_stepsize_init = 1e-2;              % Initial MCMC step size
 mcmc_adapt_iter = [50 100 200];          % Iterations at which to update the variance/covariance matrix for RWMH proposal; first iteration in list is start of adaptation phase
 mcmc_adapt_diag = false;                 % =true: Adapt only to posterior std devs of parameters, =false: adapt to full var/cov matrix
 mcmc_adapt_param = 10;                  % Shrinkage parameter for adapting to var/cov matrix (higher values: more shrinkage)
-mcmc_filename = ['mcmc' num2str(likelihood_type) '.mat'];             % File name of MCMC output
+mcmc_filename = ['mcmc_long' num2str(likelihood_type) '.mat'];             % File name of MCMC output
 
 % for adaptive RWMH
 mcmc_c = 0.55;
