@@ -20,7 +20,7 @@ n_param = length(tex_param);
 
 for i_model = 1:n_model
     % Trace plot
-    figure('Units', 'normalize', 'Position', [0.2 0.1 0.6 0.8]);
+    F1 = figure('Units', 'normalize', 'Position', [0.2 0.1 0.6 0.8]);
     for j=1:n_param
         if i_model == 4 && j == n_param
             continue
@@ -30,10 +30,10 @@ for i_model = 1:n_model
         xline(B_draw,'k--');
         title(tex_param{j}, 'FontSize', 14);
     end
-    savefig([l_model{i_model} '_traceplot'])
+    savefig(F1,[l_model{i_model} '_traceplot'])
     
     % ACF
-    figure('Units', 'normalize', 'Position', [0.2 0.1 0.6 0.8]);
+    F1 = figure('Units', 'normalize', 'Position', [0.2 0.1 0.6 0.8]);
     for j=1:n_param
         if i_model == 4 && j == n_param
             continue
@@ -44,14 +44,14 @@ for i_model = 1:n_model
         yline(0, 'k--');
         title(tex_param{j}, 'FontSize', 14);
     end
-    savefig([l_model{i_model} '_acf'])
+    savefig(F1,[l_model{i_model} '_acf'])
 end
 
 %% Posterior densities
 
 params_truth = [0.9600    0.0200   -0.2500];
 
-figure('Units', 'normalize', 'Position', [0.1 0.2 0.8 0.6]);
+F1 = figure('Units', 'normalize', 'Position', [0.1 0.2 0.8 0.6]);
 for j=1:n_param
     subplot(1,n_param,j);
     hold on
@@ -71,11 +71,11 @@ for j=1:n_param
         legend('boxoff')
         
         p = get(h1,'Position');
-        p(1) = 0.4;
+        p(1) = 0.3;
         p(2) = 0;
         set(h1,'Position',p)
     end
 end
 
-savefig('post_dens')
+savefig(F1,'post_dens')
 
