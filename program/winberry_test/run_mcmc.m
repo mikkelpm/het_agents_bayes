@@ -14,7 +14,7 @@ likelihood_type = 2; % =1: Macro + full-info micro; =2: macro + full-info micro,
 % Model/data settings
 T = 100;                                % Number of periods of simulated macro data
 ts_micro = 10:10:T;                        % Time periods where we observe micro data
-N_micro = 1e3;                             % Number of households per non-missing time period
+N_micro = 1e2;                             % Number of households per non-missing time period
 
 % Parameter transformation
 transf_to_param = @(x) [1/(1+exp(-x(1))) exp(x(2)) -exp(x(3))]; % Function mapping transformed parameters into parameters of interest
@@ -29,7 +29,7 @@ mcmc_stepsize_init = 1e-2;              % Initial MCMC step size
 mcmc_adapt_iter = [50 100 200];          % Iterations at which to update the variance/covariance matrix for RWMH proposal; first iteration in list is start of adaptation phase
 mcmc_adapt_diag = false;                 % =true: Adapt only to posterior std devs of parameters, =false: adapt to full var/cov matrix
 mcmc_adapt_param = 10;                  % Shrinkage parameter for adapting to var/cov matrix (higher values: more shrinkage)
-mcmc_filename = ['mcmc_long' num2str(likelihood_type) '.mat'];             % File name of MCMC output
+mcmc_filename = ['mcmc_N100_' num2str(likelihood_type) '.mat'];             % File name of MCMC output
 
 % for adaptive RWMH
 mcmc_c = 0.55;
@@ -184,7 +184,13 @@ the_chol = eye(length(curr_draw));      % Initial RWMH proposal var-cov matrix
 disp('MCMC...');
 timer_mcmc = tic;
 
-poolobj = parpool;
+delete(gcp('nocreate'));
+
+if contains(pwd,'u050')
+    parpool('local',12);
+else
+    parpool;
+end
 
 for i_mcmc=1:mcmc_num_draws % For each MCMC step...
 
