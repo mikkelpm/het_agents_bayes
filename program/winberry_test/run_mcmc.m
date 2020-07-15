@@ -5,10 +5,10 @@ addpath('auxiliary_functions/dynare', 'auxiliary_functions/likelihood', 'auxilia
 %% Settings
 
 % Decide what to do
-is_data_gen = 0; % whether simulate data:  
+is_data_gen = 1; % whether simulate data:  
                  % 0: no simulation
                  % 1: simulation
-likelihood_type = 2; % =1: Macro + full-info micro; =2: macro + full-info micro, no truncation; =3: macro + moments micro
+likelihood_type = 1; % =1: Macro + full-info micro; =2: macro + full-info micro, no truncation; =3: macro + moments micro
 
 
 % Model/data settings
