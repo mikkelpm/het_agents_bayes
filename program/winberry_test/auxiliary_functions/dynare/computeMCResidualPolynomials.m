@@ -59,7 +59,8 @@ if splineOpt == 0	% approximate conditional expectation function using polynomia
 		r * mAssetsGrid) .^ (-ssigma)));
 	mCoefficients = zeros(nEpsilon,nAssets);
 	for iEpsilon = 1:nEpsilon	% interpolate
-		vCoefficients = sum(vAssetsPoly' .* (ones(nAssets,1) * mGridInit(iEpsilon,:)),2);
+% 		vCoefficients = sum(vAssetsPoly' .* (ones(nAssets,1) * mGridInit(iEpsilon,:)),2);
+        vCoefficients = vAssetsPoly' * mGridInit(iEpsilon,:)';
 		mCoefficients(iEpsilon,:) = (vCoefficients ./ vAssetsPolySquared)';
 	end
 
@@ -106,7 +107,8 @@ if splineOpt == 0
 	% Compute savings policy
 	mAssetsPrimeStar = w * (mmu * (1 - mEpsilonGridQuadrature) + (1 - ttau) * mEpsilonGridQuadrature) + ...
 		(1 + r) * mAssetsGridQuadrature - (mConditionalExpectation .^ (-1 / ssigma));
-	mAssetsPrimeQuadrature = max(mAssetsPrimeStar,aaBar * ones(nEpsilon,nAssetsQuadrature));
+% 	mAssetsPrimeQuadrature = max(mAssetsPrimeStar,aaBar * ones(nEpsilon,nAssetsQuadrature));
+    mAssetsPrimeQuadrature = max(mAssetsPrimeStar,aaBar);
 		
 else
 
@@ -114,8 +116,10 @@ else
 	[vIndicesBelow,vIndicesAbove,vWeightBelow,vWeightAbove] = computeLinearWeights(vAssetsGrid,vAssetsGridQuadrature);
 		
 	% Linear interpolation
-	mAssetsPrimeQuadrature = mAssetsPrime(:,vIndicesBelow) .* repmat(vWeightBelow',nEpsilon,1) + ...
-		mAssetsPrime(:,vIndicesAbove) .* repmat(vWeightAbove',nEpsilon,1);
+	% mAssetsPrimeQuadrature = mAssetsPrime(:,vIndicesBelow) .* repmat(vWeightBelow',nEpsilon,1) + ...
+		% mAssetsPrime(:,vIndicesAbove) .* repmat(vWeightAbove',nEpsilon,1);
+	mAssetsPrimeQuadrature = mAssetsPrime(:,vIndicesBelow) .* vWeightBelow' + ...
+		mAssetsPrime(:,vIndicesAbove) .* vWeightAbove';
 	
 end
 
@@ -131,7 +135,8 @@ if splineOpt == 0
 	% Compute savings policy
 	mAssetsPrimeStar = w * (mmu * (1 - vEpsilonGrid) + (1 - ttau) * vEpsilonGrid) + ...
 		(1 + r) * assetsMin - (mConditionalExpectation .^ (-1 / ssigma));
-	mAssetsPrimeBC = max(mAssetsPrimeStar,aaBar * ones(nEpsilon,1));
+%	mAssetsPrimeBC = max(mAssetsPrimeStar,aaBar * ones(nEpsilon,1));
+	mAssetsPrimeBC = max(mAssetsPrimeStar,aaBar);
 		
 else
 
@@ -139,8 +144,10 @@ else
 	[vIndicesBelow,vIndicesAbove,vWeightBelow,vWeightAbove] = computeLinearWeights(vAssetsGrid,assetsMin);
 		
 	% Linear interpolation
-	mAssetsPrimeBC = mAssetsPrime(:,vIndicesBelow) .* repmat(vWeightBelow',nEpsilon,1) + ...
-		mAssetsPrime(:,vIndicesAbove) .* repmat(vWeightAbove',nEpsilon,1);
+	% mAssetsPrimeBC = mAssetsPrime(:,vIndicesBelow) .* repmat(vWeightBelow',nEpsilon,1) + ...
+		% mAssetsPrime(:,vIndicesAbove) .* repmat(vWeightAbove',nEpsilon,1);
+	mAssetsPrimeBC = mAssetsPrime(:,vIndicesBelow) .* vWeightBelow' + ...
+		mAssetsPrime(:,vIndicesAbove) .* vWeightAbove';
 	
 end
 
@@ -167,7 +174,9 @@ while err > err2 && iteration <= tol2
 	% Compute parameters of the distribution by minimization
 	mParameters = zeros(nEpsilon,nMeasure+1);
 	for iEpsilon = 1 : nEpsilon
-		objectiveFunction = @(vParametersTilde) parametersResidual(vParametersTilde,squeeze(aGridMoments(iEpsilon,:,:)));
+% 		objectiveFunction = @(vParametersTilde) parametersResidual(vParametersTilde,squeeze(aGridMoments(iEpsilon,:,:)));
+        objectiveFunction = @(vParametersTilde) parametersResidual(vParametersTilde,...
+            reshape(aGridMoments(iEpsilon,:,:),nAssetsQuadrature,nMeasure));
 		[vParameters,normalization] = fminunc(objectiveFunction,zeros(nMeasure,1),options);
 		mParameters(iEpsilon,:) = [1 / normalization; vParameters];
 	end
@@ -182,10 +191,14 @@ while err > err2 && iteration <= tol2
 		mMomentsNew(iEpsilon,1) = 0;
 		for iEpsilonTilde = 1 : nEpsilon
 		
-			mMomentsNew(iEpsilon,1) = mMomentsNew(iEpsilon,1) + (1 - mHat(iEpsilonTilde,1)) * vEpsilonInvariant(iEpsilonTilde) * mEpsilonTransition(...
+% 			mMomentsNew(iEpsilon,1) = mMomentsNew(iEpsilon,1) + (1 - mHat(iEpsilonTilde,1)) * vEpsilonInvariant(iEpsilonTilde) * mEpsilonTransition(...
+% 				iEpsilonTilde,iEpsilon) * mParameters(iEpsilonTilde,1) * vQuadratureWeights' * (mAssetsPrimeQuadrature(iEpsilonTilde,:)' .* ...
+% 				exp(squeeze(aGridMoments(iEpsilonTilde,:,:)) * mParameters(iEpsilonTilde,2:nMeasure+1)')) + mHat(iEpsilonTilde,1) * ...
+% 				vEpsilonInvariant(iEpsilonTilde) * mEpsilonTransition(iEpsilonTilde,iEpsilon) * mAssetsPrimeBC(iEpsilonTilde,1);
+            mMomentsNew(iEpsilon,1) = mMomentsNew(iEpsilon,1) + (1 - mHat(iEpsilonTilde,1)) * vEpsilonInvariant(iEpsilonTilde) * mEpsilonTransition(...
 				iEpsilonTilde,iEpsilon) * mParameters(iEpsilonTilde,1) * vQuadratureWeights' * (mAssetsPrimeQuadrature(iEpsilonTilde,:)' .* ...
-				exp(squeeze(aGridMoments(iEpsilonTilde,:,:)) * mParameters(iEpsilonTilde,2:nMeasure+1)')) + mHat(iEpsilonTilde,1) * ...
-				vEpsilonInvariant(iEpsilonTilde) * mEpsilonTransition(iEpsilonTilde,iEpsilon) * mAssetsPrimeBC(iEpsilonTilde,1);	
+				exp(reshape(aGridMoments(iEpsilonTilde,:,:),nAssetsQuadrature,nMeasure) * mParameters(iEpsilonTilde,2:nMeasure+1)')) + mHat(iEpsilonTilde,1) * ...
+				vEpsilonInvariant(iEpsilonTilde) * mEpsilonTransition(iEpsilonTilde,iEpsilon) * mAssetsPrimeBC(iEpsilonTilde,1);
 				
 		end
 		
@@ -199,9 +212,14 @@ while err > err2 && iteration <= tol2
 			
 			for iEpsilonTilde = 1 : nEpsilon
 			
-				mMomentsNew(iEpsilon,iMoment) = mMomentsNew(iEpsilon,iMoment) + (1 - mHat(iEpsilonTilde,1)) * vEpsilonInvariant(iEpsilonTilde) * mEpsilonTransition(...
+% 				mMomentsNew(iEpsilon,iMoment) = mMomentsNew(iEpsilon,iMoment) + (1 - mHat(iEpsilonTilde,1)) * vEpsilonInvariant(iEpsilonTilde) * mEpsilonTransition(...
+% 					iEpsilonTilde,iEpsilon) * mParameters(iEpsilonTilde,1) * vQuadratureWeights' * (((mAssetsPrimeQuadrature(iEpsilonTilde,:)' - ...
+% 					mMomentsNew(iEpsilon,1)) .^ iMoment) .* exp(squeeze(aGridMoments(iEpsilonTilde,:,:)) * ...
+% 					mParameters(iEpsilonTilde,2:nMeasure+1)')) + mHat(iEpsilonTilde,1) * vEpsilonInvariant(iEpsilonTilde) * ...
+% 					mEpsilonTransition(iEpsilonTilde,iEpsilon) * ((mAssetsPrimeBC(iEpsilonTilde,1) - mMomentsNew(iEpsilon,1)) .^ iMoment);
+                mMomentsNew(iEpsilon,iMoment) = mMomentsNew(iEpsilon,iMoment) + (1 - mHat(iEpsilonTilde,1)) * vEpsilonInvariant(iEpsilonTilde) * mEpsilonTransition(...
 					iEpsilonTilde,iEpsilon) * mParameters(iEpsilonTilde,1) * vQuadratureWeights' * (((mAssetsPrimeQuadrature(iEpsilonTilde,:)' - ...
-					mMomentsNew(iEpsilon,1)) .^ iMoment) .* exp(squeeze(aGridMoments(iEpsilonTilde,:,:)) * ...
+					mMomentsNew(iEpsilon,1)) .^ iMoment) .* exp(reshape(aGridMoments(iEpsilonTilde,:,:),nAssetsQuadrature,nMeasure) * ...
 					mParameters(iEpsilonTilde,2:nMeasure+1)')) + mHat(iEpsilonTilde,1) * vEpsilonInvariant(iEpsilonTilde) * ...
 					mEpsilonTransition(iEpsilonTilde,iEpsilon) * ((mAssetsPrimeBC(iEpsilonTilde,1) - mMomentsNew(iEpsilon,1)) .^ iMoment);
 					
@@ -221,13 +239,19 @@ while err > err2 && iteration <= tol2
 	
 	mHatNew = zeros(nEpsilon,1);
 	
-	for iEpsilon = 1 : nEpsilon;
+	for iEpsilon = 1 : nEpsilon
 	
 		for iEpsilonTilde = 1 : nEpsilon
 		
-			mHatNew(iEpsilon,1) = mHatNew(iEpsilon,1) + (1 - mHat(iEpsilonTilde,1)) * vEpsilonInvariant(iEpsilonTilde) * ...
+% 			mHatNew(iEpsilon,1) = mHatNew(iEpsilon,1) + (1 - mHat(iEpsilonTilde,1)) * vEpsilonInvariant(iEpsilonTilde) * ...
+% 				mEpsilonTransition(iEpsilonTilde,iEpsilon) * mParameters(iEpsilonTilde,1) * vQuadratureWeights' * ...
+% 				((mAssetsPrimeQuadrature(iEpsilonTilde,:)' <= aaBar + 1e-8) .* exp(squeeze(aGridMoments(iEpsilonTilde,:,:)) * mParameters(iEpsilonTilde,2:nMeasure+1)')) + ...
+% 				mHat(iEpsilonTilde,1) * vEpsilonInvariant(iEpsilonTilde) * mEpsilonTransition(iEpsilonTilde,iEpsilon) * ...
+% 				(mAssetsPrimeBC(iEpsilonTilde,1) <= aaBar + 1e-8);
+            mHatNew(iEpsilon,1) = mHatNew(iEpsilon,1) + (1 - mHat(iEpsilonTilde,1)) * vEpsilonInvariant(iEpsilonTilde) * ...
 				mEpsilonTransition(iEpsilonTilde,iEpsilon) * mParameters(iEpsilonTilde,1) * vQuadratureWeights' * ...
-				((mAssetsPrimeQuadrature(iEpsilonTilde,:)' <= aaBar + 1e-8) .* exp(squeeze(aGridMoments(iEpsilonTilde,:,:)) * mParameters(iEpsilonTilde,2:nMeasure+1)')) + ...
+				((mAssetsPrimeQuadrature(iEpsilonTilde,:)' <= aaBar + 1e-8) .* exp(reshape(aGridMoments(iEpsilonTilde,:,:),nAssetsQuadrature,nMeasure) * ...
+                    mParameters(iEpsilonTilde,2:nMeasure+1)')) + ...
 				mHat(iEpsilonTilde,1) * vEpsilonInvariant(iEpsilonTilde) * mEpsilonTransition(iEpsilonTilde,iEpsilon) * ...
 				(mAssetsPrimeBC(iEpsilonTilde,1) <= aaBar + 1e-8);
 				
@@ -253,7 +277,8 @@ end
 % Return market clearing residual
 %----------------------------------------------------------------
 
-capitalNew = (vEpsilonInvariant .* (1 - mHat))' * mMoments(:,1) + aaBar * (vEpsilonInvariant .* mHat)' * ones(nEpsilon,1);
+% capitalNew = (vEpsilonInvariant .* (1 - mHat))' * mMoments(:,1) + aaBar * (vEpsilonInvariant .* mHat)' * ones(nEpsilon,1);
+capitalNew = (vEpsilonInvariant .* (1 - mHat))' * mMoments(:,1) + aaBar * sum(vEpsilonInvariant .* mHat);
 residual = capital - capitalNew;
 
 % Also return optional outputs if requested

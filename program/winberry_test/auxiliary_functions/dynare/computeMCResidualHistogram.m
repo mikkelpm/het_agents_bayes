@@ -36,7 +36,8 @@ if splineOpt == 0	% approximate conditional expectation function using polynomia
 		r * mAssetsGrid) .^ (-ssigma)));
 	mCoefficients = zeros(nEpsilon,nAssets);
 	for iEpsilon = 1:nEpsilon	% interpolate
-		vCoefficients = sum(vAssetsPoly' .* (ones(nAssets,1) * mGridInit(iEpsilon,:)),2);
+% 		vCoefficients = sum(vAssetsPoly' .* (ones(nAssets,1) * mGridInit(iEpsilon,:)),2);
+        vCoefficients = vAssetsPoly' * mGridInit(iEpsilon,:)';
 		mCoefficients(iEpsilon,:) = (vCoefficients ./ vAssetsPolySquared)';
 	end
 
@@ -83,7 +84,8 @@ if splineOpt == 0
 	% Compute savings policy
 	mAssetsPrimeStar = w * (mmu * (1 - mEpsilonGridFine) + (1 - ttau) * mEpsilonGridFine) + ...
 		(1 + r) * mAssetsGridFine - (mConditionalExpectation .^ (-1 / ssigma));
-	mAssetsPrimeFine = max(mAssetsPrimeStar,aaBar * ones(nEpsilon,nAssetsFine));
+% 	mAssetsPrimeFine = max(mAssetsPrimeStar,aaBar * ones(nEpsilon,nAssetsFine));
+    mAssetsPrimeFine = max(mAssetsPrimeStar,aaBar);
 		
 else	% linearly interpolate savings rule over fine grid
 
@@ -91,8 +93,10 @@ else	% linearly interpolate savings rule over fine grid
 	[vIndicesBelow,vIndicesAbove,vWeightBelow,vWeightAbove] = computeLinearWeights(vAssetsGrid,vAssetsGridFine);
 		
 	% Linear interpolation
-	mAssetsPrimeFine = mAssetsPrime(:,vIndicesBelow) .* repmat(vWeightBelow',nEpsilon,1) + ...
-		mAssetsPrime(:,vIndicesAbove) .* repmat(vWeightAbove',nEpsilon,1);
+	% mAssetsPrimeFine = mAssetsPrime(:,vIndicesBelow) .* repmat(vWeightBelow',nEpsilon,1) + ...
+		% mAssetsPrime(:,vIndicesAbove) .* repmat(vWeightAbove',nEpsilon,1);
+	mAssetsPrimeFine = mAssetsPrime(:,vIndicesBelow) .* vWeightBelow' + ...
+		 mAssetsPrime(:,vIndicesAbove) .* vWeightAbove';
 	
 end
 

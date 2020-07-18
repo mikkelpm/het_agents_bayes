@@ -21,8 +21,9 @@ value = vQuadratureWeights' * exp(mGridMoments * vParameters);
 % Derivatives of function 
 if nargout > 1
 
-	vDerivs = sum(repmat(vQuadratureWeights,[1 nMeasure]) .* mGridMoments .* repmat(exp(mGridMoments * vParameters),...
-		[1 nMeasure]),1)';
+	% vDerivs = sum(repmat(vQuadratureWeights,[1 nMeasure]) .* mGridMoments .* repmat(exp(mGridMoments * vParameters),...
+		% [1 nMeasure]),1)';
+	vDerivs = mGridMoments' * (vQuadratureWeights .* exp(mGridMoments * vParameters));
 
 end
 

@@ -30,6 +30,7 @@ temp_powers = zeros(order,order);
 for ii = 1:order
 	temp_powers(:,ii) = (order+1-ii)*grid.^(order-ii);
 end
-poly_prime = repmat(the_poly(1:end-1),[order 1]) ...
-	.* temp_powers;
+% poly_prime = repmat(the_poly(1:end-1),[order 1]) ...
+	% .* temp_powers;
+poly_prime = the_poly(1:end-1).* temp_powers;
 weight = 2 ./ ((1-grid.^2).*(sum(poly_prime,2)).^2);

@@ -28,7 +28,8 @@ mAssetsPrimeStar = w * (mmu * (1 - mEpsilonGrid) + (1 - ttau) * mEpsilonGrid) + 
 	(mConditionalExpectation .^ (-1 / ssigma));
 
 % Compute actual saving
-mAssetsPrime = max(mAssetsPrimeStar,aaBar * ones(nEpsilon,nAssets));
+% mAssetsPrime = max(mAssetsPrimeStar,aaBar * ones(nEpsilon,nAssets));
+mAssetsPrime = max(mAssetsPrimeStar,aaBar);
 mAssetsPrimeGrid = repmat(reshape(mAssetsPrime,1,nState),[nEpsilon 1]);
 
 % Compute next period's polynomials
@@ -47,7 +48,8 @@ mAssetsPrimePrimeStar = w * (mmu * (1 - mEpsilonPrimeGrid) + (1 - ttau) * mEpsil
 	(mConditionalExpectationPrime .^ (-1 / ssigma));
 
 % Compute actual savings
-mAssetsPrimePrimeGrid = max(mAssetsPrimePrimeStar,aaBar*ones(nEpsilon,nEpsilon*nAssets));
+% mAssetsPrimePrimeGrid = max(mAssetsPrimePrimeStar,aaBar*ones(nEpsilon,nEpsilon*nAssets));
+mAssetsPrimePrimeGrid = max(mAssetsPrimePrimeStar,aaBar);
 
 %---------------------------------------------------------------
 % Update conditional expectation function
@@ -68,7 +70,8 @@ end
 % Update the coefficients
 mCoefficientsNew = zeros(nEpsilon,nAssets);
 for iEpsilon = 1:nEpsilon
-	vCoefficients = sum(vAssetsPoly' .* (ones(nAssets,1) * log(mConditionalExpectation(iEpsilon,:))),2);
-	mCoefficientsNew(iEpsilon,:) = (vCoefficients ./ vAssetsPolySquared)';
+% 	vCoefficients = sum(vAssetsPoly' .* (ones(nAssets,1) * log(mConditionalExpectation(iEpsilon,:))),2);
+	vCoefficients = vAssetsPoly' * log(mConditionalExpectation(iEpsilon,:))';
+    mCoefficientsNew(iEpsilon,:) = (vCoefficients ./ vAssetsPolySquared)';
 end
 
