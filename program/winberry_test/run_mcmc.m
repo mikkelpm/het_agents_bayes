@@ -18,10 +18,20 @@ N_micro = 1e2;                             % Number of households per non-missin
 
 % Parameter transformation
 transf_to_param = @(x) [1/(1+exp(-x(1))) exp(x(2)) -exp(x(3))]; % Function mapping transformed parameters into parameters of interest
+param_to_transf = @(x) [log(x(1)/(1-x(1))) log(x(2)) log(-x(3))];  % Function mapping parameters of interest into transformed parameters
 
 % Prior
 prior_logdens_transf = @(x) sum(x) - 2*log(1+exp(x(1)));    % Log prior density of transformed parameters
-prior_init_transf = @() [log(0.96)-log(1-0.96) log(0.02) log(.25)];  % Distribution of initial log(beta) draw
+
+% Initialization settings
+init_type = 3; % 1: start from true parameter values
+               % 2: start from other values
+               % 3: find posterior mode via optimization
+if init_type == 3
+%     optim_grid = combvec(linspace(0.8,0.99,5),linspace(0.01,0.05,5),linspace(-.5,-0.1,5))';    % Optimization grid
+    [aux1, aux2, aux3] = meshgrid(linspace(0.8,0.99,5),linspace(0.01,0.05,5),linspace(-.5,-0.1,5)); % same purpose, no need of Deep Learning Toolbox
+    optim_grid = [aux1(:), aux2(:), aux3(:)];
+end
 
 % MCMC settings
 mcmc_num_draws = 9000;                  % Number of MCMC steps (total)
@@ -29,7 +39,8 @@ mcmc_stepsize_init = 1e-2;              % Initial MCMC step size
 mcmc_adapt_iter = [50 100 200];          % Iterations at which to update the variance/covariance matrix for RWMH proposal; first iteration in list is start of adaptation phase
 mcmc_adapt_diag = false;                 % =true: Adapt only to posterior std devs of parameters, =false: adapt to full var/cov matrix
 mcmc_adapt_param = 10;                  % Shrinkage parameter for adapting to var/cov matrix (higher values: more shrinkage)
-mcmc_filename = ['mcmc_N' num2str(N_micro) '_type' num2str(likelihood_type) '.mat'];              % File name of MCMC output
+mcmc_filename = ['mcmc_N' num2str(N_micro) '_liktype' num2str(likelihood_type)...
+    '_inittype' num2str(init_type) '.mat'];              % File name of MCMC output
 
 % for adaptive RWMH
 mcmc_c = 0.55;
@@ -166,10 +177,66 @@ else
 
 end
 
+%% Optimize over grid to find approximate mode
+
+if init_type == 3
+    
+    optim_numgrid = size(optim_grid,1);
+    optim_logpost = nan(optim_numgrid,1);
+    
+    disp('Optimization...');
+    
+    for i_optim=1:optim_numgrid % Cycle through grid points
+        
+        the_param = optim_grid(i_optim,:);
+        fprintf(['%s' repmat('%6.4f ',1,length(the_param)),'%s\n'], 'current  [bbeta,ssigmaMeas,mu_l] = [',...
+        the_param,']');
+        the_aux = num2cell(the_param);
+        [bbeta,ssigmaMeas,mu_l] = deal(the_aux{:});
+        
+        try
+            saveParameters;         % Save parameter values to files
+            setDynareParameters;    % Update Dynare parameters in model struct
+            compute_steady_state;   % Compute steady state, no need for parameters of agg dynamics
+            compute_meas_err;       % Update measurement error var-cov matrix
+        
+            the_loglike = aux_compute_likel(simul_data_micro, ts_micro, ...
+                                   num_smooth_draws, num_interp, num_burnin_periods, ...
+                                   M_, oo_, options_, ...
+                                   likelihood_type);
+            the_logprior = prior_logdens_transf(param_to_transf(the_param));
+            optim_logpost(i_optim) = the_loglike + the_logprior;
+        catch ME
+            disp('Error encountered. Message:');
+            disp(ME.message);
+        end
+    
+        % Print progress
+        fprintf('%s%6d%s%6d\n\n', 'Progress: ', i_optim, '/', optim_numgrid);
+        
+    end
+    
+    % Find maximum of log posterior on grid
+    [~,optim_maxind] = max(optim_logpost);
+    optim_maxparam = optim_grid(optim_maxind,:);
+    
+    fprintf(['%s' repmat('%6.4f ',1,length(optim_maxparam)),'%s\n'], 'approximate mode  [bbeta,ssigmaMeas,mu_l] = [',...
+        optim_maxparam,']');
+
+end
+
 
 %% MCMC
 
-curr_draw = prior_init_transf();        % Initial draw
+if init_type == 1
+    init_val = [bbeta,ssigmaMeas,mu_l];
+elseif init_type == 2
+    init_val = [.9 .06 -1];
+elseif init_type == 3
+    init_val = optim_maxparam;
+end
+
+curr_draw = param_to_transf(init_val);        % Initial draw
 post_draws = nan(mcmc_num_draws,length(curr_draw));
 accepts = zeros(mcmc_num_draws,1);
 
@@ -185,12 +252,14 @@ the_chol = eye(length(curr_draw));      % Initial RWMH proposal var-cov matrix
 disp('MCMC...');
 timer_mcmc = tic;
 
-delete(gcp('nocreate'));
-
-if contains(pwd,'u050')
-    parpool('local',12);
-else
-    parpool;
+if likelihood_type == 1
+    delete(gcp('nocreate'));
+    
+    if contains(pwd,'u050')
+        parpool('local',12);
+    else
+        parpool;
+    end
 end
 
 for i_mcmc=1:mcmc_num_draws % For each MCMC step...
@@ -209,36 +278,17 @@ for i_mcmc=1:mcmc_num_draws % For each MCMC step...
         [bbeta,ssigmaMeas,mu_l],']');
     
     try
-        
+
         saveParameters;         % Save parameter values to files
         setDynareParameters;    % Update Dynare parameters in model struct
-        compute_steady_state;   % Compute steady state once and for all
+        compute_steady_state;   % Compute steady state, no need for parameters of agg dynamics
         compute_meas_err;       % Update measurement error var-cov matrix
-        
-        % Log likelihood of proposal
-        switch likelihood_type
-            case 1 % Macro + full info micro
-                [loglikes_prop(i_mcmc), loglikes_prop_macro(i_mcmc), loglikes_prop_micro(i_mcmc)] = ...
-                    loglike_compute('simul.mat', simul_data_micro, ts_micro, ...
-                    num_smooth_draws, num_interp, num_burnin_periods, ...
-                    M_, oo_, options_);
-            case 2 % Macro + moments w/ SS meas. err.
-                [loglikes_prop(i_mcmc), loglikes_prop_macro(i_mcmc), loglikes_prop_micro(i_mcmc)] = ...
-                    loglike_compute('simul_moments.mat', [], ts_micro, ...
-                    num_smooth_draws, -Inf, num_burnin_periods, ...
-                    M_, oo_, options_);
-            case 3  % Macro + moments w/ SS meas. err. (observe up to 2nd moment)
-                [loglikes_prop(i_mcmc), loglikes_prop_macro(i_mcmc), loglikes_prop_micro(i_mcmc)] = ...
-                    loglike_compute('simul_moments2.mat', [], ts_micro, ...
-                    0, num_interp, num_burnin_periods, ...
-                    M_, oo_, options_);
-            case 4 % Macro + moments w/o meas. err.
-                M_.H(2:end,2:end) = 1e-8*eye(nMeasure*2); % Only a little bit of meas. err. to avoid singularity
-                [loglikes_prop(i_mcmc), loglikes_prop_macro(i_mcmc), loglikes_prop_micro(i_mcmc)] = ...
-                    loglike_compute('simul_moments.mat', [], ts_micro, ...
-                    0, [], num_burnin_periods, ...
-                    M_, oo_, options_);
-        end
+
+        [loglikes_prop(i_mcmc), loglikes_prop_macro(i_mcmc), loglikes_prop_micro(i_mcmc)] = ...
+            aux_compute_likel(simul_data_micro, ts_micro, ...
+            num_smooth_draws, num_interp, num_burnin_periods, ...
+            M_, oo_, options_, ...
+            likelihood_type);
 
         % Log prior density of proposal
         logprior_prop = prior_logdens_transf(prop_draw);
@@ -268,9 +318,16 @@ for i_mcmc=1:mcmc_num_draws % For each MCMC step...
     % Adapt proposal covariance matrix
     [the_chol, the_stepsize_iter] = adapt_cov(the_chol, the_stepsize_iter, mcmc_adapt_iter, i_mcmc, post_draws, mcmc_adapt_diag, mcmc_adapt_param);
     
+    % Save middle steps in case reach time limit on the server
+    if mod(i_mcmc,1000) == 0
+        save(mcmc_filename);
+    end
+    
 end
 
-delete(gcp('nocreate'));
+if likelihood_type == 1
+    delete(gcp('nocreate'));
+end
 
 mcmc_elapsed = toc(timer_mcmc);
 fprintf('%s%8.2f\n', 'MCMC done. Elapsed minutes: ', mcmc_elapsed/60);
@@ -279,3 +336,32 @@ cd('../../');
 
 save(mcmc_filename);
 rmpath('auxiliary_functions/dynare', 'auxiliary_functions/likelihood', 'auxiliary_functions/sim');
+
+%% Auxiliary function
+
+function [the_loglike, the_loglike_macro, the_loglike_micro] = ...
+         aux_compute_likel(simul_data_micro, ts_micro, ...
+                           num_smooth_draws, num_interp, num_burnin_periods, ...
+                           M_, oo_, options_, ...
+                           likelihood_type)
+
+        % Log likelihood of proposal
+        switch likelihood_type
+            case 1 % Macro + full info micro
+                [the_loglike, the_loglike_macro, the_loglike_micro] = ...
+                    loglike_compute('simul.mat', simul_data_micro, ts_micro, ...
+                    num_smooth_draws, num_interp, num_burnin_periods, ...
+                    M_, oo_, options_);
+            case 2 % Macro + moments w/ SS meas. err.
+                [the_loglike, the_loglike_macro, the_loglike_micro] = ...
+                    loglike_compute('simul_moments.mat', [], ts_micro, ...
+                    num_smooth_draws, -Inf, num_burnin_periods, ...
+                    M_, oo_, options_);
+            case 3  % Macro + moments w/ SS meas. err. (observe up to 2nd moment)
+                [the_loglike, the_loglike_macro, the_loglike_micro] = ...
+                    loglike_compute('simul_moments2.mat', [], ts_micro, ...
+                    0, num_interp, num_burnin_periods, ...
+                    M_, oo_, options_);
+        end
+        
+end
