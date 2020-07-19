@@ -247,7 +247,7 @@ for i_mcmc=1:mcmc_num_draws % For each MCMC step...
         [curr_draw, curr_logpost, accepts(i_mcmc), the_log_ar] = rwmh_accrej(curr_draw, prop_draw, curr_logpost, logprior_prop+loglikes_prop(i_mcmc));
 
         % Adapt proposal step size
-        if is_adapt == 1
+        if is_adapt
             [the_stepsize, the_stepsize_iter] = adapt_stepsize(the_stepsize, the_stepsize_iter, i_mcmc, the_log_ar, mcmc_c, mcmc_ar_tg);
         end
         
