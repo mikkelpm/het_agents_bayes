@@ -29,11 +29,12 @@ mcmc_stepsize_init = 1e-2;              % Initial MCMC step size
 mcmc_adapt_iter = [50 100 200];          % Iterations at which to update the variance/covariance matrix for RWMH proposal; first iteration in list is start of adaptation phase
 mcmc_adapt_diag = false;                 % =true: Adapt only to posterior std devs of parameters, =false: adapt to full var/cov matrix
 mcmc_adapt_param = 10;                  % Shrinkage parameter for adapting to var/cov matrix (higher values: more shrinkage)
-mcmc_filename = ['mcmc_N100_' num2str(likelihood_type) '.mat'];             % File name of MCMC output
+mcmc_filename = ['mcmc_N' num2str(N_micro) '_type' num2str(likelihood_type) '.mat'];              % File name of MCMC output
 
 % for adaptive RWMH
 mcmc_c = 0.55;
 mcmc_ar_tg = 0.3;
+p_adapt = .95;
 
 % Likelihood settings
 num_smooth_draws = 500;                 % Number of draws from the smoothing distribution (for unbiased likelihood estimate)
@@ -198,7 +199,7 @@ for i_mcmc=1:mcmc_num_draws % For each MCMC step...
         transf_to_param(curr_draw),']');
     
     % Proposed draw (modified to always start with initial draw)
-    prop_draw = rwmh_propose(curr_draw, (i_mcmc>1)*the_stepsize, the_chol); % Proposal
+    [prop_draw,is_adapt] = rwmh_propose(curr_draw, (i_mcmc>1)*the_stepsize, the_chol, p_adapt, mcmc_stepsize_init); % Proposal
     
     % Set new parameters
     the_transf = num2cell(transf_to_param(prop_draw));
@@ -246,8 +247,10 @@ for i_mcmc=1:mcmc_num_draws % For each MCMC step...
         [curr_draw, curr_logpost, accepts(i_mcmc), the_log_ar] = rwmh_accrej(curr_draw, prop_draw, curr_logpost, logprior_prop+loglikes_prop(i_mcmc));
 
         % Adapt proposal step size
-        [the_stepsize, the_stepsize_iter] = adapt_stepsize(the_stepsize, the_stepsize_iter, i_mcmc, the_log_ar, mcmc_c, mcmc_ar_tg);
-    
+        if is_adapt == 1
+            [the_stepsize, the_stepsize_iter] = adapt_stepsize(the_stepsize, the_stepsize_iter, i_mcmc, the_log_ar, mcmc_c, mcmc_ar_tg);
+        end
+        
     catch ME
         
         disp('Error encountered. Message:');
