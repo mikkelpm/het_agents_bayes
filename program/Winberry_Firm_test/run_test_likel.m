@@ -16,8 +16,8 @@ end
 % Model/data settings
 T = 50;                                % Number of periods of simulated macro data
 ts_micro = 10:10:T;                        % Time periods where we observe micro data
-N_micro = 1e2;                             % Number of micro entities per non-missing time period
-trunc_logn = -1.1271;                      % Micro sample selection: Lower truncation point for log(n)
+N_micro = 1e3;                             % Number of micro entities per non-missing time period
+trunc_logn = -1.1271+sqrt(0.0541)*norminv(0.75); % Micro sample selection: Lower truncation point for log(n)
 
 % Parameter values to check (prod dynamics)
 param_plot = 'rrhoProd'; %'ssigmaProd'; %'ppsiCapital'; %'aaUpper'; % Parameter to vary when plotting likelihood
