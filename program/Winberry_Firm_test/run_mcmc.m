@@ -8,18 +8,25 @@ addpath('auxiliary_functions/dynare', 'auxiliary_functions/likelihood', 'auxilia
 is_data_gen = 1; % whether simulate data:  
                  % 0: no simulation
                  % 1: simulation
+likelihood_type = 1; % =1: Macro + full-info micro; =2: macro + full-info micro, no truncation; =3: macro + moments micro
 
 % Model/data settings
-T = 50;                                % Number of periods of simulated macro data
-ts_micro = 1:T;                        % Time periods where we observe micro data
-N_micro = 1e3;                             % Number of micro entities per non-missing time period
+T = 50;                                 % Number of periods of simulated macro data
+ts_micro = 10:10:T;                         % Time periods where we observe micro data
+N_micro = 1e2;                          % Number of micro entities per non-missing time period
+trunc_logn = -1.1271;                   % Micro sample selection: Lower truncation point for log(n)
 
 % Parameter transformation
-transf_to_param = @(x) [1/(1+exp(-x(1))) exp(x(2:end))]; % Function mapping transformed parameters into parameters of interest
+transf_to_param = @(x) [1/(1+exp(-x(1))) exp(x(2:end))];    % Function mapping transformed parameters into parameters of interest
+param_to_transf = @(x) [log(x(1)/(1-x(1))) log(x(2:end))];  % Function mapping parameters of interest into transformed parameters
 
 % Prior
 prior_logdens_transf = @(x) sum(x) - 2*log(1+exp(x(1)));    % Log prior density of transformed parameters
-prior_init_transf = @() [log(0.7)-log(1-0.7) log(0.02)];  % Distribution of initial transformed draw
+prior_init_transf = @() param_to_transf([0.7 0.02]);        % Distribution of initial transformed draw
+
+% Optimization settings
+is_optimize = true;                                                     % Find posterior mode?
+optim_grid = combvec(linspace(0.001,0.99,5),linspace(0.01,0.1,5))';    % Optimization grid
 
 % MCMC settings
 mcmc_num_iter = 1e4;                  % Number of MCMC steps (total)
@@ -40,7 +47,7 @@ num_interp = 100;                       % Number of interpolation grid points fo
 
 % Numerical settings
 num_burnin_periods = 100;               % Number of burn-in periods for simulations
-rng_seed = 201810011;                    % Random number generator seed for initial simulation
+rng_seed = 202006221;                    % Random number generator seed for initial simulation
 
 %% Set economic parameters 
 
@@ -119,34 +126,77 @@ dynare dynamicModel noclearall nopathchange; % Run Dynare once to process model 
 
 %% Simulate data
 
-% if is_data_gen == 0
+if is_data_gen == 0
     
     % Load previous data
-    load('simul_moments.mat')
-%     load('simul_data_micro.mat');
+%     load('simul_moments.mat')
+    load('simul_data_micro.mat');
 %     load('simul_data_micro_indv_param.mat');
     
-% else
+else
     
-       % Simulate
-%     set_dynare_seed(rng_seed);                                          % Seed RNG
-%     sim_struct = simulate_model(T,num_burnin_periods,M_,oo_,options_);  % Simulate data
-%     save('simul.mat', '-struct', 'sim_struct');                         % Save simulated data
+    % Simulate
+    set_dynare_seed(rng_seed);                                          % Seed RNG
+    simul_data;
     
-%     % draw micro data
-%     simul_data_micro = simulate_micro(sim_struct, ts_micro, N_micro, num_interp);
-%     save('simul_data_micro.mat','simul_data_micro');
+end
+
+
+%% Optimize over grid to find approximate mode
+
+poolobj = parpool;
+
+if is_optimize
     
-%     % draw individual productivities and incomes
-%     simul_data_micro_indv_param = simulate_micro_indv_param(simul_data_micro);
-%     save('simul_data_micro_indv_param.mat','simul_data_micro_indv_param');
+    optim_numgrid = size(optim_grid,1);
+    optim_logpost = nan(optim_numgrid,1);
     
-% end
+    disp('Optimization...');
+    
+    for i_optim=1:optim_numgrid % Cycle through grid points
+        
+        the_param = optim_grid(i_optim,:);
+        fprintf(['%s' repmat('%6.4f ',1,length(the_param)),'%s\n'], 'current  [rrhoProd,ssigmaProd] = [',...
+        the_param,']');
+        the_aux = num2cell(the_param);
+        [rrhoProd,ssigmaProd] = deal(the_aux{:});
+        
+        try
+            the_loglike = aux_compute_likel(simul_data_micro, ts_micro, ...
+                                   num_smooth_draws, trunc_logn, num_burnin_periods, ...
+                                   M_, oo_, options_, ...
+                                   likelihood_type);
+            the_logprior = prior_logdens_transf(param_to_transf(the_param));
+            optim_logpost(i_optim) = the_loglike + the_logprior;
+        catch ME
+            disp('Error encountered. Message:');
+            disp(ME.message);
+        end
+    
+        % Print progress
+        fprintf('%s%6d%s%6d\n\n', 'Progress: ', i_optim, '/', optim_numgrid);
+        
+    end
+    
+    % Find maximum of log posterior on grid
+    [~,optim_maxind] = max(optim_logpost);
+    optim_maxparam = optim_grid(optim_maxind,:);
+    
+    fprintf(['%s' repmat('%6.4f ',1,length(optim_maxparam)),'%s\n'], 'approximate mode  [rrhoProd,ssigmaProd] = [',...
+        optim_maxparam,']');
+
+end
+
 
 
 %% MCMC
 
-curr_draw = prior_init_transf();        % Initial draw
+% Initial draw
+if is_optimize
+    curr_draw = param_to_transf(optim_maxparam);  % Start at approximate mode
+else
+    curr_draw = prior_init_transf();    % Draw from prior
+end
 
 accepts = zeros(mcmc_num_iter,1);
 
@@ -165,8 +215,6 @@ the_chol = eye(length(curr_draw));      % Initial RWMH proposal var-cov matrix
 disp('MCMC...');
 timer_mcmc = tic;
 
-% poolobj = parpool;
-
 for i_mcmc=1:mcmc_num_iter % For each MCMC step...
     
     fprintf(['%s' repmat('%6.4f ',1,length(curr_draw)),'%s\n'], 'current  [rrhoProd,ssigmaProd] = [',...
@@ -184,13 +232,11 @@ for i_mcmc=1:mcmc_num_iter % For each MCMC step...
     
     try
         
-        saveParameters;         % Save parameter values to files
-        setDynareParameters;    % Update Dynare parameters in model struct
-        compute_steady_state;   % Compute steady state, no need for parameters of agg dynamics
-
-        % Log likelihood of proposal
         [the_loglike_prop, the_loglike_prop_macro, the_loglike_prop_micro] = ...
-            loglike_compute('simul_moments.mat', M_, oo_, options_);
+         aux_compute_likel(simul_data_micro, ts_micro, ...
+                                   num_smooth_draws, trunc_logn, num_burnin_periods, ...
+                                   M_, oo_, options_, ...
+                                   likelihood_type);
         
         % Log prior density of proposal
         logprior_prop = prior_logdens_transf(prop_draw);
@@ -229,7 +275,7 @@ for i_mcmc=1:mcmc_num_iter % For each MCMC step...
     
 end
 
-% delete(poolobj);
+delete(poolobj);
 
 mcmc_elapsed = toc(timer_mcmc);
 fprintf('%s%8.2f\n', 'MCMC done. Elapsed minutes: ', mcmc_elapsed/60);
@@ -238,3 +284,38 @@ cd('../../');
 
 save(mcmc_filename);
 rmpath('auxiliary_functions/dynare', 'auxiliary_functions/likelihood', 'auxiliary_functions/sim');
+
+
+%% Auxiliary function
+
+function [the_loglike, the_loglike_macro, the_loglike_micro] = ...
+         aux_compute_likel(simul_data_micro, ts_micro, ...
+                                   num_smooth_draws, trunc_logn, num_burnin_periods, ...
+                                   M_, oo_, options_, ...
+                                   likelihood_type)
+
+        saveParameters;         % Save parameter values to files
+        setDynareParameters;    % Update Dynare parameters in model struct
+        compute_steady_state;   % Compute steady state, no need for parameters of agg dynamics
+        compute_meas_err;       % Update measurement error var-cov matrix
+
+        % Log likelihood of proposal
+        switch likelihood_type
+            case 1 % Macro + full info micro
+                [the_loglike, the_loglike_macro, the_loglike_micro] = ...
+                    loglike_compute('simul.mat', simul_data_micro, ts_micro, ...
+                                   num_smooth_draws, trunc_logn, num_burnin_periods, ...
+                                   M_, oo_, options_);
+            case 2 % Macro + full info micro, ignore truncation
+                [the_loglike, the_loglike_macro, the_loglike_micro] = ...
+                    loglike_compute('simul.mat', simul_data_micro, ts_micro, ...
+                                   num_smooth_draws, -Inf, num_burnin_periods, ...
+                                   M_, oo_, options_);
+            case 3 % Macro + moments w/ SS meas. err.
+                [the_loglike, the_loglike_macro, the_loglike_micro] = ...
+                    loglike_compute('simul_moments.mat', [], ts_micro, ...
+                                   0, [], num_burnin_periods, ...
+                                   M_, oo_, options_);
+        end
+        
+end

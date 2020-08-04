@@ -1,8 +1,8 @@
-function simul_data_micro = simulate_micro(sim_struct, ts_micro, N_micro, num_interp)
+function simul_data_micro = simulate_micro(sim_struct, ts_micro, N_micro, trunc_logn)
 
 % Simulate household employment and income
 
-global nMeasure ttheta nnu prodMin prodMax capitalMin capitalMax;
+global nMeasure ttheta nnu; % prodMin prodMax capitalMin capitalMax;
 
 T_micro = length(ts_micro);
 simul_data_micro = nan(T_micro,N_micro,2);
@@ -84,4 +84,8 @@ for it=1:T_micro
 %         +nnu*(log(nnu)-log(sim_struct.wage(t))))/(1-nnu);
     
 end
+
+% Truncate
+simul_data_micro(repmat(simul_data_micro(:,:,1)<trunc_logn,1,1,2)) = nan;
+
 end

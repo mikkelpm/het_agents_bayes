@@ -1,5 +1,5 @@
 function [loglike, loglike_macro, loglike_micro]...
-    = loglike_compute(data_macro, data_micro, ts_micro, num_smooth_draws, num_interp, num_burnin_periods, M_, oo_, options_)
+    = loglike_compute(data_macro, data_micro, ts_micro, num_smooth_draws, trunc_logn, num_burnin_periods, M_, oo_, options_)
 
 % Compute likelihood for firm model
 
@@ -95,7 +95,11 @@ parfor i_draw = 1:num_smooth_draws
         
         the_mean = moment(1:2);
         the_varcov = [moment(3) moment(4); moment(4) moment(5)];
-        the_likes = abs(the_jacob)*mvnpdf([the_prod' data_micro(it,:,2)'], the_mean, the_varcov);
+        the_likes = the_jacob*mvnpdf([the_prod' data_micro(it,:,2)'], the_mean, the_varcov);
+        
+        % Truncation term
+        the_aux = [1 ttheta_local]';
+        the_likes = the_likes/normcdf((the_mean*the_aux+the_c-(1-nnu_local)*trunc_logn)/sqrt(the_aux'*the_varcov*the_aux));
         
 %         the_likes = the_jacob*g(the_prod,data_micro(it,:,2))/normalization;
         
@@ -113,7 +117,7 @@ parfor i_draw = 1:num_smooth_draws
         
         % Log likelihood
         the_loglikes_micro_draw_t = log(the_likes);
-        the_loglikes_micro_draw(it) = sum(the_loglikes_micro_draw_t);
+        the_loglikes_micro_draw(it) = nansum(the_loglikes_micro_draw_t);
 
     end
     
