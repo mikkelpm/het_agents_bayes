@@ -4,38 +4,14 @@
 !*/
 # And all the file types you're interested in.
 !*.m
-!*.mod
 !*.gitignore
-!program/winberryAlgorithmCodes_speedup/Auxiliary Functions/codegen/lib/*
-!program/winberryAlgorithmCodes_speedup/Auxiliary Functions/codegen/mex/*
-!program/winberryAlgorithmCodes_speedup/Auxiliary Functions/codegen/lib/updateCoefficients_polynomials/*
-!program/winberryAlgorithmCodes_speedup/Auxiliary Functions/codegen/lib/updateCoefficients_polynomials/examples/*
-!program/winberryAlgorithmCodes_speedup/Auxiliary Functions/codegen/lib/updateCoefficients_polynomials/html/*
-!program/winberryAlgorithmCodes_speedup/Auxiliary Functions/codegen/lib/updateCoefficients_polynomials/interface/*
-!program/winberryAlgorithmCodes_speedup/Auxiliary Functions/codegen/lib/updateCoefficients_polynomials/html/resources/*
-!program/winberryAlgorithmCodes_speedup/Auxiliary Functions/codegen/lib/updateCoefficients_polynomials/html/resources/css/*
-!program/winberryAlgorithmCodes_speedup/Auxiliary Functions/codegen/lib/updateCoefficients_polynomials/html/resources/jQuery/*
-!program/winberryAlgorithmCodes_speedup/Auxiliary Functions/codegen/lib/updateCoefficients_polynomials/html/resources/js/*
-!program/winberryAlgorithmCodes_speedup/Auxiliary Functions/codegen/mex/updateCoefficients_polynomials/*
-!program/winberryAlgorithmCodes_speedup/Auxiliary Functions/codegen/mex/updateCoefficients_polynomials/html/*
-!program/winberryAlgorithmCodes_speedup/Auxiliary Functions/codegen/mex/updateCoefficients_polynomials/interface/*
-!program/winberryAlgorithmCodes_speedup/Auxiliary Functions/codegen/mex/updateCoefficients_polynomials/html/resources/*
-!program/winberryAlgorithmCodes_speedup/Auxiliary Functions/codegen/mex/updateCoefficients_polynomials/html/resources/css/*
-!program/winberryAlgorithmCodes_speedup/Auxiliary Functions/codegen/mex/updateCoefficients_polynomials/html/resources/jQuery/*
-!program/winberryAlgorithmCodes_speedup/Auxiliary Functions/codegen/mex/updateCoefficients_polynomials/html/resources/js/*
 
-*.mexw64
-program/winberry_test/auxiliary_functions/dynare/firstOrderDynamics_polynomials*.*
-!program/winberry_test/auxiliary_functions/dynare/firstOrderDynamics_polynomials.mod
-!program/winberry_test/auxiliary_functions/dynare/firstOrderDynamics_polynomials_steadystate.m
-program/Winberry_Firm_test/auxiliary_functions/dynare/dynamicModel*.*
-program/Winberry_Firm_test/auxiliary_functions/dynare/+dynamicModel/*.*
-!program/winberry_Firm_test/auxiliary_functions/dynare/dynamicModel.mod
-!program/winberry_Firm_test/auxiliary_functions/dynare/dynamicModel_steadystate.m
-program/winberryAlgorithmCodes_speedup/Auxiliary Functions/firstOrderDynamics_polynomials*.*
-!program/winberryAlgorithmCodes_speedup/Auxiliary Functions/firstOrderDynamics_polynomials.mod
-!program/winberryAlgorithmCodes_speedup/Auxiliary Functions/firstOrderDynamics_polynomials_steadystate.m
-program/hank/auxiliary_functions/dynare/firstOrderDynamics_polynomials*.*
-!program/hank/auxiliary_functions/dynare/firstOrderDynamics_polynomials.mod
-!program/hank/auxiliary_functions/dynare/firstOrderDynamics_polynomials_steadystate.m
-program/winberry_test/auxiliary_functions/dynare/+firstOrderDynamics_polynomials/*.*
+# Remove specific files
+program/hh_model/dynare/firstOrderDynamics_polynomials*.*
+program/hh_model/dynare/+firstOrderDynamics_polynomials/*.*
+program/firm_model/dynare/dynamicModel*.*
+program/firm_model/dynare/+dynamicModel/*.*
+
+# Add some files back in
+!*.mod
+!*_steadystate.m
