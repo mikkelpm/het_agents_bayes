@@ -6,7 +6,7 @@ addpath(genpath('./firm_model/auxiliary_functions'));
 %% Settings
 
 % Decide what to do
-is_run_dynare = false;  % Make Dynare process model files?
+is_run_dynare = true;   % Make Dynare process model files?
 is_data_gen = true;     % Simulate data?
 likelihood_type = 1;    % =1: Macro + full-info micro; =2: macro + full-info micro, no truncation; =3: macro + moments micro
 
@@ -14,7 +14,7 @@ likelihood_type = 1;    % =1: Macro + full-info micro; =2: macro + full-info mic
 T = 50;                                 % Number of periods of simulated macro data
 ts_micro = 10:10:T;                     % Time periods where we observe micro data
 N_micro = 1e2;                          % Number of micro entities per non-missing time period
-trunc_logn = -1.1271;                   % Micro sample selection: Lower truncation point for log(n)
+trunc_quant = 0.9;                      % Micro sample selection: Lower truncation quantile for labor (steady state distribution)
 
 % Parameter transformation
 param_names = {'rrhoProd', 'ssigmaProd'};                   % Names of parameters to estimate
@@ -52,7 +52,6 @@ rng_seed = 202006221;                   % Random number generator seed for initi
 poolobj = parpool;                      % Parallel computing object
 
 
-
 %% Calibrate parameters and set numerical settings
 
 run('firm_model/calibrate');
@@ -61,7 +60,7 @@ cd('./firm_model/dynare');
 saveParameters;
 
 
-%% Initial Dynare run
+%% Initial Dynare processing
 
 if is_run_dynare
     delete steady_vars.mat;
@@ -70,6 +69,12 @@ if is_run_dynare
 else
     load('dynare.mat');
 end
+
+
+%% Truncation point
+
+ss = load('steady_vars');
+trunc_logn = ss.smpl_m1+norminv(trunc_quant)*sqrt(ss.smpl_m3); % Lower truncation value for log(n)
 
 
 %% Simulate data
@@ -114,7 +119,7 @@ save(fullpath('results', mcmc_filename));
 delete(poolobj);
 
 
-%% Auxiliary function
+%% Auxiliary likelihood function
 
 function [the_loglike, the_loglike_macro, the_loglike_micro] = ...
          aux_ll(simul_data_micro, ts_micro, ...
