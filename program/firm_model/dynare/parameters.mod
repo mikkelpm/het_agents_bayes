@@ -9,10 +9,10 @@
 //----------------------------------------------------------------
 
 // Load in files containing parameters
-economicParameters 			= load('economicParameters');
-approximationParameters 	= load('approximationParameters');
-grids 								= load('grids');
-polynomials 						= load('polynomials');
+economicParameters 			= load_mat('economicParameters');
+approximationParameters 	= load_mat('approximationParameters');
+grids 								= load_mat('grids');
+polynomials 						= load_mat('polynomials');
 
 // Define economic parameters
 parameters ttheta nnu ddelta rrhoProd ssigmaProd aaUpper aaLower ppsiCapital

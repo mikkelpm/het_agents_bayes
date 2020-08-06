@@ -5,10 +5,8 @@ function [ys,params,check] = dynamicModel_steadystate(ys,exo,M_,options_)
 %
 % Thomas Winberry, February 15th, 2018
 
-% Load steady state
-try
-    load('steady_vars.mat');
-catch
+% Compute steady state if not already computed
+if ~isfield(M_, 'steady_vars')
     setParameters;
     compute_steady_state;
 end
@@ -16,9 +14,8 @@ end
 params = M_.params;
 
 % Save endogenous variables back into ys
-for ii = 1 : length(save_vars) % M_.orig_endo_nbr
-  varname = deblank(save_vars{ii}); % %M_.endo_names(ii,:));
-  eval(['ys(' int2str(ii) ') = ' varname ';']); 
+for iVar = 1:length(M_.endo_names)
+    ys(iVar) = M_.steady_vars.(M_.endo_names{iVar});
 end
 
 check = 0;

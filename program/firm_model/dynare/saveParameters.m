@@ -5,16 +5,16 @@ setParameters;
 
 %% Save parameters in .mat files to import into Dynare 
 
-save economicParameters.mat ttheta nnu ddelta rrhoProd ssigmaProd aaUpper aaLower ppsiCapital ...
+save_mat economicParameters ttheta nnu ddelta rrhoProd ssigmaProd aaUpper aaLower ppsiCapital ...
 	bbeta ssigma pphi nSS rrhoTFP ssigmaTFP rrhoQ ssigmaQ corrTFPQ cchi
 	
 % Approximation parameters
-save approximationParameters.mat nProd nCapital nState nProdQuadrature nCapitalQuadrature nStateQuadrature ...
+save_mat approximationParameters nProd nCapital nState nProdQuadrature nCapitalQuadrature nStateQuadrature ...
 	nMeasureCoefficients nMeasure prodMin prodMax capitalMin capitalMax nShocks
 	
 % Grids
-save grids.mat vShocksGrid vShocksWeights mStateGrid mQuadratureGrid vQuadratureWeights mProdPrimeQuadrature
+save_mat grids vShocksGrid vShocksWeights mStateGrid mQuadratureGrid vQuadratureWeights mProdPrimeQuadrature
 
 % Polynomials
-save polynomials.mat mStatePoly mStatePoly2 vStatePolySquared aProdPrimePoly mQuadraturePoly aProdPrimeQuadraturePoly
+save_mat polynomials mStatePoly mStatePoly2 vStatePolySquared aProdPrimePoly mQuadraturePoly aProdPrimeQuadraturePoly
 

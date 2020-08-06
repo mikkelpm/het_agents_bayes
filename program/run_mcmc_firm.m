@@ -6,15 +6,15 @@ addpath(genpath('./firm_model/auxiliary_functions'));
 %% Settings
 
 % Decide what to do
-is_run_dynare = true;   % Make Dynare process model files?
+is_run_dynare = true;   % Process Dynare model?
 is_data_gen = true;     % Simulate data?
 likelihood_type = 1;    % =1: Macro + full-info micro; =2: macro + full-info micro, no truncation; =3: macro + moments micro
 
 % Model/data settings
-T = 50;                                 % Number of periods of simulated macro data
-ts_micro = 10:10:T;                     % Time periods where we observe micro data
-N_micro = 1e2;                          % Number of micro entities per non-missing time period
-trunc_quant = 0.9;                      % Micro sample selection: Lower truncation quantile for labor (steady state distribution)
+T = 50;                 % Number of periods of simulated macro data
+ts_micro = 10:10:T;     % Time periods where we observe micro data
+N_micro = 1e2;          % Number of micro entities per non-missing time period
+trunc_quant = 0.9;      % Micro sample selection: Lower truncation quantile for labor (steady state distribution)
 
 % Parameter transformation
 param_names = {'rrhoProd', 'ssigmaProd'};                   % Names of parameters to estimate
@@ -25,11 +25,11 @@ param_to_transf = @(x) [log(x(1)/(1-x(1))) log(x(2:end))];  % Function mapping p
 prior_logdens_transf = @(x) sum(x) - 2*log(1+exp(x(1)));    % Log prior density of transformed parameters
 
 % Optimization settings
-is_optimize = true;                                                    % Find posterior mode?
+is_optimize = true;                                                 % Find posterior mode?
 optim_grid = combvec(linspace(0.1,0.9,3),linspace(0.01,0.1,3))';    % Optimization grid
 
 % MCMC settings
-mcmc_init = param_to_transf([0.7 0.02]);% Distribution of initial transformed draw (will be overwritten if is_optimize=true)
+mcmc_init = param_to_transf([0.7 0.02]);% Initial transformed draw (will be overwritten if is_optimize=true)
 mcmc_num_iter = 1e4;                    % Number of MCMC steps (total)
 mcmc_thin = 1;                          % Store every X draws
 mcmc_stepsize_init = 1e-2;              % Initial MCMC step size
@@ -51,6 +51,9 @@ num_burnin_periods = 100;               % Number of burn-in periods for simulati
 rng_seed = 202006221;                   % Random number generator seed for initial simulation
 poolobj = parpool;                      % Parallel computing object
 
+global mat_suff;
+mat_suff = sprintf('%02d', 1);          % Suffix string for all saved .mat files
+
 
 %% Calibrate parameters and set numerical settings
 
@@ -63,20 +66,18 @@ saveParameters;
 %% Initial Dynare processing
 
 if is_run_dynare
-    delete steady_vars.mat;
     dynare dynamicModel noclearall nopathchange; % Run Dynare once to process model file
-    save dynare.mat M_ oo_ options_;
 else
-    load('dynare.mat');
+    load('dynamicModel_results');
     check_matlab_path(false);
-    dynareroot = dynare_config(); % Add Dynare sub-folders
+    dynareroot = dynare_config(); % Add Dynare sub-folders to path
 end
 
 
 %% Truncation point
 
-ss = load('steady_vars');
-trunc_logn = ss.smpl_m1+norminv(trunc_quant)*sqrt(ss.smpl_m3); % Lower truncation value for log(n)
+compute_steady_state; % Re-compute steady state
+trunc_logn = M_.steady_vars.smpl_m1+norminv(trunc_quant)*sqrt(M_.steady_vars.smpl_m3); % Lower truncation value for log(n)
 
 
 %% Simulate data
@@ -86,7 +87,7 @@ rng(rng_seed, 'twister');   % Seed Matlab RNG
 
 if ~is_data_gen
     % Load previous data
-    load('simul_data_micro.mat');
+    load_mat('simul_data_micro');
 else
     % Simulate
     simul_data;
@@ -116,7 +117,7 @@ mcmc_iter;
 
 cd('../');
 addpath('results');
-save(fullpath('results', mcmc_filename));
+save_mat(fullpath('results', mcmc_filename));
 
 delete(poolobj);
 
@@ -128,6 +129,8 @@ function [the_loglike, the_loglike_macro, the_loglike_micro] = ...
                 num_smooth_draws, num_burnin_periods, ...
                 trunc_logn, likelihood_type, ...
                 M_, oo_, options_)
+        
+        global mat_suff;
 
         saveParameters;         % Save parameter values to files
         setDynareParameters;    % Update Dynare parameters in model struct
@@ -148,17 +151,20 @@ function [the_loglike, the_loglike_macro, the_loglike_micro] = ...
         switch likelihood_type
             case 1 % Macro + full info micro
                 [the_loglike, the_loglike_macro, the_loglike_micro] = ...
-                    loglike_compute('simul.mat', num_burnin_periods, smooth_vars, num_smooth_draws, ...
+                    loglike_compute(strcat('simul', mat_suff, '.mat'), ...
+                                   num_burnin_periods, smooth_vars, num_smooth_draws, ...
                                    M_, oo_, options_, ...
                                    ts_micro, @(smooth_draw,it) likelihood_micro_fct(smooth_draw,it,trunc_logn));
             case 2 % Macro + full info micro, ignore truncation
                 [the_loglike, the_loglike_macro, the_loglike_micro] = ...
-                    loglike_compute('simul.mat', num_burnin_periods, smooth_vars, num_smooth_draws, ...
+                    loglike_compute(strcat('simul', mat_suff, '.mat'), ...
+                                   num_burnin_periods, smooth_vars, num_smooth_draws, ...
                                    M_, oo_, options_, ...
                                    ts_micro, @(smooth_draw,it) likelihood_micro_fct(smooth_draw,it,-Inf));
             case 3 % Macro + moments w/ SS meas. err.
                 [the_loglike, the_loglike_macro, the_loglike_micro] = ...
-                    loglike_compute('simul_moments.mat', num_burnin_periods, smooth_vars, 0, ...
+                    loglike_compute(strcat('simul_moments', mat_suff, '.mat'), ...
+                                   num_burnin_periods, smooth_vars, 0, ...
                                    M_, oo_, options_, ...
                                    [], []);
         end

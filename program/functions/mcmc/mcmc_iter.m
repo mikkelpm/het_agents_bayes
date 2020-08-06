@@ -15,7 +15,7 @@ the_stepsize = mcmc_stepsize_init;      % Initial RWMH step size
 the_stepsize_iter = 1;
 the_chol = eye(length(curr_draw));      % Initial RWMH proposal var-cov matrix
 
-disp('MCMC...');
+fprintf('\nMCMC...\n');
 timer_mcmc = tic;
 
 for i_mcmc=1:mcmc_num_iter % For each MCMC step...

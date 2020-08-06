@@ -144,13 +144,15 @@ logMarginalUtility					= log(marginalUtilitySS);
 logAggregateOutputObs = logAggregateOutput;
 logAggregateInvestmentObs = logAggregateInvestment;
 
-% Save
-save_vars = cellstr(M_.endo_names);
-save('steady_vars.mat', save_vars{:}, 'save_vars');
+% Save steady state values to M_ struct
+M_.steady_vars = struct;
+for iVar = 1:length(M_.endo_names)
+    M_.steady_vars.(M_.endo_names{iVar}) = eval(M_.endo_names{iVar});
+end
 
 % Update parameters which were changed in the steady state file
 for iParameter = 18:length(M_.params)                               % start at 18 ( = cchi) so don't reset other parameters, in case those are reset elsewhere
-  eval([ 'M_.params(' num2str(iParameter) ') = ' M_.param_names{iParameter} ';' ])
+    M_.params(iParameter) = eval(M_.param_names{iParameter});
 end
 
 % Print elapsed time

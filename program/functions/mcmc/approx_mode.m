@@ -3,7 +3,7 @@
 optim_numgrid = size(optim_grid,1);
 optim_logpost = nan(optim_numgrid,1);
 
-disp('Optimization...');
+fprintf('\nOptimization...\n');
 timer_optim = tic;
 
 for i_optim=1:optim_numgrid % Cycle through grid points
