@@ -115,7 +115,7 @@ mcmc_iter;
 
 %% Save results
 
-cd('../');
+cd('../../');
 addpath('results');
 save_mat(fullpath('results', mcmc_filename));
 
