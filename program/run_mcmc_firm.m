@@ -1,8 +1,8 @@
 clear all;
 addpath(genpath('./functions'));
 
-model_folder = 'firm_model';
-addpath(genpath(['./' model_folder '/auxiliary_functions']));
+model_name = 'firm';
+addpath(genpath(['./' model_name '_model/auxiliary_functions']));
 
 
 %% Settings
@@ -38,7 +38,7 @@ mcmc_stepsize_init = 1e-2;              % Initial MCMC step size
 mcmc_adapt_iter = [50 200 500 1000];    % Iterations at which to update the variance/covariance matrix for RWMH proposal; first iteration in list is start of adaptation phase
 mcmc_adapt_diag = false;                % =true: Adapt only to posterior std devs of parameters, =false: adapt to full var/cov matrix
 mcmc_adapt_param = 10;                  % Shrinkage parameter for adapting to var/cov matrix (higher values: more shrinkage)
-mcmc_filename = ['firm_liktype' num2str(likelihood_type) '_trunc' num2str(trunc_quant*100) '_']; % File name of MCMC output
+mcmc_filename = [model_name '_liktype' num2str(likelihood_type) '_trunc' num2str(trunc_quant*100) '_']; % File name of MCMC output
 
 % Adaptive RWMH
 mcmc_c = 0.55;
@@ -59,9 +59,9 @@ mat_suff = sprintf('%02d', 1);          % Suffix string for all saved .mat files
 
 %% Calibrate parameters and set numerical settings
 
-run([model_folder '/calibrate']);
+run([model_name '_model/calibrate']);
 
-cd(['./' model_folder '/dynare']);
+cd(['./' model_name '_model/dynare']);
 saveParameters;
 
 
