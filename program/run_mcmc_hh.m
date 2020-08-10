@@ -27,7 +27,7 @@ prior_logdens_transf = @(x) sum(x) - 2*log(1+exp(x(1)));    % Log prior density 
 
 % Optimization settings
 is_optimize = true;                         % Find posterior mode?
-[aux1, aux2, aux3] = meshgrid(linspace(0.8,0.99,5),linspace(0.001,0.05,5),linspace(-.5,-0.1,5));
+[aux1, aux2, aux3] = meshgrid(linspace(0.8,0.99,3),linspace(0.001,0.05,3),linspace(-1,-0.01,3));
 optim_grid = [aux1(:), aux2(:), aux3(:)];   % Optimization grid
 
 % MCMC settings
@@ -84,7 +84,7 @@ rng(rng_seed, 'twister');   % Seed Matlab RNG
 
 if ~is_data_gen
     % Load previous data
-    load('simul_data_micro.mat');
+    load_mat('simul_data_micro');
 else
     % Simulate
     simul_data;
@@ -158,7 +158,7 @@ function [the_loglike, the_loglike_macro, the_loglike_micro] = ...
                     loglike_compute(strcat('simul', mat_suff, '.mat'), ...
                                    num_burnin_periods, smooth_vars, num_smooth_draws, ...
                                    M_, oo_, options_, ...
-                                   ts_micro, @(smooth_draw,it) likelihood_micro_fct(smooth_draw,it);
+                                   ts_micro, @(smooth_draw,it) likelihood_micro_fct(smooth_draw,it));
             case 2 % Macro + full info micro, ignore truncation
                 [the_loglike, the_loglike_macro, the_loglike_micro] = ...
                     loglike_compute(strcat('simul_moments', mat_suff, '.mat'), ...

@@ -4,20 +4,20 @@ function likes = likelihood_micro(smooth_draw, t, data_micro, it, aaBar, mmu, tt
 
 num_mom = 3;
 
-likes = nan(length(data_micro,2),1);
+likes = nan(1,size(data_micro,2));
 
 for eepsilon=0:1 % For each employment status...
     
     ix = (data_micro(it,:,1)==eepsilon); % Households with given employment status
 
     % Collect distribution parameters
-    moment = nan(num_mom,1);
-    measureCoefficient = nan(num_mom,1);
+    moment = nan(1,num_mom);
+    measureCoefficient = nan(1,num_mom);
     for im=1:num_mom
-        moment(ii) = smooth_draw.(sprintf('%s%d%s%d', 'lag_moment_', eepsilon+1, '_', ii))(t);
-        measureCoefficient(ii) = smooth_draw.(sprintf('%s%d%s%d', 'measureCoefficient_', eepsilon+1, '_', ii))(t);
+        moment(im) = smooth_draw.(sprintf('%s%d%s%d', 'lag_moment_', eepsilon+1, '_', im))(t);
+        measureCoefficient(im) = smooth_draw.(sprintf('%s%d%s%d', 'measureCoefficient_', eepsilon+1, '_', im))(t);
     end
-    mHat = smooth_draw.(sprintf('%s%d', 'mHat_', eepsilon+1))(t);
+    mHat = smooth_draw.(sprintf('%s%d', 'lag_mHat_', eepsilon+1))(t);
     
     % Compute normalization constant
     moment_aux = moment;

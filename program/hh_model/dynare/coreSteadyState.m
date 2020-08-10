@@ -8,11 +8,11 @@
 %----------------------------------------------------------------
 
 % Grids
-load('grids');
+load_mat('grids');
 
 % Polynomials over grids (only if using polynomials to approximate conditional expectation)
 if splineOpt == 0
-	load('polynomials');
+	load_mat('polynomials');
 end
 
 %----------------------------------------------------------------

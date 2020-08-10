@@ -74,8 +74,10 @@ logAggregateConsumption = log(exp(logAggregateOutput) - exp(logAggregateInvestme
 logWage = log(w);
 logAggregateOutputObs = logAggregateOutput; % MPM: observable with measurement error
 
-% Save
-save_vars = cellstr(M_.endo_names);
-save('steady_vars.mat', save_vars{:}, 'save_vars');
+% Save steady state values to M_ struct
+M_.steady_vars = struct;
+for iVar = 1:length(M_.endo_names)
+    M_.steady_vars.(M_.endo_names{iVar}) = eval(M_.endo_names{iVar});
+end
 
 fprintf('... Done!  Elapsed time: %2.2f seconds \n\n',toc(tStart));

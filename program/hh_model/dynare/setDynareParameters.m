@@ -1,10 +1,10 @@
 
 %% Load in files containing parameters
 
-economicParameters = load('economicParameters');
-approximationParameters = load('approximationParameters');
-grids = load('grids');
-polynomials = load('polynomials');
+economicParameters = load_mat('economicParameters');
+approximationParameters = load_mat('approximationParameters');
+grids = load_mat('grids');
+polynomials = load_mat('polynomials');
 
 
 %% Economic parameters
@@ -14,7 +14,7 @@ nEconomicParameters = 11; % MPM: account for mu_l
 for iParam = 1 : nEconomicParameters
 	parameterName = deblank(M_.param_names{iParam});
 	if isfield(economicParameters,parameterName)
-		M_.params(iParam) = eval(['economicParameters.' parameterName]);
+		M_.params(iParam) = economicParameters.(parameterName);
 	end
 end
 
@@ -41,7 +41,7 @@ nApproximationParameters = 15;
 for iParam = 1 : nApproximationParameters
 	parameterName = deblank(M_.param_names{nEconomicParameters + 6 + iParam});
 	if isfield(approximationParameters,parameterName)
-		M_.params(nEconomicParameters + 6 + iParam) = eval(['approximationParameters.' parameterName]);
+		M_.params(nEconomicParameters + 6 + iParam) = approximationParameters.(parameterName);
 	end
 end
 
