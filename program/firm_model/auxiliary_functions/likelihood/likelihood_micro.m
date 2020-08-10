@@ -1,8 +1,6 @@
-function likes = likelihood_micro(smooth_draw, it, data_micro, ts_micro, nnu, ttheta, trunc_logn)
+function likes = likelihood_micro(smooth_draw, t, data_micro, it, nnu, ttheta, trunc_logn)
 
     % Micro likelihood for firm model
-
-    t = ts_micro(it);
     
     c = log(nnu)+smooth_draw.aggregateTFP(t)-smooth_draw.logWage(t);
     jacob = 1-nnu;

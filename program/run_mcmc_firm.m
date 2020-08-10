@@ -143,7 +143,7 @@ function [the_loglike, the_loglike_macro, the_loglike_micro] = ...
         nnu_local = nnu;
         ttheta_local = ttheta;
         likelihood_micro_fct = @(smooth_draw,it,the_trunc_logn) ...
-                               likelihood_micro(smooth_draw, it, data_micro, ts_micro, nnu_local, ttheta_local, the_trunc_logn);
+                               likelihood_micro(smooth_draw, ts_micro(it), data_micro, it, nnu_local, ttheta_local, the_trunc_logn);
         
         % Macro state variables used in micro likelihood
         smooth_vars = [{'logWage'; 'aggregateTFP'};
