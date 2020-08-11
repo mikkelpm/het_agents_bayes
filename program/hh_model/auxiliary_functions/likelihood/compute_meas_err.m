@@ -40,5 +40,5 @@ smpl_m(:,6) = r^6*mMoments(:,6)*mom_lambda(6)...
     +15*r^2*mMoments(:,2).*smpl_m(:,1).^4*(mom_lambda(6)-4*mom_lambda(5)+6*mom_lambda(4)-4*mom_lambda(3)+mom_lambda(2))...
     +smpl_m(:,1).^6*(mom_lambda(6)-6*mom_lambda(5)+15*mom_lambda(4)-20*mom_lambda(3)+15*mom_lambda(2)-5);  % Sixth central moment
 M_.H(1,1) = ssigmaMeas^2;
-M_.H(2:4,2:4) = cov_smpl(smpl_m(1,:))/mean(sum(data_micro(:,:,1)==0,2));
-M_.H(5:7,5:7) = cov_smpl(smpl_m(2,:))/mean(sum(data_micro(:,:,1)==1,2));
+M_.H(2:4,2:4) = cov_smpl(smpl_m(1,:))/size(data_micro,2)/(1-aggEmployment);
+M_.H(5:7,5:7) = cov_smpl(smpl_m(2,:))/size(data_micro,2)/aggEmployment;
