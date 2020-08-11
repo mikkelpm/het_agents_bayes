@@ -72,7 +72,6 @@ logAggregateOutput = log(exp(aggregateTFP) * (aggregateCapital ^ aalpha) * (aggE
 logAggregateInvestment = log(ddelta * aggregateCapital);
 logAggregateConsumption = log(exp(logAggregateOutput) - exp(logAggregateInvestment));
 logWage = log(w);
-logAggregateOutputObs = logAggregateOutput; % MPM: observable with measurement error
 
 % Save steady state values to M_ struct
 M_.steady_vars = struct;
