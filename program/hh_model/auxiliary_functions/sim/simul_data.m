@@ -28,3 +28,9 @@ sim_struct_moments2 = sim_struct_moments;
 sim_struct_moments2.smpl_m13 = nan(T,1);
 sim_struct_moments2.smpl_m23 = nan(T,1);
 save_mat('simul_moments2', '-struct', 'sim_struct_moments2');
+
+% Data set with missing second and third moments
+sim_struct_moments1 = sim_struct_moments2;
+sim_struct_moments1.smpl_m12 = nan(T,1);
+sim_struct_moments1.smpl_m22 = nan(T,1);
+save_mat('simul_moments1', '-struct', 'sim_struct_moments1');
