@@ -1,8 +1,6 @@
-function likes = likelihood_micro(smooth_draw, t, data_micro, it, aaBar, mmu, ttau, mu_l, num_interp)
+function likes = likelihood_micro(smooth_draw, t, data_micro, it, aaBar, mmu, ttau, mu_l, num_mom, num_interp)
 
 % Micro likelihood for household model
-
-num_mom = 3;
 
 likes = nan(1,size(data_micro,2));
 

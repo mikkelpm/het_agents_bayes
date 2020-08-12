@@ -22,7 +22,7 @@ parameters bbeta ssigma aaBar aalpha ddelta aggEmployment
 for iParam = 1 : @{nEconomicParameters}
 	parameterName = deblank(M_.param_names{iParam});
 	if isfield(economicParameters,parameterName)
-		M_.params(iParam) = eval(['economicParameters.' parameterName]);
+		M_.params(iParam) = economicParameters.(parameterName);
 	end
 end
 
@@ -52,7 +52,7 @@ parameters nEpsilon nAssets nState assetsMin assetsMax nAssetsFine nStateFine nA
 for iParam = 1 : @{nApproximationParameters}
 	parameterName = deblank(M_.param_names{@{nEconomicParameters} + 6 + iParam});
 	if isfield(approximationParameters,parameterName)
-		M_.params(@{nEconomicParameters} + 6 + iParam) = eval(['approximationParameters.' parameterName]);
+		M_.params(@{nEconomicParameters} + 6 + iParam) = approximationParameters.(parameterName);
 	end
 end
 

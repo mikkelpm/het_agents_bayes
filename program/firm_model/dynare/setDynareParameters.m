@@ -11,7 +11,7 @@ nEconomicParameters = 18;
 for iParam = 1 : nEconomicParameters
 	parameterName = deblank(M_.param_names{iParam});
 	if isfield(economicParameters,parameterName)
-		M_.params(iParam) = eval(['economicParameters.' parameterName]);
+		M_.params(iParam) = economicParameters.(parameterName);
 	end
 end
 	
@@ -20,7 +20,7 @@ nApproximationParameters = 13;
 for iParam = 1 : nApproximationParameters
 	parameterName = deblank(M_.param_names{nEconomicParameters + iParam});	
 	if isfield(approximationParameters,parameterName)
-		M_.params(nEconomicParameters + iParam) = eval(['approximationParameters.' parameterName]);
+		M_.params(nEconomicParameters + iParam) = approximationParameters.(parameterName);
 	end	
 end
 

@@ -19,16 +19,17 @@ N_micro = 1e3;          % Number of micro entities per non-missing time period
 trunc_quant = 0.9;      % Micro sample selection: Lower truncation quantile for labor (steady state distribution)
 
 % Parameter transformation
-param_names = {'rrhoProd', 'ssigmaProd'};                   % Names of parameters to estimate
-transf_to_param = @(x) [1/(1+exp(-x(1))) exp(x(2:end))];    % Function mapping transformed parameters into parameters of interest
-param_to_transf = @(x) [log(x(1)/(1-x(1))) log(x(2:end))];  % Function mapping parameters of interest into transformed parameters
+param_names = {'rrhoProd', 'ssigmaProd'};               % Names of parameters to estimate
+transf_to_param = @(x) [1/(1+exp(-x(1))) exp(x(2))];    % Function mapping transformed parameters into parameters of interest
+param_to_transf = @(x) [log(x(1)/(1-x(1))) log(x(2))];  % Function mapping parameters of interest into transformed parameters
 
 % Prior
 prior_logdens_transf = @(x) sum(x) - 2*log(1+exp(x(1)));    % Log prior density of transformed parameters
 
 % Optimization settings
-is_optimize = true;                                                 % Find posterior mode?
-optim_grid = combvec(linspace(0.1,0.9,3),linspace(0.01,0.1,3))';    % Optimization grid
+is_optimize = true;                 % Find posterior mode?
+[aux1, aux2] = meshgrid(linspace(0.1,0.9,3),linspace(0.01,0.1,3));
+optim_grid = [aux1(:), aux2(:)];    % Optimization grid
 
 % MCMC settings
 mcmc_init = param_to_transf([0.7 0.02]);% Initial transformed draw (will be overwritten if is_optimize=true)
@@ -119,7 +120,7 @@ mcmc_iter;
 
 cd('../../');
 mkdir('results');
-save_mat(fullpath('results', mcmc_filename));
+save_mat(fullfile('results', mcmc_filename));
 
 delete(poolobj);
 

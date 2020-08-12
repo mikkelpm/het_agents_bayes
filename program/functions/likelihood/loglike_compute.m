@@ -48,19 +48,25 @@ parfor i_draw = 1:num_smooth_draws
                                           M_new, oo_new, options_new, dataset_fake, dataset_info, xparam1, estim_params_, bayestopt_);
     
     the_loglikes_micro_draw = nan(1,T_micro);
-
-    for it = 1:T_micro
     
-        % Likelihood
-        the_likes = likelihood_micro_fct(the_smooth_draw, it);
+    try % Once numerical issue in one period, no need to go through the remaining periods, but still run the other smooth draws
         
-        % Log likelihood
-        the_loglikes_micro_draw_t = log(the_likes);
-        the_loglikes_micro_draw(it) = nansum(the_loglikes_micro_draw_t);
-
-    end
+        for it = 1:T_micro
+            
+            % Likelihood
+            the_likes = likelihood_micro_fct(the_smooth_draw, it);
+            
+            % Log likelihood
+            the_loglikes_micro_draw_t = log(the_likes);
+            the_loglikes_micro_draw(it) = sum(the_loglikes_micro_draw_t);
+            
+        end
+        
+        loglikes_micro(i_draw) = sum(the_loglikes_micro_draw);
     
-    loglikes_micro(i_draw) = sum(the_loglikes_micro_draw);
+    catch
+        
+    end
     
     % Print progress
     if mod(i_draw,ceil(num_smooth_draws/50))==0
@@ -76,12 +82,17 @@ fprintf('Micro likelihood time: %6.1f sec\n\n', toc(timer));
 %% Sum log likelihood
 
 % Micro log likelihood
-log_max = max(loglikes_micro);
-loglike_micro = log_max + log(mean(exp(loglikes_micro-log_max))); % Formula deals with underflow
-if isempty(loglike_micro)
-    loglike_micro = 0;
+ix_micro = isfinite(loglikes_micro);
+if sum(ix_micro) > 0 % as long as there is a draw survive
+    loglikes_micro = loglikes_micro(ix_micro);
+    log_max = max(loglikes_micro);
+    loglike_micro = log_max + log(mean(exp(loglikes_micro-log_max))); % Formula deals with underflow
+    loglike = loglike_macro + loglike_micro; % Total log likelihood
+else
+    loglike_micro = nan;
+    loglike_macro = nan;
+    loglike = nan;
 end
 
-loglike = loglike_macro + loglike_micro; % Total log likelihood
 
 end

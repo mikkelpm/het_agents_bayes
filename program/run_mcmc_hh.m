@@ -10,7 +10,7 @@ addpath(genpath(['./' model_name '_model/auxiliary_functions']));
 % Decide what to do
 is_run_dynare = true;   % Process Dynare model?
 is_data_gen = true;     % Simulate data?
-likelihood_type = 1;    % =1: Macro + full-info micro; =2: macro + full-info micro, no truncation; =3: macro + moments micro
+likelihood_type = 1;    % =1: Macro + full-info micro; =2: macro + full-info micro, no truncation; =3: macro + moments micro; =4: macro only
 
 % Model/data settings
 T = 100;                % Number of periods of simulated macro data
@@ -32,7 +32,7 @@ optim_grid = [aux1(:), aux2(:), aux3(:)];   % Optimization grid
 
 % MCMC settings
 mcmc_init = param_to_transf([.9 .06 -1]);   % Initial transformed draw (will be overwritten if is_optimize=true)
-mcmc_num_draws = 9000;                  % Number of MCMC steps (total)
+mcmc_num_iter = 1e4;                  % Number of MCMC steps (total)
 mcmc_thin = 1;                          % Store every X draws
 mcmc_stepsize_init = 1e-2;              % Initial MCMC step size
 mcmc_adapt_iter = [50 200 500 1000];    % Iterations at which to update the variance/covariance matrix for RWMH proposal; first iteration in list is start of adaptation phase
@@ -43,7 +43,7 @@ mcmc_filename = [model_name '_liktype' num2str(likelihood_type) '_N' num2str(N_m
 % for adaptive RWMH
 mcmc_c = 0.55;
 mcmc_ar_tg = 0.3;
-p_adapt = .95;
+mcmc_p_adapt = .95;
 
 % Likelihood settings
 num_smooth_draws = 500;                 % Number of draws from the smoothing distribution (for unbiased likelihood estimate)
@@ -114,7 +114,7 @@ mcmc_iter;
 
 cd('../../');
 mkdir('results');
-save_mat(fullpath('results', mcmc_filename));
+save_mat(fullfile('results', mcmc_filename));
 
 delete(poolobj);
 
@@ -139,12 +139,13 @@ function [the_loglike, the_loglike_macro, the_loglike_micro] = ...
         mmu_local = mmu;
         ttau_local = ttau;
         mu_l_local = mu_l;
+        num_mom = 3;
         likelihood_micro_fct = @(smooth_draw,it) ...
                                likelihood_micro(smooth_draw, ts_micro(it), data_micro, it, ...
-                                                aaBar_local, mmu_local, ttau_local, mu_l_local, num_interp);
+                                                aaBar_local, mmu_local, ttau_local, mu_l_local, num_mom, ...
+                                                num_interp);
         
         % Macro state variables used in micro likelihood
-        num_mom = 3;
         smooth_vars = [{'w'; 'r'; 'lag_mHat_1' ; 'lag_mHat_2'};
                        str_add_numbers('lag_moment_1_', 1:num_mom);
                        str_add_numbers('lag_moment_2_', 1:num_mom);
@@ -159,15 +160,21 @@ function [the_loglike, the_loglike_macro, the_loglike_micro] = ...
                                    num_burnin_periods, smooth_vars, num_smooth_draws, ...
                                    M_, oo_, options_, ...
                                    ts_micro, @(smooth_draw,it) likelihood_micro_fct(smooth_draw,it));
-            case 2 % Macro + full info micro, ignore truncation
+            case 2 % Macro + up to 3rd moments w/ SS meas. err.
                 [the_loglike, the_loglike_macro, the_loglike_micro] = ...
                     loglike_compute(strcat('simul_moments', mat_suff, '.mat'), ...
                                    num_burnin_periods, smooth_vars, 0, ...
                                    M_, oo_, options_, ...
                                    [], []);
-            case 3 % Macro + moments w/ SS meas. err.
+            case 3 % Macro + up to 2nd moments w/ SS meas. err.
                 [the_loglike, the_loglike_macro, the_loglike_micro] = ...
                     loglike_compute(strcat('simul_moments2', mat_suff, '.mat'), ...
+                                   num_burnin_periods, smooth_vars, 0, ...
+                                   M_, oo_, options_, ...
+                                   [], []);
+            case 4 % Macro only
+                [the_loglike, the_loglike_macro, the_loglike_micro] = ...
+                    loglike_compute(strcat('simul', mat_suff, '.mat'), ...
                                    num_burnin_periods, smooth_vars, 0, ...
                                    M_, oo_, options_, ...
                                    [], []);

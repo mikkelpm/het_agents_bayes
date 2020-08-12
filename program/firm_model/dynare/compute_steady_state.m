@@ -141,9 +141,6 @@ cchi 										= (wage * marginalUtility / (aggregateHours ^ pphi));
 
 logMarginalUtility					= log(marginalUtilitySS);
 
-logAggregateOutputObs = logAggregateOutput;
-logAggregateInvestmentObs = logAggregateInvestment;
-
 % Save steady state values to M_ struct
 M_.steady_vars = struct;
 for iVar = 1:length(M_.endo_names)
