@@ -148,7 +148,7 @@ function [the_loglike, the_loglike_macro, the_loglike_micro] = ...
         
         % Macro state variables used in micro likelihood
         smooth_vars = [{'logWage'; 'aggregateTFP'};
-                       cellfun(@(x) sprintf('%s%d', 'lag_moment_', x), num2cell(1:5), 'UniformOutput', false)'];
+                       str_add_numbers('lag_moment_', 1:5)];
         
         % Log likelihood computation
         switch likelihood_type

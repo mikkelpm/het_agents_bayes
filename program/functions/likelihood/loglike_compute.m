@@ -1,7 +1,7 @@
 function [loglike, loglike_macro, loglike_micro]...
     = loglike_compute(data_macro, num_burnin_periods, smooth_vars, num_smooth_draws, ...
                       M_, oo_, options_, ...
-                      ts_micro, likelihood_micro_fct)
+                      data_micro, ts_micro, param)
 
 % Compute log likelihood for macro+micro data
 
@@ -17,7 +17,7 @@ fprintf('Macro likelihood/smoother time: %6.1f sec\n\n', toc(timer));
 
 %% Micro likelihood per period
 
-if isempty(ts_micro) || isempty(likelihood_micro_fct)
+if isempty(data_micro) || isempty(ts_micro)
     loglike_micro = nan;
     loglike = loglike_macro;
     return;
@@ -46,7 +46,9 @@ parfor i_draw = 1:num_smooth_draws
     % Compute smoothing draw
     the_smooth_draw = simulation_smoother(smooth_means, smooth_vars, num_burnin_periods, rand_seeds(i_draw), ...
                                           M_new, oo_new, options_new, dataset_fake, dataset_info, xparam1, estim_params_, bayestopt_);
-    
+    the_smooth_draw_tab = struct2table(the_smooth_draw); % Transform struct to table
+    the_smooth_draw_tab = the_smooth_draw_tab(ts_micro,:); % Only retain relevant time periods for micro data
+
     the_loglikes_micro_draw = nan(1,T_micro);
     
     try % Once numerical issue in one period, no need to go through the remaining periods, but still run the other smooth draws
@@ -54,7 +56,7 @@ parfor i_draw = 1:num_smooth_draws
         for it = 1:T_micro
             
             % Likelihood
-            the_likes = likelihood_micro_fct(the_smooth_draw, it);
+            the_likes = likelihood_micro(the_smooth_draw_tab(it,:), permute(data_micro(it,:,:), [2 3 1]), param);
             
             % Log likelihood
             the_loglikes_micro_draw_t = log(the_likes);
@@ -87,12 +89,10 @@ if sum(ix_micro) > 0 % as long as there is a draw survive
     loglikes_micro = loglikes_micro(ix_micro);
     log_max = max(loglikes_micro);
     loglike_micro = log_max + log(mean(exp(loglikes_micro-log_max))); % Formula deals with underflow
-    loglike = loglike_macro + loglike_micro; % Total log likelihood
 else
     loglike_micro = nan;
-    loglike_macro = nan;
-    loglike = nan;
 end
+loglike = loglike_macro + loglike_micro; % Total log likelihood
 
 
 end
