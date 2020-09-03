@@ -10,7 +10,9 @@ for i_optim=1:optim_numgrid % Cycle through grid points
 
     the_param = optim_grid(i_optim,:);
     print_param(the_param, param_names, 'current');
-    update_param(the_param, param_names);
+    for i=1:n_param
+        eval(sprintf('%s%s%f%s', param_names{i}, '=', the_param(i), ';'));
+    end
 
     try
         the_loglike = ll_fct(M_, oo_, options_);

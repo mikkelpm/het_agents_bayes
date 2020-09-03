@@ -24,8 +24,11 @@ for i_mcmc=1:mcmc_num_iter % For each MCMC step...
     
     % Proposed draw (modified to always start with initial draw)
     prop_draw = rwmh_propose(curr_draw, (i_mcmc>1)*the_stepsize, the_chol, mcmc_p_adapt, mcmc_stepsize_init); % Proposal
-    update_param(transf_to_param(prop_draw), param_names);
     print_param(transf_to_param(prop_draw), param_names, 'proposed');
+    the_param = transf_to_param(prop_draw);
+    for i=1:length(the_param)
+        eval(sprintf('%s%s%f%s', param_names{i}, '=', the_param(i), ';'));
+    end
     
     try
         
@@ -66,6 +69,11 @@ for i_mcmc=1:mcmc_num_iter % For each MCMC step...
     
     % Adapt proposal covariance matrix
     [the_chol, the_stepsize_iter] = adapt_cov(the_chol, the_stepsize_iter, mcmc_adapt_iter, i_mcmc, post_draws, mcmc_thin, mcmc_adapt_diag, mcmc_adapt_param);
+    
+    % Save middle steps in case reach time limit on the server
+    if mod(i_mcmc,1000) == 0 && i_mcmc < mcmc_num_iter
+        save_mat(model_name);
+    end
     
 end
 

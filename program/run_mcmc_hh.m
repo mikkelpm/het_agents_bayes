@@ -28,6 +28,7 @@ mat_suff = sprintf('%s%d%s%d%s%02d', '_N', N_micro, '_liktype', likelihood_type,
 
 % Parameter transformation
 param_names = {'bbeta', 'ssigmaMeas', 'mu_l'};                      % Names of parameters to estimate
+n_param = length(param_names);
 transf_to_param = @(x) [1/(1+exp(-x(1))) exp(x(2)) -exp(x(3))];     % Function mapping transformed parameters into parameters of interest
 param_to_transf = @(x) [log(x(1)/(1-x(1))) log(x(2)) log(-x(3))];   % Function mapping parameters of interest into transformed parameters
 
@@ -61,7 +62,10 @@ num_interp = 100;                       % Number of interpolation grid points fo
 % Numerical settings
 num_burnin_periods = 100;               % Number of burn-in periods for simulations
 rng_seed = 20200813+serial_id;          % Random number generator seed
-poolobj = parpool;                      % Parallel computing object
+if likelihood_type == 1
+    delete(gcp('nocreate'));    
+    poolobj = parpool;                  % Parallel computing object
+end
 
 
 %% Calibrate parameters and set numerical settings
@@ -122,7 +126,9 @@ cd('../../');
 mkdir('results');
 save_mat(fullfile('results', model_name));
 
-delete(poolobj);
+if likelihood_type == 1
+    delete(gcp('nocreate'));
+end
 
 
 %% Auxiliary function
