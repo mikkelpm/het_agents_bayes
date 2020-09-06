@@ -17,7 +17,7 @@ model_filename = cell(n_rep,n_model);
 for i_model = 1:n_model
     for i_rep = 1:n_rep
         model_filename{i_rep,i_model} = ['results/' model_name '_N1000' ...
-            sprintf('%s%d%s%02d','_model',i_model,'_',i_rep)];
+            sprintf('%s%d%s%02d','_liktype',i_model,'_',i_rep)];
         model_mcmc{i_rep,i_model} = load(model_filename{i_rep,i_model}); %size ~ 1MB each 
     end
 end
@@ -36,49 +36,45 @@ acf_lags = 200;
 SFont = 12;
 graph_size = [6 6];
 
-i_rep = 1;
-
 for i_model = 1:n_model
-    % Trace plot
-    F1 = figure;
-    for j = 1:n_param
-        if i_model == 2 && j == n_param
-            continue
-        end
-        
-        if i_model <= 2
+    for i_rep = 1:n_rep
+        if i_model <= 2 && i_rep == 1
             N_draw_aux = N_draw;
         else
             N_draw_aux = N_draw_alt;
         end
-        
-        subplot(n_param,1,j);
-        plot(model_mcmc{i_rep,i_model}.post_draws(1:B_draw+N_draw_aux,j),'-k');
-        xline(B_draw,'k--');
-        title(tex_param{j},'FontSize',SFont,'FontWeight','bold');
-    end
-    graph_out(F1,[model_filename{i_rep,i_model} '_traceplot'],graph_size)
-    
-    % ACF
-    F1 = figure;
-    for j = 1:n_param
-        if i_model == 2 && j == n_param
-            continue
+            
+        % Trace plot
+        F1 = figure;
+        for j = 1:n_param
+            if i_model == 2 && j == n_param
+                continue
+            end
+            
+            subplot(n_param,1,j);
+            plot(model_mcmc{i_rep,i_model}.post_draws(1:B_draw+N_draw_aux,j),'-k');
+            xline(B_draw,'k--');
+            title(tex_param{j},'FontSize',SFont,'FontWeight','bold');
         end
+        graph_out(F1,[model_filename{i_rep,i_model} '_traceplot'],graph_size)
         
-        if i_model <= 2
-            ix_out_aux = ix_out;
-        else
-            ix_out_aux = ix_out_alt;
+        % ACF
+        if i_rep == 1
+            F1 = figure;
+            for j = 1:n_param
+                if i_model == 2 && j == n_param
+                    continue
+                end
+                
+                subplot(n_param,1,j);
+                the_acf = autocorr(model_mcmc{i_rep,i_model}.post_draws(ix_out_aux,j),acf_lags);
+                plot(0:acf_lags,the_acf,'-k','LineWidth',2);
+                yline(0, 'k--');
+                title(tex_param{j},'FontSize',SFont,'FontWeight','bold');
+            end
+            graph_out(F1,[model_filename{i_rep,i_model} '_acf'],graph_size)
         end
-        
-        subplot(n_param,1,j);
-        the_acf = autocorr(model_mcmc{i_rep,i_model}.post_draws(ix_out_aux,j),acf_lags);
-        plot(0:acf_lags,the_acf,'-k','LineWidth',2);
-        yline(0, 'k--');
-        title(tex_param{j},'FontSize',SFont,'FontWeight','bold');
     end
-    graph_out(F1,[model_filename{i_rep,i_model} '_acf'],graph_size)
 end
 
 % =========================================================================

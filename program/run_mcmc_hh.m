@@ -27,10 +27,17 @@ global mat_suff;
 mat_suff = sprintf('%s%d%s%d%s%02d', '_N', N_micro, '_liktype', likelihood_type, '_', serial_id);
 
 % Parameter transformation
-param_names = {'bbeta', 'ssigmaMeas', 'mu_l'};                      % Names of parameters to estimate
-n_param = length(param_names);
-transf_to_param = @(x) [1/(1+exp(-x(1))) exp(x(2)) -exp(x(3))];     % Function mapping transformed parameters into parameters of interest
-param_to_transf = @(x) [log(x(1)/(1-x(1))) log(x(2)) log(-x(3))];   % Function mapping parameters of interest into transformed parameters
+if likelihood_type ~= 2
+    param_names = {'bbeta', 'ssigmaMeas', 'mu_l'};                      % Names of parameters to estimate
+    n_param = length(param_names);
+    transf_to_param = @(x) [1/(1+exp(-x(1))) exp(x(2)) -exp(x(3))];     % Function mapping transformed parameters into parameters of interest
+    param_to_transf = @(x) [log(x(1)/(1-x(1))) log(x(2)) log(-x(3))];   % Function mapping parameters of interest into transformed parameters
+else % mu_l is not identified with macro data only
+    param_names = {'bbeta', 'ssigmaMeas'};                      % Names of parameters to estimate
+    n_param = length(param_names);
+    transf_to_param = @(x) [1/(1+exp(-x(1))) exp(x(2))];     % Function mapping transformed parameters into parameters of interest
+    param_to_transf = @(x) [log(x(1)/(1-x(1))) log(x(2))];   % Function mapping parameters of interest into transformed parameters
+end
 
 % Prior
 prior_logdens_transf = @(x) sum(x) - 2*log(1+exp(x(1)));    % Log prior density of transformed parameters
@@ -40,6 +47,9 @@ is_optimize = true;                         % Find posterior mode?
 [aux1, aux2, aux3] = meshgrid(linspace(0.8,0.99,5),linspace(0.001,0.05,5),linspace(-1,-0.01,5));
 optim_grid = [aux1(:), aux2(:), aux3(:)];   % Optimization grid
 clearvars aux1 aux2 aux3;
+if likelihood_type == 2 % mu_l is not identified with macro data only
+    optim_grid = optim_grid(:,1:2);   % Optimization grid
+end
 
 % MCMC settings
 mcmc_init = param_to_transf([.9 .06 -1]);   % Initial transformed draw (will be overwritten if is_optimize=true)
