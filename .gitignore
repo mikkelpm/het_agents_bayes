@@ -4,15 +4,16 @@
 !*/
 # And all the file types you're interested in.
 !*.m
+!*.mod
 !*.gitignore
 
 # Remove specific files
 program/hh_model/dynare/firstOrderDynamics_polynomials*.*
 program/hh_model/dynare/+firstOrderDynamics_polynomials/*.*
+program/hh_model/dynare/firstOrderDynamics_polynomials_distirf*.*
 program/hh_model/dynare/+firstOrderDynamics_polynomials_distirf/*.*
 program/firm_model/dynare/dynamicModel*.*
 program/firm_model/dynare/+dynamicModel/*.*
 
 # Add some files back in
-!*.mod
 !*_steadystate.m

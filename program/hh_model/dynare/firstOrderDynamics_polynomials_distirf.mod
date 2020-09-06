@@ -75,6 +75,6 @@ steady(nocheck); // Modified wrt firstOrderDynamics_polynomials.mod
 // Simulate 
 // Modified wrt firstOrderDynamics_polynomials.mod
 stoch_simul(irf=8, order=1, irf_shocks = (aggregateTFPShock), nograph, noprint) 
-	moment_1_1 moment_1_2 moment_1_3 moment_2_1 moment_2_2 moment_2_3
+	lag_moment_1_1 lag_moment_1_2 lag_moment_1_3 lag_moment_2_1 lag_moment_2_2 lag_moment_2_3
 	measureCoefficient_1_1 measureCoefficient_1_2 measureCoefficient_1_3 
 	measureCoefficient_2_1 measureCoefficient_2_2 measureCoefficient_2_3;
