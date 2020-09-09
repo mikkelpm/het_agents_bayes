@@ -22,13 +22,13 @@ ts_micro = 10:10:T;     % Time periods where we observe micro data
 N_micro = 1e3;          % Number of micro entities per non-missing time period
 trunc_quant = 0.9;      % Micro sample selection: Lower truncation quantile for labor (steady state distribution)
 
-% Suffix string for all saved .mat files
+% File names
 global mat_suff;
-mat_suff = sprintf('%s%d%s%d%s%02d', '_trunc', 100*trunc_quant, '_liktype', likelihood_type, '_', serial_id);
+mat_suff = sprintf('%s%d%s%d%s%02d', '_trunc', 100*trunc_quant, '_liktype', likelihood_type, '_', serial_id); % Suffix string for all saved .mat files
+save_folder = fullfile(pwd, 'results'); % Folder for saving results
 
 % Parameter transformation
 param_names = {'rrhoProd', 'ssigmaProd'};               % Names of parameters to estimate
-n_param = length(param_names);
 transf_to_param = @(x) [1/(1+exp(-x(1))) exp(x(2))];    % Function mapping transformed parameters into parameters of interest
 param_to_transf = @(x) [log(x(1)/(1-x(1))) log(x(2))];  % Function mapping parameters of interest into transformed parameters
 
@@ -73,6 +73,7 @@ run([model_name '_model/calibrate']);
 
 cd(['./' model_name '_model/dynare']);
 saveParameters;
+economicParameters_true = load_mat('economicParameters'); % Store true parameters
 
 
 %% Initial Dynare processing
@@ -122,14 +123,13 @@ end
 
 %% Run MCMC iterations
 
+mkdir(save_folder);
 mcmc_iter;
 
 
 %% Save results
 
-cd('../../');
-mkdir('results');
-save_mat(fullfile('results', model_name));
+save_mat(fullfile(save_folder, model_name));
 
 if likelihood_type == 1
     delete(gcp('nocreate'));
