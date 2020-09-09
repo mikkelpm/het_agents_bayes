@@ -22,19 +22,18 @@ T = 100;                % Number of periods of simulated macro data
 ts_micro = 10:10:T;     % Time periods where we observe micro data
 N_micro = 1e3;          % Number of households per non-missing time period
 
-% Suffix string for all saved .mat files
+% File names
 global mat_suff;
-mat_suff = sprintf('%s%d%s%d%s%02d', '_N', N_micro, '_liktype', likelihood_type, '_', serial_id);
+mat_suff = sprintf('%s%d%s%d%s%02d', '_N', N_micro, '_liktype', likelihood_type, '_', serial_id); % Suffix string for all saved .mat files
+save_folder = fullfile(pwd, 'results'); % Folder for saving results
 
 % Parameter transformation
 if likelihood_type ~= 2
     param_names = {'bbeta', 'ssigmaMeas', 'mu_l'};                      % Names of parameters to estimate
-    n_param = length(param_names);
     transf_to_param = @(x) [1/(1+exp(-x(1))) exp(x(2)) -exp(x(3))];     % Function mapping transformed parameters into parameters of interest
     param_to_transf = @(x) [log(x(1)/(1-x(1))) log(x(2)) log(-x(3))];   % Function mapping parameters of interest into transformed parameters
 else % mu_l is not identified with macro data only
     param_names = {'bbeta', 'ssigmaMeas'};                      % Names of parameters to estimate
-    n_param = length(param_names);
     transf_to_param = @(x) [1/(1+exp(-x(1))) exp(x(2))];     % Function mapping transformed parameters into parameters of interest
     param_to_transf = @(x) [log(x(1)/(1-x(1))) log(x(2))];   % Function mapping parameters of interest into transformed parameters
 end
@@ -43,16 +42,22 @@ end
 prior_logdens_transf = @(x) sum(x) - 2*log(1+exp(x(1)));    % Log prior density of transformed parameters
 
 % Optimization settings
-is_optimize = true;                         % Find posterior mode?
-[aux1, aux2, aux3] = meshgrid(linspace(0.8,0.99,5),linspace(0.001,0.05,5),linspace(-1,-0.01,5));
-optim_grid = [aux1(:), aux2(:), aux3(:)];   % Optimization grid
-clearvars aux1 aux2 aux3;
-if likelihood_type == 2 % mu_l is not identified with macro data only
-    optim_grid = optim_grid(:,1:2);   % Optimization grid
+is_optimize = true;                             % Find posterior mode?
+if likelihood_type ~= 2
+    [aux1, aux2, aux3] = meshgrid(linspace(0.8,0.99,5),linspace(0.001,0.05,5),linspace(-1,-0.01,5));
+    optim_grid = [aux1(:), aux2(:), aux3(:)];   % Optimization grid
+else % mu_l is not identified with macro data only
+    [aux1, aux2] = meshgrid(linspace(0.8,0.99,5),linspace(0.001,0.05,5));
+    optim_grid = [aux1(:), aux2(:)];
 end
+clearvars aux*;
 
 % MCMC settings
-mcmc_init = param_to_transf([.9 .06 -1]);   % Initial transformed draw (will be overwritten if is_optimize=true)
+if likelihood_type ~= 2
+    mcmc_init = param_to_transf([.9 .06 -1]);   % Initial transformed draw (will be overwritten if is_optimize=true)
+else % mu_l is not identified with macro data only
+    mcmc_init = param_to_transf([.9 .06]);
+end
 mcmc_num_iter = 1e4;                  % Number of MCMC steps (total)
 mcmc_thin = 1;                          % Store every X draws
 mcmc_stepsize_init = 1e-2;              % Initial MCMC step size
@@ -84,6 +89,7 @@ run([model_name '_model/calibrate']);
 
 cd(['./' model_name '_model/dynare']);
 saveParameters;
+economicParameters_true = load_mat('economicParameters'); % Store true parameters
 
 
 %% Initial Dynare processing
@@ -127,14 +133,13 @@ end
 
 %% Run MCMC iterations
 
+mkdir(save_folder);
 mcmc_iter;
 
 
 %% Save results
 
-cd('../../');
-mkdir('results');
-save_mat(fullfile('results', model_name));
+save_mat(fullfile(save_folder, model_name));
 
 if likelihood_type == 1
     delete(gcp('nocreate'));
