@@ -92,6 +92,7 @@ end
 % Combinations of parameters for likelihood evaluation
 % Vary each parameter individually, keeping other parameters at true values
 lik_grid = nan(0,n_param);
+len_lik = nan(1,n_param); % Length of lik_grid for each parameter
 for i_param = 1:n_param
 
     % Fine grid for parameter
@@ -113,7 +114,8 @@ for i_param = 1:n_param
     end
     
     % Add to grid of all parameter combinations
-    aux2 = repmat(params_truth, length(the_grid), 1);
+    len_lik(i_param) = length(the_grid);
+    aux2 = repmat(params_truth, len_lik(i_param), 1);
     aux2(:,i_param) = the_grid;
     lik_grid = [lik_grid; aux2];
     
