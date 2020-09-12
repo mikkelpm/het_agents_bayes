@@ -27,6 +27,10 @@ save_folder = fullfile(pwd, 'results'); % Folder for saving results
 
 % Parameters to evaluate
 param_names = {'bbeta', 'ssigmaMeas', 'mu_l'};          % Names of parameters to estimate
+param_vals_num = 100;                                   % Number of values for each parameter (excluding true values)
+param_vals_mult = [0.75 1.25];                          % Lowest and highest multiples of true value to compute
+param_vals_include = [nan nan; nan 0.3; -0.5 nan];      % Include at least these lower/upper endpoints of intervals for each parameter (nan: no override)
+param_space =        [0   1;   0   Inf; -Inf 0];        % Boundaries of parameter space
 
 % Likelihood settings
 num_smooth_draws = 500;                 % Number of draws from the smoothing distribution (for unbiased likelihood estimate)
@@ -76,39 +80,28 @@ end
 
 %% Parameter combinations to evaluate
 
-param_vals_mult = unique([1 linspace(0.75,1.25,101)]); % Multiples of true parameter to compute
-n_lik = length(param_vals_mult);
-
+n_lik = param_vals_num+1;
 n_param = length(param_names);
 params_truth = nan(1,n_param);
-for i_param = 1:n_param
-    params_truth(i_param) = eval(param_names{i_param});
-end
+lik_grid = nan(n_lik*n_param,n_param);
 
-% Likelihood parameters, including the peaks of the 3rd-moment likelihood
-n_lik2 = 50;
-lik_grid = repmat(params_truth,n_lik*n_param+n_lik2*(n_param-1),1);  
+% Combinations of parameters
 for i_param = 1:n_param
-    lik_grid((i_param-1)*n_lik+(1:n_lik),i_param) = params_truth(i_param)*param_vals_mult;  
+    
+    params_truth(i_param) = eval(param_names{i_param}); % True parameter value
+    
+    % Vary parameter individually, keeping other parameters fixed at truth
+    lik_grid(:,i_param) = params_truth(i_param);
+    aux = [params_truth(i_param)*param_vals_mult param_vals_include(i_param,:)];
+    lik_grid((i_param-1)*n_lik+(1:n_lik),i_param) = ...
+        sort([params_truth(i_param) ...
+              linspace(max(min(aux),param_space(i_param,1)), ... % Smallest value to evaluate
+                       min(max(aux),param_space(i_param,2)), ... % Largest value to evaluate
+                       param_vals_num) ...
+              ]);
+          
 end
-for i_param = 2:n_param
-    if i_param == 2
-        aux = linspace(params_truth(i_param)*param_vals_mult(end),.3,n_lik2+1);
-        aux(1) = [];
-    elseif i_param == 3
-        aux = linspace(-.5,params_truth(i_param)*param_vals_mult(end),n_lik2+1);
-        aux(end) = [];
-    end
-    lik_grid(n_lik*n_param+(i_param-2)*n_lik2+(1:n_lik2),i_param) = aux;  
-end
-
-ix_lik = cell(n_param,1); % Indices in lik_grid for each parameter
-for i_param = 1:n_param
-    ix_lik{i_param} = (i_param-1)*n_lik+(1:n_lik);
-    if i_param >= 2
-        ix_lik{i_param} = [ix_lik{i_param} n_lik*n_param+(i_param-2)*n_lik2+(1:n_lik2)];
-    end
-end
+clearvars aux;
 
 
 %% Evaluate likelihoods
@@ -128,21 +121,14 @@ for i_lik=1:lik_numgrid % Cycle through parameters
     saveParameters;         % Save parameter values to files
     setDynareParameters;    % Update Dynare parameters in model struct
     try
-        compute_steady_state;   % Compute steady state, no need for parameters of agg dynamics
+        compute_steady_state;   % Compute steady state
     catch ME
         disp('Error encountered in steady state computation. Message:');
         disp(ME.message);
         continue;
     end
-    
-    if ismember(i_lik,ix_lik{3}) 
-        % For likelihood types 2 and 5, no need to run the parameter combinations that vary only over mu_l
-        v_type = [1 3 4];
-    else
-        v_type = 1:5;
-    end
 
-    for i_type=v_type % Cycle through likelihood types
+    for i_type=1:5 % Cycle through likelihood types
         
         fprintf('%s%d\n', 'Likelihood type: ', i_type);
         
