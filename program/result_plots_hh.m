@@ -8,7 +8,7 @@ N_draw_alt = 4000; % MCMC draws after burn-in
 ix_out_alt = B_draw+(1:N_draw_alt);
 
 model_name = 'hh';
-n_model = 5;
+n_model = 2;
 n_rep = 10;
 
 model_mcmc = cell(n_rep,n_model);
@@ -38,7 +38,7 @@ graph_size = [6 6];
 
 for i_model = 1:n_model
     for i_rep = 1:n_rep
-        if i_model <= 2 && i_rep == 1
+        if i_rep == 1
             N_draw_aux = N_draw;
         else
             N_draw_aux = N_draw_alt;
@@ -67,7 +67,7 @@ for i_model = 1:n_model
                 end
                 
                 subplot(n_param,1,j);
-                the_acf = autocorr(model_mcmc{i_rep,i_model}.post_draws(ix_out_aux,j),acf_lags);
+                the_acf = autocorr(model_mcmc{i_rep,i_model}.post_draws(ix_out,j),acf_lags);
                 plot(0:acf_lags,the_acf,'-k','LineWidth',2);
                 yline(0, 'k--');
                 title(tex_param{j},'FontSize',SFont,'FontWeight','bold');
@@ -153,69 +153,29 @@ end
 graph_out(F1,[model_filename00 '_postdens'],graph_size)
 
 % =========================================================================
-% All 5 models x 10 repetitions
+% 10 repetitions x 2 models
 ix_rep = 1:n_rep;
-all_xi = cell(n_rep,n_model,n_param);
-all_f = cell(n_rep,n_model,n_param);
+
+F1 = figure;
 for i_model = 1:n_model  
     for j = 1:n_param
         if i_model == 2 && j == n_param
             continue
         end
-        for i_rep = ix_rep
-            [all_f{i_rep,i_model,j},all_xi{i_rep,i_model,j}] = ...
-                ksdensity(model_mcmc{i_rep,i_model}.post_draws(ix_out_alt,j));
-        end
-    end
-end
-
-xxlim = nan(n_param,2);
-yylim = nan(n_param,2); 
-yylim(:,1) = 0;
-for j = 1:n_param
-    aux = cell2mat(all_xi(:,:,j));
-    xxlim(j,:) = [min(aux(:)) max(aux(:))];
-    aux = cell2mat(all_f(:,:,j));
-    yylim(j,2) = max(aux(:));
-end
-
-for i_model = 1:n_model  
-    F1 = figure;
-    if i_model == 1
-        graph_size = [6 1.8]; % due to subtitle
-        position_inch = nan(n_param,4); % inner position in inches,
-                                        % so all graphs are compatible across models
-    else
-        graph_size = [6 1.7];
-    end
-    
-    for j = 1:n_param
-        if i_model == 2 && j == n_param
-            continue
-        end
-        
         subplot(1,n_param,j);
         hold on
         for i_rep = ix_rep
-            patchline(all_xi{i_rep,i_model,j}',all_f{i_rep,i_model,j}','linestyle','-',...
-                'edgecolor',co(i_model,:),'linewidth',2,'edgealpha',.5);
+            [the_f,the_xi] = ksdensity(model_mcmc{i_rep,i_model}.post_draws(ix_out_alt,j));
+            patchline(the_xi,the_f,'linestyle','-','edgecolor',co(i_model,:),...
+                'linewidth',2,'edgealpha',.5);
         end
         hold off
-        
-        xlim(xxlim(j,:))
-        ylim(yylim(j,:))
         xline(params_truth(j),'k--');
         
-        if i_model == 1
-            title(tex_param{j},'FontSize',SFont,'FontWeight','bold');
-            position_inch(j,:) = get(gca,'Position').*repmat(graph_size,2);
-        else
-            set(gca,'Units','Inches','Position',position_inch(j,:))
-        end
+        title(tex_param{j},'FontSize',SFont,'FontWeight','bold');
     end
-    
-    graph_out(F1,[model_filename{n_rep,i_model} '_postdens'],graph_size)
 end
+graph_out(F1,[model_filename{n_rep,n_model} '_postdens'],graph_size)
 
 close all
 
@@ -223,3 +183,6 @@ close all
 addpath([model_name '_model/plot']);
 consumption_policy_fcn;
 dist_irf;
+
+%% Likelhood: 10 repetitions x 5 models
+likelihood_plots;
