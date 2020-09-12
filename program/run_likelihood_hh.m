@@ -10,7 +10,7 @@ addpath(genpath(['./' model_name '_model/auxiliary_functions']));
 
 % Decide what to do
 is_run_dynare = false;   % Process Dynare model?
-is_data_gen = false;     % Simulate data?
+is_data_gen = true;     % Simulate data?
 
 % ID
 serial_id = 1;          % ID number of current run (used in file names and RNG seeds)
@@ -26,11 +26,12 @@ mat_suff = sprintf('%s%d%s%02d', '_likelihood_N', N_micro, '_', serial_id); % Su
 save_folder = fullfile(pwd, 'results'); % Folder for saving results
 
 % Parameters to evaluate
-param_names = {'bbeta', 'ssigmaMeas', 'mu_l'};          % Names of parameters to estimate
-param_vals_num = 100;                                   % Number of values for each parameter (excluding true values)
-param_vals_mult = [0.75 1.25];                          % Lowest and highest multiples of true value to compute
-param_vals_include = [nan nan; nan 0.3; -0.5 nan];      % Include at least these lower/upper endpoints of intervals for each parameter (nan: no override)
-param_space =        [0   1;   0   Inf; -Inf 0];        % Boundaries of parameter space
+param_names = {'bbeta', 'ssigmaMeas', 'mu_l'};          % Names of parameters to evaluate
+param_vals_mult = [0.75 1.25];                          % Lowest and highest multiples of true value on fine grid
+param_vals_num_fine = 100;                              % Number of fine grid points (excluding true values) in interval defined by "param_vals_mult"
+param_space =        [0   1;   0   Inf; -Inf 0];        % Boundaries of parameter space to enforce on fine grid
+param_vals_include = [nan nan; nan 0.3; -0.5 nan];      % Include these lower/upper endpoints for each parameter (nan: no override)
+param_vals_num_coarse = 50;                             % Number of coarse grid points outside interval defined by "param_vals_mult"
 
 % Likelihood settings
 num_smooth_draws = 500;                 % Number of draws from the smoothing distribution (for unbiased likelihood estimate)
@@ -80,28 +81,44 @@ end
 
 %% Parameter combinations to evaluate
 
-n_lik = param_vals_num+1;
 n_param = length(param_names);
 params_truth = nan(1,n_param);
-lik_grid = nan(n_lik*n_param,n_param);
 
-% Combinations of parameters
+% True parameter values
 for i_param = 1:n_param
-    
-    params_truth(i_param) = eval(param_names{i_param}); % True parameter value
-    
-    % Vary parameter individually, keeping other parameters fixed at truth
-    lik_grid(:,i_param) = params_truth(i_param);
-    aux = [params_truth(i_param)*param_vals_mult param_vals_include(i_param,:)];
-    lik_grid((i_param-1)*n_lik+(1:n_lik),i_param) = ...
-        sort([params_truth(i_param) ...
-              linspace(max(min(aux),param_space(i_param,1)), ... % Smallest value to evaluate
-                       min(max(aux),param_space(i_param,2)), ... % Largest value to evaluate
-                       param_vals_num) ...
-              ]);
-          
+    params_truth(i_param) = eval(param_names{i_param});
 end
-clearvars aux;
+
+% Combinations of parameters for likelihood evaluation
+% Vary each parameter individually, keeping other parameters at true values
+lik_grid = nan(0,n_param);
+for i_param = 1:n_param
+
+    % Fine grid for parameter
+    aux = params_truth(i_param)*param_vals_mult;
+    the_grid = sort([params_truth(i_param) ...
+                     linspace(max(min(aux),param_space(i_param,1)), ...
+                              min(max(aux),param_space(i_param,2)), ...
+                              param_vals_num_fine) ...
+                    ]);
+    
+    % Extend with coarse grid to left/right, if desired
+    if param_vals_include(i_param,1)<the_grid(1)
+        the_lin = linspace(param_vals_include(i_param,1), the_grid(1), param_vals_num_coarse+1);
+        the_grid = [the_lin(1:end-1) the_grid];
+    end
+    if param_vals_include(i_param,2)>the_grid(end)
+        the_lin = linspace(the_grid(end), param_vals_include(i_param,2), param_vals_num_coarse+1);
+        the_grid = [the_grid the_lin(2:end)];
+    end
+    
+    % Add to grid of all parameter combinations
+    aux2 = repmat(params_truth, length(the_grid), 1);
+    aux2(:,i_param) = the_grid;
+    lik_grid = [lik_grid; aux2];
+    
+end
+clearvars aux aux2 the_grid the_lin;
 
 
 %% Evaluate likelihoods
