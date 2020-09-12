@@ -27,7 +27,6 @@ save_folder = fullfile(pwd, 'results'); % Folder for saving results
 
 % Parameters to evaluate
 param_names = {'bbeta', 'ssigmaMeas', 'mu_l'};          % Names of parameters to estimate
-param_vals_mult = unique([1 linspace(0.75,1.25,51)]);   % Multiples of true parameter to compute
 
 % Likelihood settings
 num_smooth_draws = 500;                 % Number of draws from the smoothing distribution (for unbiased likelihood estimate)
@@ -39,7 +38,6 @@ rng_seed = 20200813+serial_id;          % Random number generator seed
 
 delete(gcp('nocreate'));    
 poolobj = parpool;                      % Parallel computing object
-
 
 
 %% Calibrate parameters and set numerical settings
@@ -78,15 +76,38 @@ end
 
 %% Parameter combinations to evaluate
 
+param_vals_mult = unique([1 linspace(0.75,1.25,101)]); % Multiples of true parameter to compute
 n_lik = length(param_vals_mult);
+
 n_param = length(param_names);
 params_truth = nan(1,n_param);
 for i_param = 1:n_param
     params_truth(i_param) = eval(param_names{i_param});
 end
-lik_grid = repmat(params_truth,n_lik*n_param,1);
+
+% Likelihood parameters, including the peaks of the 3rd-moment likelihood
+n_lik2 = 50;
+lik_grid = repmat(params_truth,n_lik*n_param+n_lik2*(n_param-1),1);  
 for i_param = 1:n_param
-    lik_grid((i_param-1)*n_lik+(1:n_lik),i_param) = params_truth(i_param)*param_vals_mult;
+    lik_grid((i_param-1)*n_lik+(1:n_lik),i_param) = params_truth(i_param)*param_vals_mult;  
+end
+for i_param = 2:n_param
+    if i_param == 2
+        aux = linspace(params_truth(i_param)*param_vals_mult(end),.3,n_lik2+1);
+        aux(1) = [];
+    elseif i_param == 3
+        aux = linspace(-.5,params_truth(i_param)*param_vals_mult(end),n_lik2+1);
+        aux(end) = [];
+    end
+    lik_grid(n_lik*n_param+(i_param-2)*n_lik2+(1:n_lik2),i_param) = aux;  
+end
+
+ix_lik = cell(n_param,1); % Indices in lik_grid for each parameter
+for i_param = 1:n_param
+    ix_lik{i_param} = (i_param-1)*n_lik+(1:n_lik);
+    if i_param >= 2
+        ix_lik{i_param} = [ix_lik{i_param} n_lik*n_param+(i_param-2)*n_lik2+(1:n_lik2)];
+    end
 end
 
 
@@ -106,9 +127,22 @@ for i_lik=1:lik_numgrid % Cycle through parameters
     
     saveParameters;         % Save parameter values to files
     setDynareParameters;    % Update Dynare parameters in model struct
-    compute_steady_state;   % Compute steady state, no need for parameters of agg dynamics
+    try
+        compute_steady_state;   % Compute steady state, no need for parameters of agg dynamics
+    catch ME
+        disp('Error encountered in steady state computation. Message:');
+        disp(ME.message);
+        continue;
+    end
+    
+    if ismember(i_lik,ix_lik{3}) 
+        % For likelihood types 2 and 5, no need to run the parameter combinations that vary only over mu_l
+        v_type = [1 3 4];
+    else
+        v_type = 1:5;
+    end
 
-    for i_type=1:5 % Cycle through likelihood types
+    for i_type=v_type % Cycle through likelihood types
         
         fprintf('%s%d\n', 'Likelihood type: ', i_type);
         
@@ -119,7 +153,7 @@ for i_lik=1:lik_numgrid % Cycle through parameters
                                     num_interp, i_type, ...
                                     M_, oo_, options_); % Only compute steady state once
         catch ME
-            disp('Error encountered. Message:');
+            disp('Error encountered in likelihoood computation. Message:');
             disp(ME.message);
         end
         
@@ -147,7 +181,7 @@ function [the_loglike, the_loglike_macro, the_loglike_micro] = ...
                 M_, oo_, options_)
         
         global mat_suff;
-
+        
         saveParameters;         % Save parameter values to files
         compute_meas_err;       % Update measurement error var-cov matrix for sample moments
         
