@@ -62,29 +62,17 @@ num_smooth_draws = 500;                 % Number of draws from the smoothing dis
 num_burnin_periods = 100;               % Number of burn-in periods for simulations
 rng_seed = 20200813+serial_id;          % Random number generator seed
 if likelihood_type == 1
-    delete(gcp('nocreate'));    
+    delete(gcp('nocreate'));
     poolobj = parpool;                  % Parallel computing object
 end
 
-
-%% Calibrate parameters and set numerical settings
-
-run([model_name '_model/calibrate']);
-
-cd(['./' model_name '_model/dynare']);
-saveParameters;
-economicParameters_true = load_mat('economicParameters'); % Store true parameters
+% Dynare settings
+dynare_model = 'dynamicModel';          % Dynare model file
 
 
-%% Initial Dynare processing
+%% Calibrate parameters, execute initial Dynare processing
 
-if is_run_dynare
-    dynare dynamicModel noclearall nopathchange; % Run Dynare once to process model file
-else
-    load('dynamicModel_results');
-    check_matlab_path(false);
-    dynareroot = dynare_config(); % Add Dynare sub-folders to path
-end
+run_calib_dynare;
 
 
 %% Truncation point
@@ -95,16 +83,7 @@ trunc_logn = M_.steady_vars.smpl_m1+norminv(trunc_quant)*sqrt(M_.steady_vars.smp
 
 %% Simulate data
 
-set_dynare_seed(rng_seed);  % Seed Dynare RNG
-rng(rng_seed, 'twister');   % Seed Matlab RNG
-
-if ~is_data_gen
-    % Load previous data
-    load_mat('simul_data_micro');
-else
-    % Simulate
-    simul_data;
-end
+run_sim;
 
 
 %% Find approximate mode
@@ -113,7 +92,8 @@ end
 ll_fct = @(M_, oo_, options_) aux_ll(simul_data_micro, ts_micro, ...
                                 num_smooth_draws, num_burnin_periods, ...
                                 trunc_logn, likelihood_type, ...
-                                M_, oo_, options_);
+                                M_, oo_, options_, ...
+                                true);
 
 % Optimization
 if is_optimize
@@ -132,51 +112,6 @@ mcmc_iter;
 save_mat(fullfile(save_folder, model_name));
 
 if likelihood_type == 1
-    delete(gcp('nocreate'));
+    delete(poolobj);
 end
 
-%% Auxiliary likelihood function
-
-function [the_loglike, the_loglike_macro, the_loglike_micro] = ...
-         aux_ll(data_micro, ts_micro, ...
-                num_smooth_draws, num_burnin_periods, ...
-                trunc_logn, likelihood_type, ...
-                M_, oo_, options_)
-        
-        global mat_suff;
-
-        saveParameters;         % Save parameter values to files
-        setDynareParameters;    % Update Dynare parameters in model struct
-        compute_steady_state;   % Compute steady state, no need for parameters of agg dynamics
-        compute_meas_err;       % Update measurement error var-cov matrix for sample moments
-        
-        % Macro state variables used in micro likelihood
-        smooth_vars = [{'logWage'; 'aggregateTFP'};
-                       str_add_numbers('lag_moment_', 1:5)];
-        
-        % Parameters passed to micro likelihood function
-        param = [nnu ttheta trunc_logn];
-        
-        % Log likelihood computation
-        switch likelihood_type
-            case 1 % Macro + full info micro
-                [the_loglike, the_loglike_macro, the_loglike_micro] = ...
-                    loglike_compute(strcat('simul', mat_suff, '.mat'), ...
-                                   num_burnin_periods, smooth_vars, num_smooth_draws, ...
-                                   M_, oo_, options_, ...
-                                   data_micro, ts_micro, param);
-            case 2 % Macro + full info micro, ignore truncation
-                [the_loglike, the_loglike_macro, the_loglike_micro] = ...
-                    loglike_compute(strcat('simul', mat_suff, '.mat'), ...
-                                   num_burnin_periods, smooth_vars, num_smooth_draws, ...
-                                   M_, oo_, options_, ...
-                                   data_micro, ts_micro, [param(1:2) -Inf]);
-            case 3 % Macro + moments w/ SS meas. err.
-                [the_loglike, the_loglike_macro, the_loglike_micro] = ...
-                    loglike_compute(strcat('simul_moments', mat_suff, '.mat'), ...
-                                   num_burnin_periods, smooth_vars, 0, ...
-                                   M_, oo_, options_, ...
-                                   [], [], param);
-        end
-        
-end

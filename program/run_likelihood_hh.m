@@ -40,43 +40,21 @@ num_interp = 100;                       % Number of interpolation grid points fo
 % Numerical settings
 num_burnin_periods = 100;               % Number of burn-in periods for simulations
 rng_seed = 20200813+serial_id;          % Random number generator seed
-
 delete(gcp('nocreate'));    
 poolobj = parpool;                      % Parallel computing object
 
-
-%% Calibrate parameters and set numerical settings
-
-run([model_name '_model/calibrate']);
-
-cd(['./' model_name '_model/dynare']);
-saveParameters;
-economicParameters_true = load_mat('economicParameters'); % Store true parameters
+% Dynare settings
+dynare_model = 'firstOrderDynamics_polynomials'; % Dynare model file
 
 
-%% Initial Dynare processing
+%% Calibrate parameters, execute initial Dynare processing
 
-if is_run_dynare
-    dynare firstOrderDynamics_polynomials noclearall nopathchange; % Run Dynare once to process model file
-else
-    load('firstOrderDynamics_polynomials_results');
-    check_matlab_path(false);
-    dynareroot = dynare_config(); % Add Dynare sub-folders to path
-end
+run_calib_dynare;
 
 
 %% Simulate data
 
-set_dynare_seed(rng_seed);  % Seed Dynare RNG
-rng(rng_seed, 'twister');   % Seed Matlab RNG
-
-if ~is_data_gen
-    % Load previous data
-    load_mat('simul_data_micro');
-else
-    % Simulate
-    simul_data;
-end
+run_sim;
 
 
 %% Parameter combinations to evaluate
@@ -154,7 +132,8 @@ for i_lik=1:lik_numgrid % Cycle through parameters
                                     aux_ll(simul_data_micro, ts_micro, ...
                                     num_smooth_draws, num_burnin_periods, ...
                                     num_interp, i_type, ...
-                                    M_, oo_, options_); % Only compute steady state once
+                                    M_, oo_, options_, ...
+                                    false); % Only compute steady state once
         catch ME
             disp('Error encountered in likelihoood computation. Message:');
             disp(ME.message);
@@ -172,65 +151,4 @@ end
 mkdir(save_folder);
 save_mat(fullfile(save_folder, model_name));
 
-delete(gcp('nocreate'));
-
-
-%% Auxiliary function
-
-function [the_loglike, the_loglike_macro, the_loglike_micro] = ...
-         aux_ll(data_micro, ts_micro, ...
-                num_smooth_draws, num_burnin_periods, ...
-                num_interp, likelihood_type, ...
-                M_, oo_, options_)
-        
-        global mat_suff;
-        
-        saveParameters;         % Save parameter values to files
-        compute_meas_err;       % Update measurement error var-cov matrix for sample moments
-        
-        % Macro state variables used in micro likelihood
-        num_mom = 3;
-        smooth_vars = [{'w'; 'r'; 'lag_mHat_1' ; 'lag_mHat_2'};
-                       str_add_numbers('lag_moment_1_', 1:num_mom);
-                       str_add_numbers('lag_moment_2_', 1:num_mom);
-                       str_add_numbers('measureCoefficient_1_', 1:num_mom);
-                       str_add_numbers('measureCoefficient_2_', 1:num_mom)];
-        
-        % Parameters passed to micro likelihood function
-        param = [aaBar mmu ttau mu_l num_mom num_interp];
-        
-        % Log likelihood computation
-        switch likelihood_type
-            case 1 % Macro + full info micro
-                [the_loglike, the_loglike_macro, the_loglike_micro] = ...
-                    loglike_compute(strcat('simul', mat_suff, '.mat'), ...
-                                   num_burnin_periods, smooth_vars, num_smooth_draws, ...
-                                   M_, oo_, options_, ...
-                                   data_micro, ts_micro, param);
-            case 2 % Macro only
-                [the_loglike, the_loglike_macro, the_loglike_micro] = ...
-                    loglike_compute(strcat('simul', mat_suff, '.mat'), ...
-                                   num_burnin_periods, smooth_vars, 0, ...
-                                   M_, oo_, options_, ...
-                                   [], [], param);
-            case 3 % Macro + up to 3rd moments
-                [the_loglike, the_loglike_macro, the_loglike_micro] = ...
-                    loglike_compute(strcat('simul_moments', mat_suff, '.mat'), ...
-                                   num_burnin_periods, smooth_vars, 0, ...
-                                   M_, oo_, options_, ...
-                                   [], [], param);
-            case 4 % Macro + up to 2nd moments
-                [the_loglike, the_loglike_macro, the_loglike_micro] = ...
-                    loglike_compute(strcat('simul_moments2', mat_suff, '.mat'), ...
-                                   num_burnin_periods, smooth_vars, 0, ...
-                                   M_, oo_, options_, ...
-                                   [], [], param);
-            case 5 % Macro + only 1st moments
-                [the_loglike, the_loglike_macro, the_loglike_micro] = ...
-                    loglike_compute(strcat('simul_moments1', mat_suff, '.mat'), ...
-                                   num_burnin_periods, smooth_vars, 0, ...
-                                   M_, oo_, options_, ...
-                                   [], [], param);
-        end
-        
-end
+delete(poolobj);
