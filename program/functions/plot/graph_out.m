@@ -5,3 +5,5 @@ set(F1,'PaperPositionMode','Auto');
 set(F1,'Clipping','off')
 
 print(F1,graph_name,'-dpng');
+
+close(F1);
