@@ -8,7 +8,11 @@ addpath('./functions/plot');
 % Results to plot
 model_name = 'hh';      % Either 'hh' or 'firm'
 subspec = '_N1000';     % For model_name='hh': format '_N1000'; for model_name='firm': format '_trunc90'
-plot_liktypes = 1:2;    % Likelihood types to plot
+if strcmp(model_name,'hh')
+    plot_liktypes = 1:2;% Likelihood types to plot
+else
+    plot_liktypes = 1;  % Likelihood types to plot
+end
 plot_reps = 1:10;       % Repetitions to include in plot (non-existing repetitions are ignored)
 
 % Plot settings
@@ -17,8 +21,8 @@ acf_lags = 200;                 % No. of ACF lags
 colors_postdens = [zeros(1,3); get(0, 'DefaultAxesColorOrder')]; % Posterior density colors for different liktypes
 alpha_postdens = 0.5;
 plot_fontsize = 12;             % Plot font size
-graph_size = [6 6];             % Graph size for trace plot and ACF
-graph_size_postdens = [6 3];    % Graph size for trace plot and ACF
+graph_size_diagnostic = [6 6];        % Graph size for trace plot and ACF
+graph_size_postdens = [6 3];    % Graph size for posterior density plots
 
 % Parameter names
 if strcmp(model_name, 'hh')
@@ -120,29 +124,31 @@ for i_rep = 1:n_rep
             
             % Posterior density
             figure(f_postdens);
-            subplot(nparam_all,1,the_param);
+            subplot(1,nparam_all,the_param);
             [the_f,the_xi] = ksdensity(the_draws(plot_burnin+1:end));
-            hold on;
             plot(the_xi,the_f,'LineWidth',2,'Color',colors_postdens(i_type,:));
-            hold off;
-            xline(model_params_truth{i_rep,i_type}(i_param),'k--');
-            title(the_tex,'FontSize',plot_fontsize,'FontWeight','bold');
+            if isempty(get(get(gca,'Title'),'String'))
+                hold on; % hold off will be automatic when the figure is closed
+                xline(model_params_truth{i_rep,i_type}(i_param),'k--');
+                title(the_tex,'FontSize',plot_fontsize,'FontWeight','bold');
+            end
             
             % Posterior density, all repetitions together
             figure(f_postdens_all);
-            subplot(nparam_all,1,the_param);
-            hold on;
+            subplot(1,nparam_all,the_param);
             patchline(the_xi,the_f,'linestyle','-','edgecolor',colors_postdens(i_type,:),...
                       'linewidth',2,'edgealpha',alpha_postdens);
-            hold off;
-            xline(model_params_truth{i_rep,i_type}(i_param),'k--');
-            title(the_tex,'FontSize',plot_fontsize,'FontWeight','bold');
+            if isempty(get(get(gca,'Title'),'String'))
+                hold on; % hold off will be automatic when the figure is closed
+                xline(model_params_truth{i_rep,i_type}(i_param),'k--');
+                title(the_tex,'FontSize',plot_fontsize,'FontWeight','bold');
+            end
             
         end
         
         % Save trace plot and ACF
-        graph_out(f_trace,fullfile(save_folder,strcat(model_filename{i_rep,i_type},'_trace')),graph_size);
-        graph_out(f_acf,fullfile(save_folder,strcat(model_filename{i_rep,i_type},'_acf')),graph_size);
+        graph_out(f_trace,fullfile(save_folder,strcat(model_filename{i_rep,i_type},'_trace')),graph_size_diagnostic);
+        graph_out(f_acf,fullfile(save_folder,strcat(model_filename{i_rep,i_type},'_acf')),graph_size_diagnostic);
         
     end
     
@@ -150,7 +156,7 @@ for i_rep = 1:n_rep
     if the_n_liktype>0
         graph_out(f_postdens, ...
                   fullfile(save_folder,...
-                           strcat(strrep(model_filename{i_rep,1},sprintf('%s%d','_liktype',plot_liktypes(1)),''), ...
+                           strcat(strrep(model_filename{i_rep,1},sprintf('%s%d','_liktype',plot_liktypes(1))), ...
                                   '_postdens') ...
                            ), ...
                   graph_size_postdens);
