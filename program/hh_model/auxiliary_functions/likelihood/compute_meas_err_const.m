@@ -1,4 +1,4 @@
-% Part of cov matrix of sample moments that doesn't change over parameter values
+% Part of measurement error cov matrix that doesn't change over parameter values
 
 smpl_m = zeros(2,6);
 num_obs = zeros(2,1);

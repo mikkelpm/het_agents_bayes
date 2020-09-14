@@ -57,6 +57,11 @@ run_calib_dynare;
 run_sim;
 
 
+%% Measurement error
+
+compute_meas_err_const; % Part of cov matrix of sample moments that doesn't change over parameter values
+
+
 %% Parameter combinations to evaluate
 
 n_param = length(param_names);

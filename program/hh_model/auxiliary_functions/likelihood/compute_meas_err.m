@@ -1,4 +1,4 @@
-% Cov matrix of sample moments
+% Measurement error
 
 M_.H(1,1) = ssigmaMeas^2;
 

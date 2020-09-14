@@ -9,9 +9,9 @@ addpath(genpath(['./' model_name '_model/auxiliary_functions']));
 %% Settings
 
 % Decide what to do
-is_run_dynare = false;   % Process Dynare model?
-is_data_gen = false;     % Simulate data?
-likelihood_type = 3;    % =1: macro + full-info micro; =2: macro only;
+is_run_dynare = true;   % Process Dynare model?
+is_data_gen = true;     % Simulate data?
+likelihood_type = 1;    % =1: macro + full-info micro; =2: macro only;
                         % =3: macro + 3 micro moments; =4: macro + 2 micro moments; =5: macro + 1 micro moment
 
 % ID
@@ -96,10 +96,12 @@ run_calib_dynare;
 run_sim;
 
 
-%% Find approximate mode
+%% Measurement error
 
-% Part of cov matrix of sample moments that doesn't change over parameter values
-compute_meas_err_const;
+compute_meas_err_const; % Part of cov matrix of sample moments that doesn't change over parameter values
+
+
+%% Find approximate mode
 
 % Log likelihood function
 ll_fct = @(M_, oo_, options_) aux_ll(simul_data_micro, ts_micro, ...
