@@ -111,7 +111,7 @@ clearvars aux aux2 the_grid the_lin;
 lik_numgrid = size(lik_grid,1);
 lik_all = nan(lik_numgrid,3,5);
 
-fprintf('\nLikelihoood...\n');
+fprintf('\nLikelihood...\n');
 timer_lik = tic;
 
 for i_lik=1:lik_numgrid % Cycle through parameters
@@ -142,7 +142,7 @@ for i_lik=1:lik_numgrid % Cycle through parameters
                                     M_, oo_, options_, ...
                                     false); % Only compute steady state once
         catch ME
-            disp('Error encountered in likelihoood computation. Message:');
+            disp('Error encountered in likelihood computation. Message:');
             disp(ME.message);
         end
         
