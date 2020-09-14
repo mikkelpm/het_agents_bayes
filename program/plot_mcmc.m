@@ -1,6 +1,6 @@
 clear all;
 
-addpath('./functions/plot');
+addpath(fullfile('functions', 'plot'));
 
 
 %% Settings
@@ -15,14 +15,30 @@ else
 end
 plot_reps = 1:10;       % Repetitions to include in plot (non-existing repetitions are ignored)
 
-% Plot settings
+% Steady state computations (only for 'hh' model)
+is_run_dynare = false;  % Process Dynare model?
+is_run_comput = true;   % Run computations or load previous computations from file?
+comput_rep = 1;         % Repetition to use for consumption policy or distribution (must be included in "plot_reps")
+dynare_model = 'firstOrderDynamics_polynomials'; % Dynare model file for 'hh' model
+
+% Reporting settings
 plot_burnin = 1e3;              % Burn-in
 acf_lags = 200;                 % No. of ACF lags
+thin_draw = 10;                 % Compute SS consumption policy or distribution every X-th draw
+
+% Plot layout
 colors_postdens = [zeros(1,3); get(0, 'DefaultAxesColorOrder')]; % Posterior density colors for different liktypes
-alpha_postdens = 0.5;
+alpha_postdens = 0.5;           % Opacity of density curves when plotted on same figure
 plot_fontsize = 12;             % Plot font size
-graph_size_diagnostic = [6 6];        % Graph size for trace plot and ACF
+graph_size_diagnostic = [6 6];  % Graph size for trace plot and ACF
 graph_size_postdens = [6 3];    % Graph size for posterior density plots
+
+% Policy function plot layout
+graph_size_polfct = [6 3];      % Graph size for policy function plot
+colors_polfct = [0.7*ones(1,3); get(0, 'DefaultAxesColorOrder')]; % Colors for policy function for different liktypes
+alpha_polfct = 0.05;            % Opacity of policy function
+emp_label = {'Unemployed','Employed'}; % Labels of employment states
+xlim_polfct = [0 10];           % Limits of assets axis
 
 % Parameter names
 if strcmp(model_name, 'hh')
@@ -172,10 +188,14 @@ graph_out(f_postdens_all,fullfile(save_folder,strcat(model_filename{i_rep,1}(1:e
 clearvars the_*;
 
 
-%% Consumption policy functions and distribution IRFs
+%% Consumption policy function and distribution IRF
 
 if strcmp(model_name, 'hh')
-    addpath([model_name '_model/plot']);
+    
+    addpath(fullfile('functions', 'likelihood'));
+    addpath(fullfile('hh_model', 'dynare'));
+    addpath(fullfile('hh_model', 'plot'));
     consumption_policy_fcn;
     dist_irf;
+    
 end
