@@ -1,170 +1,78 @@
-clear all;
+function [assets,dist] = dist_irf(maxhorz,M_,oo_,options_,mMoments,mParameters)
 
-model_name = 'hh';
+    % Impulse response of asset distribution
 
-addpath(genpath('./functions'));
-addpath(genpath(['./' model_name '_model/auxiliary_functions']));
-
-is_run_dynare = true;   % Process Dynare model?
-
-%% Calibrate parameters and set numerical settings
-run([model_name '_model/calibrate']);
-
-cd(['./' model_name '_model/dynare']);
-saveParameters;
-
-%% Initial Dynare processing
-if is_run_dynare
-    dynare firstOrderDynamics_polynomials_distirf noclearall nopathchange;
-        % Run Dynare once to process model file
-else
-    load('firstOrderDynamics_polynomials_distirf_results');
-    check_matlab_path(false);
-    dynareroot = dynare_config(); % Add Dynare sub-folders to path
-end
-
-%% Steady state distributions under true DGP
-[vassets0,vdist0] = aux_distss(M_,oo_,options_);
-
-%% Full info vs Macro only	
-B_draw = 1000; % Burn-in
-N_draw = 9000; % MCMC draws after burn-in
-thin_draw = 10;
-
-n_model = 2;
-nHorizon = 8;
-assets_draw_all = nan(nAssets,N_draw/thin_draw,n_model);
-distirf_draw_all = nan(nAssets,nEpsilon,nHorizon+1,N_draw/thin_draw,n_model);
-v_discard = cell(1,n_model);
-
-for i_model = 1:n_model
-    load(['../../results/' model_name '_N1000_model' num2str(i_model) '_01']);
-    v_discard{i_model} = [];
+    global nAssetsFine nEpsilon nMeasure vAssetsGridFine;
     
-    for i_draw = ix_out(1:thin_draw:end)
-        ii_draw = (i_draw-B_draw-1)/thin_draw+1; 
-            % Index after excluding burn-out and thinning
-        if mod(i_draw,100) == 0
-            disp(['Model ' num2str(i_model) ', i_draw = ' num2str(i_draw)])
+    assets = vAssetsGridFine;
+    dist = nan(nAssetsFine,nEpsilon,maxhorz+1);
+    
+    % First compute steady state distribution
+    dist(:,:,1) = aux_dist(mMoments, mParameters(:,2:end));
+    
+    % Compute IRFs of all endogenous Dynare variables
+    the_irf = computeIRF(maxhorz,M_,oo_,options_);
+
+    % Compute asset distribution at each horizon
+    for iHorizon = 1:maxhorz
+        
+        the_mMoments = nan(nEpsilon,nMeasure);
+        the_mMeasureCoefficients = nan(nEpsilon,nMeasure);
+        
+        % Collect moments and distribution coefficients
+        for iEpsilon = 1:nEpsilon
+            for iMeasure = 1:nMeasure
+                the_mMoments(iEpsilon,iMeasure) = ...
+                    the_irf(strcmp(M_.endo_names, ...
+                                   ['lag_moment_' num2str(iEpsilon) '_' num2str(iMeasure)]), ...
+                            iHorizon);
+                the_mMeasureCoefficients(iEpsilon,iMeasure) = ...
+                    the_irf(strcmp(M_.endo_names, ...
+                                   ['measureCoefficient_' num2str(iEpsilon) '_' num2str(iMeasure)]), ...
+                            iHorizon);
+            end            
         end
         
-        bbeta = post_draws(i_draw,1); 
-        ssigmaMeas = post_draws(i_draw,2);
-        mu_l = post_draws(i_draw,3);
-        try
-            [~,distirf_draw_all(:,:,1,ii_draw,i_model)] = aux_distss(M_,oo_,options_);
-            [assets_draw_all(:,ii_draw,i_model),...
-                distirf_draw_all(:,:,2:end,ii_draw,i_model)] = aux_distirf(M_,oo_,options_);
-        catch
-            v_discard{i_model} = [v_discard{i_model} i_draw];
-            continue
-        end
-    end    
-end
-
-%% Save results
-cd('../../');
-save('results/dist_irf.mat','vassets0','vdist0','assets_draw_all','distirf_draw_all')
-
-%% Plot graphs
-co = [0.7*ones(1,3); get(0, 'DefaultAxesColorOrder')];
-SFont = 12;
-graph_size = [6 6];
-emp_label = {'Unemployed','Employed'};
-vHorizon_out = [0 2 4 8];
-nHorizon_out = length(vHorizon_out);
-
-F1 = figure;
-for iEpsilon = 1:nEpsilon
-    subplot(1,nEpsilon,3-iEpsilon) 
-    
-    hold on
-    for iHorizon_out = 1:nHorizon_out
-        iHorizon = vHorizon_out(iHorizon_out);
-        y_wedge = .8-.2*iHorizon_out;
+        % Compute distribution at this horizon
+        dist(:,:,iHorizon+1) = aux_dist(the_mMoments, the_mMeasureCoefficients);
         
-        for i_model = [2 1]
-            for i_draw = 1:N_draw/thin_draw
-                patchline(assets_draw_all(:,i_draw,i_model),...
-                    distirf_draw_all(:,iEpsilon,iHorizon+1,i_draw,i_model)+y_wedge,...
-                    'linestyle','-','edgecolor',co(i_model,:),'linewidth',1,'edgealpha',.05);
-            end
-        end
-        plot(vassets0,vdist0(:,iEpsilon)+y_wedge,'k-','linewidth',.75)        
     end
-    hold off
     
-    xlim([0 10])
-    ylim([0 .9])
-    set(gca,'ytick',[])
-    grid on    
-    
-    for iHorizon_out = 1:nHorizon_out
-        iHorizon = vHorizon_out(iHorizon_out);
-        text(8,.9-.2*iHorizon_out,['h = ' num2str(iHorizon)],...
-            'FontSize',SFont,'FontWeight','bold')
-    end
-    title(emp_label{iEpsilon},'FontSize',SFont,'FontWeight','bold');
 end
 
-graph_name = 'results/dist_irf';
-graph_out(F1,graph_name,graph_size);
-
-close all
 
 %% Auxiliary functions
-% Distributions at steady states
-function [vassets,vdist] = aux_distss(M_,oo_,options_)
-saveParameters;         % Save parameter values to files
-setDynareParameters;    % Update Dynare parameters in model struct
-compute_steady_state;   % Compute steady state, no need for parameters of agg dynamics
 
-vassets = vAssetsGridFine;
-vdist = nan(nAssetsFine,nEpsilon);
+function irf_out = computeIRF(maxhorz,M_,oo_,options_)
 
-for iEpsilon = 1:nEpsilon
-    moment = mMoments(iEpsilon,:);
-    measureCoefficient = mParameters(iEpsilon,2:nMeasure+1);
-    moment_aux = moment;
-    moment_aux(1) = 0;
-    g_log = @(a) measureCoefficient*((a-moment(1)).^((1:nMeasure)')-moment_aux');
-    normalization = integral(@(a) exp(g_log(a)), aaBar, Inf);
+    % Call internal Dynare impulse response computation
     
-    % Compute density away from borrowing constraint
-    vdist(:,iEpsilon) = exp(g_log(vAssetsGridFine'))/normalization;
-end 
+    dr = resol(0, M_, options_, oo_); % Decision rule
+    irf_out = irf(M_, options_, dr, 1, maxhorz, [], [], 1); % IRFs of all endogenous variables
+    irf_out = irf_out+dr.ys; % Add back steady state
+
 end
 
-% Distribution IRFs
-function [vassets,vdist] = aux_distirf(M_,oo_,options_)
-saveParameters;         % Save parameter values to files
-firstOrderDynamics_polynomials;
+function dist = aux_dist(mMoments, mMeasureCoefficients)
 
-vassets = vAssetsGridFine;
-vdist = nan(nAssetsFine,nEpsilon,nHorizon);
+    % Asset distribution
 
-for iEpsilon = 1:nEpsilon
-    for iHorizon = 1:nHorizon
-        moment = nan(1,nMeasure);
-        for iMeasure = 1:nMeasure
-            moment(1,iMeasure) = ...
-                eval(['oo_.irfs.lag_moment_' num2str(iEpsilon) '_' num2str(iMeasure)...
-                '_aggregateTFPShock(iHorizon)']);
-        end
-        measureCoefficient = nan(1,nMeasure);
-        for iMeasure = 1:nMeasure
-            measureCoefficient(1,iMeasure) = ...
-                eval(['oo_.irfs.measureCoefficient_' num2str(iEpsilon) '_' num2str(iMeasure)...
-                '_aggregateTFPShock(iHorizon)']);
-        end
-        
+    global nAssetsFine vAssetsGridFine nEpsilon nMeasure aaBar;
+
+    dist = nan(nAssetsFine,nEpsilon);
+
+    for iEpsilon = 1:nEpsilon
+
+        moment = mMoments(iEpsilon,:);
+        measureCoefficient = mMeasureCoefficients(iEpsilon,:);
         moment_aux = moment;
         moment_aux(1) = 0;
         g_log = @(a) measureCoefficient*((a-moment(1)).^((1:nMeasure)')-moment_aux');
         normalization = integral(@(a) exp(g_log(a)), aaBar, Inf);
-        
+
         % Compute density away from borrowing constraint
-        vdist(:,iEpsilon,iHorizon) = exp(g_log(vAssetsGridFine'))/normalization;        
-    end
-end
+        dist(:,iEpsilon) = exp(g_log(vAssetsGridFine'))/normalization;
+        
+    end 
+
 end

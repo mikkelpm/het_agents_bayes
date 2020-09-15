@@ -15,16 +15,18 @@ else
 end
 plot_reps = 1:10;       % Repetitions to include in plot (non-existing repetitions are ignored)
 
-% Steady state computations (only for 'hh' model)
-is_run_dynare = false;  % Process Dynare model?
-is_run_comput = true;   % Run computations or load previous computations from file?
-comput_rep = 1;         % Repetition to use for consumption policy or distribution (must be included in "plot_reps")
-dynare_model = 'firstOrderDynamics_polynomials'; % Dynare model file for 'hh' model
-
 % Reporting settings
-plot_burnin = 1e3;              % Burn-in
+plot_burnin = 1e3;              % Burn-in for MCMC chains
 acf_lags = 200;                 % No. of ACF lags
-thin_draw = 10;                 % Compute SS consumption policy or distribution every X-th draw
+
+% Parameter names
+if strcmp(model_name, 'hh')
+    plot_param = {'bbeta', 'ssigmaMeas', 'mu_l'};   % Names of parameters to plot
+    tex_param = {'\beta','\sigma_e','\mu_\lambda'}; % Tex versions of parameter names (in same order as above)
+else
+    plot_param = {'rrhoProd', 'ssigmaProd'};
+    tex_param = {'\rho_\epsilon','\sigma_\epsilon'};
+end
 
 % Plot layout
 colors_postdens = [zeros(1,3); get(0, 'DefaultAxesColorOrder')]; % Posterior density colors for different liktypes
@@ -33,21 +35,28 @@ plot_fontsize = 12;             % Plot font size
 graph_size_diagnostic = [6 6];  % Graph size for trace plot and ACF
 graph_size_postdens = [6 3];    % Graph size for posterior density plots
 
-% Policy function plot layout
-graph_size_polfct = [6 3];      % Graph size for policy function plot
-colors_polfct = [0.7*ones(1,3); get(0, 'DefaultAxesColorOrder')]; % Colors for policy function for different liktypes
-alpha_polfct = 0.05;            % Opacity of policy function
+% Extra posterior computations (only for 'hh' model)
+is_run_dynare = false;          % Process Dynare model?
+is_run_comput = true;           % true: run computation; false: load previous computations from file
+comput_rep = 1;                 % Single repetition to use for computations (must be included in "plot_reps")
+dynare_model = 'firstOrderDynamics_polynomials'; % Dynare model file for 'hh' model
+thin_draw = 10;                 % Compute consumption policy or distribution every X-th draw
 emp_label = {'Unemployed','Employed'}; % Labels of employment states
-xlim_polfct = [0 10];           % Limits of assets axis
+xlim_assets = [0 10];           % Limits of assets axis
 
-% Parameter names
-if strcmp(model_name, 'hh')
-    plot_param = {'bbeta', 'ssigmaMeas', 'mu_l'};   % Parameter names to plot
-    tex_param = {'\beta','\sigma_e','\mu_\lambda'}; % Tex versions of parameter names (in same order as above)
-else
-    plot_param = {'rrhoProd', 'ssigmaProd'};
-    tex_param = {'\rho_\epsilon','\sigma_\epsilon'};
-end
+% Consumption policy function layout
+graph_size_polfct = [6 3];      % Graph size
+colors_polfct = [0.7*ones(1,3); get(0, 'DefaultAxesColorOrder')]; % Colors for different liktypes
+alpha_polfct = 0.05;            % Opacity
+
+% Asset distribution IRF layout
+horzs = [0 2 4 8];              % Impulse response horizons to plot
+graph_size_distirf = [6 6];     % Graph size
+colors_distirf = colors_postdens; % Colors for different liktypes
+alpha_distirf = alpha_polfct;   % Opacity
+ylim_distirf = [0 .9];          % y-axis limits
+wedge_param = [.8 -.2];         % Shift distributions vertically by wedge_param(1)+wedge_param(2)*horizon, in order to display on single plot
+wedge_text = 0.1;               % Shift horizon label vertically by this much relative to above wedge
 
 % Folders
 results_folder = 'results';                         % Stores results
@@ -192,10 +201,11 @@ clearvars the_*;
 
 if strcmp(model_name, 'hh')
     
+    addpath('functions');
     addpath(fullfile('functions', 'likelihood'));
     addpath(fullfile('hh_model', 'dynare'));
     addpath(fullfile('hh_model', 'plot'));
-    consumption_policy_fcn;
-    dist_irf;
+    
+    comput_polfct_distirf;
     
 end
