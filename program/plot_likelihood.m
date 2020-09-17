@@ -24,7 +24,7 @@ graph_size_rep = [6 2.3];       % Graph size for plots by repetitions
 graph_size_liktype = [6 1.7];   % Graph size for plots by likelihood types
 ylim_lik = [-10 0];             % Limits of likelihood axis
 legend_lik = {'FI','macro','3 mom','2 mom','1 mom'}; % Likelihood type names in legend
-shrink_rep = 0.05;               % Shrink the plots by repetitions due to legend
+shrink_rep = 0.025;             % Shrink the plots by repetitions due to legend
 
 % Folders
 results_folder = 'results';                         % Stores results
@@ -132,7 +132,7 @@ for i_rep = 1:n_rep
         
         subplot_position = get(gca,'Position');
         subplot_position(2) = subplot_position(2)+shrink_rep;
-        subplot_position(4) = subplot_position(4)-shrink_rep;
+        subplot_position(4) = subplot_position(4)-2*shrink_rep;
         set(gca,'Position',subplot_position)
         
         if i_param == 1
