@@ -14,6 +14,8 @@ else
     plot_liktypes = 1;  % Likelihood types to plot
 end
 plot_reps = 1:10;       % Repetitions to include in plot (non-existing repetitions are ignored)
+n_liktype = length(plot_liktypes);
+n_rep = length(plot_reps);
 
 % Reporting settings
 plot_burnin = 1e3;              % Burn-in for MCMC chains
@@ -29,11 +31,17 @@ else
 end
 
 % Plot layout
-colors_postdens = [zeros(1,3); get(0, 'DefaultAxesColorOrder')]; % Posterior density colors for different liktypes
+layer_order = 1:n_liktype;             % Layer order of likelihood types for overlayed plots: 1st element = top layer
+colors_postdens = [zeros(1,3); 1 0 0]; % Posterior density colors for different liktypes
+linestyles_postdens_1rep = {'-';'--'}; % Line styles of single-repetition posteriror density plots 
 alpha_postdens = 0.5;           % Opacity of density curves when plotted on same figure
 plot_fontsize = 12;             % Plot font size
 graph_size_diagnostic = [6 6];  % Graph size for trace plot and ACF
-graph_size_postdens = [6 3];    % Graph size for posterior density plots
+if strcmp(model_name, 'hh')
+    graph_size_postdens = [6 2.5];    % Graph size for posterior density plots
+else
+    graph_size_postdens = [5 2.5];    % Graph size for posterior density plots
+end
 
 % Extra posterior computations (only for 'hh' model)
 is_run_dynare = false;          % Process Dynare model?
@@ -44,29 +52,34 @@ thin_draw = 10;                 % Compute consumption policy or distribution eve
 emp_label = {'Unemployed','Employed'}; % Labels of employment states
 xlim_assets = [0 10];           % Limits of assets axis
 
-% Consumption policy function layout
-graph_size_polfct = [6 3];      % Graph size
-colors_polfct = [0.7*ones(1,3); get(0, 'DefaultAxesColorOrder')]; % Colors for different liktypes
-alpha_polfct = 0.05;            % Opacity
+% Common layout of consumption policy function and Asset distribution IRF
+colors_hairline = [0.7*ones(1,3); 1 0 0]; % Colors for different liktypes
+alpha_hairline = 0.05;          % Opacity
 
-% Asset distribution IRF layout
+% Specific layout of consumption policy function
+graph_size_polfct = [6 3];      % Graph size
+
+% Specific layout of Asset distribution IRF
 horzs = [0 2 4 8];              % Impulse response horizons to plot
-graph_size_distirf = [6 6];     % Graph size
-colors_distirf = colors_postdens; % Colors for different liktypes
-alpha_distirf = alpha_polfct;   % Opacity
+graph_size_distirf = [6 3.5];     % Graph size
 ylim_distirf = [0 .9];          % y-axis limits
 wedge_param = [.8 -.2];         % Shift distributions vertically by wedge_param(1)+wedge_param(2)*horizon, in order to display on single plot
 wedge_text = 0.1;               % Shift horizon label vertically by this much relative to above wedge
+xloc_text = 0.7;                % Horizon location of labels
 
 % Folders
 results_folder = 'results';                         % Stores results
 save_folder = fullfile(results_folder, 'plots');    % Saved figures
 
+% Macro Only model (likelihood type 2) doesn't depend on micro sample size (N),
+% so we can simulate it once (with tag '_N1000') and copy its output file across different Ns
+if strcmp(model_name,'hh') && ~strcmp(subspec,'_N1000')
+    addpath(fullfile('hh_model', 'plot'));  
+    copy_macroonly;
+end
+
 
 %% Load MCMC results
-
-n_liktype = length(plot_liktypes);
-n_rep = length(plot_reps);
 
 model_filename = cell(n_rep,n_liktype);
 model_mcmc = cell(n_rep,n_liktype);
@@ -108,6 +121,8 @@ mkdir(save_folder);
 nparam_all = length(tex_param);
 
 f_postdens_all = figure;
+n_rep_actual = 0;
+stack_postdens_all = cell(nparam_all,1); % For layers of hairlines    
 
 for i_rep = 1:n_rep
     
@@ -122,6 +137,7 @@ for i_rep = 1:n_rep
         
         the_n_liktype = the_n_liktype+1;
         the_nparam = model_nparam(i_rep,i_type); % Number of parameters for this likelihood type
+        i_layer = find(layer_order==i_type);
         
         f_trace = figure;
         f_acf = figure;
@@ -151,7 +167,8 @@ for i_rep = 1:n_rep
             figure(f_postdens);
             subplot(1,nparam_all,the_param);
             [the_f,the_xi] = ksdensity(the_draws(plot_burnin+1:end));
-            plot(the_xi,the_f,'LineWidth',2,'Color',colors_postdens(i_type,:));
+            plot(the_xi,the_f,'LineStyle',linestyles_postdens_1rep{i_type},...
+                'LineWidth',2,'Color',colors_postdens(i_type,:));
             if isempty(get(get(gca,'Title'),'String'))
                 hold on; % hold off will be automatic when the figure is closed
                 xline(model_params_truth{i_rep,i_type}(i_param),'k--');
@@ -162,10 +179,12 @@ for i_rep = 1:n_rep
             figure(f_postdens_all);
             subplot(1,nparam_all,the_param);
             patchline(the_xi,the_f,'linestyle','-','edgecolor',colors_postdens(i_type,:),...
-                      'linewidth',2,'edgealpha',alpha_postdens);
+                      'linewidth',1,'edgealpha',alpha_postdens);
+            stack_postdens_all{the_param} = [i_layer stack_postdens_all{the_param}];
             if isempty(get(get(gca,'Title'),'String'))
                 hold on; % hold off will be automatic when the figure is closed
                 xline(model_params_truth{i_rep,i_type}(i_param),'k--');
+                stack_postdens_all{the_param} = [n_liktype+1 stack_postdens_all{the_param}]; % Bottom of the layer
                 title(the_tex,'FontSize',plot_fontsize,'FontWeight','bold');
             end
             
@@ -179,12 +198,16 @@ for i_rep = 1:n_rep
     
     % Save posterior densities
     if the_n_liktype>0
+        
         graph_out(f_postdens, ...
                   fullfile(save_folder,...
                            strcat(strrep(model_filename{i_rep,1},sprintf('%s%d','_liktype',plot_liktypes(1)),''), ...
                                   '_postdens') ...
                            ), ...
                   graph_size_postdens);
+              
+        n_rep_actual = n_rep_actual+1;
+        
     else
         close(f_postdens);
     end
@@ -192,20 +215,36 @@ for i_rep = 1:n_rep
 end
 
 % Save posterior densities, all repetitions together
-graph_out(f_postdens_all,fullfile(save_folder,strcat(model_filename{i_rep,1}(1:end-11),'postdens')),graph_size_postdens);
+if n_rep_actual>1 
+    
+    % Reorder the layers
+    figure(f_postdens_all);
+    for the_param = 1:nparam_all
+        [~,children_order] = sort(stack_postdens_all{the_param});
+        subplot(1,nparam_all,the_param);
+        children_handle = get(gca,'Children');
+        set(gca,'Children',children_handle(children_order))
+    end
+    
+    graph_out(f_postdens_all,fullfile(save_folder,strcat(model_filename{i_rep,1}(1:end-11),'postdens')),...
+              graph_size_postdens);   
+
+else
+    close(f_postdens_all);        
+end
 
 clearvars the_*;
 
 
 %% Consumption policy function and distribution IRF
 
-if strcmp(model_name, 'hh')
+if strcmp(model_name, 'hh') && strcmp(subspec,'_N1000')
     
     addpath('functions');
     addpath(fullfile('functions', 'likelihood'));
     addpath(fullfile('hh_model', 'dynare'));
     addpath(fullfile('hh_model', 'plot'));
-    
+
     comput_polfct_distirf;
     
 end

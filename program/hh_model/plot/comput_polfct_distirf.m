@@ -74,7 +74,7 @@ if is_run_comput
 
     % Save results
     cd('../../');
-    save(fullfile(save_folder, 'comput_polfct_distirf.mat'), ...
+    save(fullfile(results_folder, 'comput_polfct_distirf.mat'), ...
         'ixs','assets_truth','cons_truth','assets_fine_truth','distirf_truth', ...
         'assets_draw_all','cons_draw_all','assets_fine_draw_all','distirf_draw_all', ...
         'elapsed_time');
@@ -82,7 +82,7 @@ if is_run_comput
 else
     
     cd('../../');
-    load(fullfile(save_folder, 'comput_polfct_distirf.mat'));
+    load(fullfile(results_folder, 'comput_polfct_distirf.mat'));
 
 end
 
@@ -93,15 +93,16 @@ save_name = strrep(model_filename{comput_rep_ind,1},sprintf('%s%d','_liktype',pl
 ylim_subplots = nan(nEpsilon,2);
 f_polfct = figure;
 
-for iEpsilon = nEpsilon:-1:1
+for iEpsilon = 1:nEpsilon
     
-    subplot(1,nEpsilon,iEpsilon);
+    subplot(1,nEpsilon,nEpsilon+1-iEpsilon); % Plot "Employed" on the left panel and "Unemployed" on the right panel
     hold on;
-    for i_type = 1:n_liktype
+    for i_type = layer_order(end:-1:1) % Layer order of likelihood types for overlayed plots
         for i_draw = 1:length(ixs{i_type})
             patchline(assets_draw_all{i_type}(:,i_draw),...
                 cons_draw_all{i_type}(:,iEpsilon,i_draw),...
-                'linestyle','-','edgecolor',colors_polfct(i_type,:),'linewidth',1,'edgealpha',alpha_polfct);
+                'linestyle','-','edgecolor',colors_hairline(i_type,:),...
+                'linewidth',1,'edgealpha',alpha_hairline);
         end
     end
     plot(assets_truth,cons_truth(:,iEpsilon),'k-','linewidth',.75); % Truth
@@ -129,9 +130,9 @@ graph_out(f_polfct,fullfile(save_folder,strcat(save_name,'_conspolfct')),graph_s
 numhorz = length(horzs);
 f_distirf = figure;
 
-for iEpsilon = nEpsilon:-1:1
+for iEpsilon = 1:nEpsilon
     
-    subplot(1,nEpsilon,iEpsilon);
+    subplot(1,nEpsilon,nEpsilon+1-iEpsilon); % Plot "Employed" on the left panel and "Unemployed" on the right panel
     hold on;
     
     for i_horz = 1:numhorz
@@ -139,18 +140,19 @@ for iEpsilon = nEpsilon:-1:1
         the_horz = horzs(i_horz);
         the_y_wedge = wedge_param(1)+wedge_param(2)*i_horz;
         
-        for i_type = 1:n_liktype
+        for i_type = layer_order(end:-1:1) % Layer order of likelihood types for overlayed plots
             for i_draw = 1:length(ixs{i_type})
                 patchline(assets_fine_draw_all{i_type}(:,i_draw),...
                     distirf_draw_all{i_type}(:,iEpsilon,the_horz+1,i_draw)+the_y_wedge,...
-                    'linestyle','-','edgecolor',colors_distirf(i_type,:),'linewidth',1,'edgealpha',alpha_distirf);
+                    'linestyle','-','edgecolor',colors_hairline(i_type,:),...
+                    'linewidth',1,'edgealpha',alpha_hairline);
             end
         end
         
         plot(assets_fine_truth,distirf_truth(:,iEpsilon,1)+the_y_wedge,'k-','linewidth',.75); % Truth
         
-        text(xlim_assets(1)+0.8*diff(xlim_assets),the_y_wedge+wedge_text,['h = ' num2str(the_horz)],...
-            'FontSize',plot_fontsize,'FontWeight','bold'); % Horizon label
+        text(xlim_assets(1)+xloc_text*diff(xlim_assets),the_y_wedge+wedge_text,...
+            ['h = ' num2str(the_horz)],'FontSize',plot_fontsize,'FontWeight','bold'); % Horizon label
         
     end
     
