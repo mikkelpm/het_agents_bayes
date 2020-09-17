@@ -6,14 +6,15 @@ addpath(fullfile('functions', 'plot'));
 %% Settings
 
 % Results to plot
-model_name = 'hh';      % Either 'hh' or 'firm'
-subspec = '_N1000';     % For model_name='hh': format '_N1000'; for model_name='firm': format '_trunc90'
+model_name = 'hh';              % Either 'hh' or 'firm'
 if strcmp(model_name,'hh')
-    plot_liktypes = 1:2;% Likelihood types to plot
+    plot_liktypes = 1:2;        % Likelihood types to plot
+    subspecs = {'_N1000', '_N1000'}; % Number of households, for each likelihood type
 else
-    plot_liktypes = 1;  % Likelihood types to plot
+    plot_liktypes = 1;          % Likelihood types to plot
+    subspecs = {'_trunc90'};    % Truncation
 end
-plot_reps = 1:10;       % Repetitions to include in plot (non-existing repetitions are ignored)
+plot_reps = 1:10;               % Repetitions to include in plot (non-existing repetitions are ignored)
 n_liktype = length(plot_liktypes);
 n_rep = length(plot_reps);
 
@@ -31,16 +32,16 @@ else
 end
 
 % Plot layout
-layer_order = 1:n_liktype;             % Layer order of likelihood types for overlayed plots: 1st element = top layer
-colors_postdens = [zeros(1,3); 1 0 0]; % Posterior density colors for different liktypes
-linestyles_postdens_1rep = {'-';'--'}; % Line styles of single-repetition posteriror density plots 
-alpha_postdens = 0.5;           % Opacity of density curves when plotted on same figure
-plot_fontsize = 12;             % Plot font size
-graph_size_diagnostic = [6 6];  % Graph size for trace plot and ACF
+layer_order = 1:n_liktype;              % Layer order of likelihood types for overlaid plots: 1st element = top layer
+colors_postdens = [zeros(1,3); 1 0 0];  % Posterior density colors for different liktypes
+linestyles_postdens_1rep = {'-';'--'};  % Line styles of single-repetition posterior density plots 
+alpha_postdens = 0.5;                   % Opacity of density curves when plotted on same figure
+plot_fontsize = 12;                     % Plot font size
+graph_size_diagnostic = [6 6];          % Graph size for trace plot and ACF
 if strcmp(model_name, 'hh')
-    graph_size_postdens = [6 2.5];    % Graph size for posterior density plots
+    graph_size_postdens = [6 2.5];      % Graph size for posterior density plots
 else
-    graph_size_postdens = [5 2.5];    % Graph size for posterior density plots
+    graph_size_postdens = [5 2.5];      % Graph size for posterior density plots
 end
 
 % Extra posterior computations (only for 'hh' model)
@@ -61,7 +62,7 @@ graph_size_polfct = [6 3];      % Graph size
 
 % Specific layout of Asset distribution IRF
 horzs = [0 2 4 8];              % Impulse response horizons to plot
-graph_size_distirf = [6 3.5];     % Graph size
+graph_size_distirf = [6 3.5];   % Graph size
 ylim_distirf = [0 .9];          % y-axis limits
 wedge_param = [.8 -.2];         % Shift distributions vertically by wedge_param(1)+wedge_param(2)*horizon, in order to display on single plot
 wedge_text = 0.1;               % Shift horizon label vertically by this much relative to above wedge
@@ -70,13 +71,6 @@ xloc_text = 0.7;                % Horizon location of labels
 % Folders
 results_folder = 'results';                         % Stores results
 save_folder = fullfile(results_folder, 'plots');    % Saved figures
-
-% Macro Only model (likelihood type 2) doesn't depend on micro sample size (N),
-% so we can simulate it once (with tag '_N1000') and copy its output file across different Ns
-if strcmp(model_name,'hh') && ~strcmp(subspec,'_N1000')
-    addpath(fullfile('hh_model', 'plot'));  
-    copy_macroonly;
-end
 
 
 %% Load MCMC results
@@ -93,7 +87,7 @@ for i_type = 1:n_liktype
     for i_rep = 1:n_rep
         
         % Model file name and results
-        model_filename{i_rep,i_type} = sprintf('%s%s%s%d%s%02d',model_name,subspec,'_liktype',plot_liktypes(i_type),'_',plot_reps(i_rep));
+        model_filename{i_rep,i_type} = sprintf('%s%s%s%d%s%02d',model_name,subspecs{i_type},'_liktype',plot_liktypes(i_type),'_',plot_reps(i_rep));
         the_file = fullfile(results_folder, model_filename{i_rep,i_type});
         if ~isfile(strcat(the_file, '.mat'))
             continue;
@@ -238,7 +232,7 @@ clearvars the_*;
 
 %% Consumption policy function and distribution IRF
 
-if strcmp(model_name, 'hh') && strcmp(subspec,'_N1000')
+if strcmp(model_name, 'hh')
     
     addpath('functions');
     addpath(fullfile('functions', 'likelihood'));
