@@ -27,7 +27,7 @@ legend_lik = {'Full Info','Macro Only','3rd Momemnt','2nd Moment','1st Moment'};
 reposition_rep = [0 0.025 0 -0.05];                  % Reposition the repetition-specific plots due to legend
 
 % Folders
-results_folder = 'C:\Users\Laura\Dropbox\projects\Hetero_Agent\results';                         % Stores results
+results_folder = 'results';                         % Stores results
 save_folder = fullfile(results_folder, 'plots');    % Saved figures
 
 % For each parameter, which likelihood type(s) cannot identify the parameter?
@@ -69,6 +69,7 @@ end
 
 %% Likelihood plots
 
+mkdir(save_folder);
 n_liktype = length(plot_liktypes);
 n_param = length(tex_param);
 
