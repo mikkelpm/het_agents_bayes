@@ -74,8 +74,8 @@ end
 
 % Combinations of parameters for likelihood evaluation
 % Vary each parameter individually, keeping other parameters at true values
-lik_grid = nan(0,n_param);
-len_lik = nan(1,n_param); % Length of lik_grid for each parameter
+lik_grid = nan(0,n_param); % Parameter value combinaitions on which the likelihoods are computed
+len_lik = nan(1,n_param);  % Length of each parameter in lik_grid
 for i_param = 1:n_param
 
     % Fine grid for parameter

@@ -45,6 +45,7 @@ else
 end
 
 % Extra posterior computations (only for 'hh' model)
+is_comput_polfct_distirf = true;% Compute consumption policy function and distribution IRF
 is_run_dynare = false;          % Process Dynare model?
 is_run_comput = true;           % true: run computation; false: load previous computations from file
 comput_rep = 1;                 % Single repetition to use for computations (must be included in "plot_reps")
@@ -232,7 +233,7 @@ clearvars the_*;
 
 %% Consumption policy function and distribution IRF
 
-if strcmp(model_name, 'hh')
+if strcmp(model_name, 'hh') && is_comput_polfct_distirf
     
     addpath('functions');
     addpath(fullfile('functions', 'likelihood'));
