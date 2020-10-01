@@ -1,7 +1,9 @@
 function [loglike, loglike_macro, loglike_micro]...
-    = loglike_compute(data_macro, num_burnin_periods, smooth_vars, num_smooth_draws, ...
+    = loglike_compute(data_macro, ...
+                      num_burnin_periods, smooth_vars, num_smooth_draws, ...
                       M_, oo_, options_, ...
-                      data_micro, ts_micro, param)
+                      data_micro, ts_micro, param, ...
+                      varargin)
 
 % Compute log likelihood for macro+micro data
 
@@ -33,6 +35,13 @@ options_new.initial_date = [];
 % Seeds for simulation smoother
 rand_seeds = randi(2^32,1,num_smooth_draws);
 
+% Random shocks for simulation smoother
+if isempty(varargin)
+    sim_shocks = zeros(0,0,num_smooth_draws);
+else
+    sim_shocks = varargin{1};
+end
+
 loglikes_micro = nan(1,num_smooth_draws);
 disp('Micro likelihood...');
 timer = tic;
@@ -40,11 +49,13 @@ timer = tic;
 % for i_draw = 1:num_smooth_draws
 parfor i_draw = 1:num_smooth_draws
     
+    rng(rand_seeds(i_draw), 'twister'); % Set RNG
+    
     dataset_fake = struct;
     dataset_fake.nobs = nobs;
     
     % Compute smoothing draw
-    the_smooth_draw = simulation_smoother(smooth_means, smooth_vars, num_burnin_periods, rand_seeds(i_draw), ...
+    the_smooth_draw = simulation_smoother(smooth_means, smooth_vars, num_burnin_periods, sim_shocks(:,:,i_draw), ...
                                           M_new, oo_new, options_new, dataset_fake, dataset_info, xparam1, estim_params_, bayestopt_);
     the_smooth_draw_tab = struct2table(the_smooth_draw); % Transform struct to table
     the_smooth_draw_tab = the_smooth_draw_tab(ts_micro,:); % Only retain relevant time periods for micro data

@@ -108,6 +108,11 @@ clearvars aux aux2 the_grid the_lin;
 
 %% Evaluate likelihoods
 
+% Simulate random shocks that are held fixed across parameters
+sim_shocks = simulate_shocks(M_, T+num_burnin_periods, num_smooth_draws);
+
+% Likelihood
+
 lik_numgrid = size(lik_grid,1);
 lik_all = nan(lik_numgrid,3,5);
 
@@ -140,7 +145,8 @@ for i_lik=1:lik_numgrid % Cycle through parameters
                                     num_smooth_draws, num_burnin_periods, ...
                                     num_interp, i_type, ...
                                     M_, oo_, options_, ...
-                                    false); % Only compute steady state once
+                                    false, ...   % Only compute steady state once
+                                    sim_shocks); % Supply same shocks regardless of parameters
         catch ME
             disp('Error encountered in likelihood computation. Message:');
             disp(ME.message);
