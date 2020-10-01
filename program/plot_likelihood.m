@@ -121,7 +121,7 @@ for i_rep = 1:n_rep
         for i_type = 1:n_liktype
             
             plot(all_param{i_param},all_lik{i_rep,i_type,i_param},...
-                'LineWidth',1,'Color',colors_lik(i_type,:));
+                'LineWidth',1,'Color',colors_lik(plot_liktypes(i_type),:));
             
         end
         hold off
@@ -161,7 +161,7 @@ for i_type = 1:n_liktype
         hold on
         for i_rep = 1:n_rep
             patchline(all_param{i_param},all_lik{i_rep,i_type,i_param},...
-                'linestyle','-','edgecolor',colors_lik(i_type,:),...
+                'linestyle','-','edgecolor',colors_lik(plot_liktypes(i_type),:),...
                 'linewidth',1,'edgealpha',alpha_lik);
         end
         hold off
