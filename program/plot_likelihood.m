@@ -23,15 +23,16 @@ plot_fontsize = 12;             % Plot font size
 graph_size_rep = [6 2.3];       % Graph size for repetition-specific plots
 graph_size_liktype = [6 1.7];   % Graph size for likelihood-type-specific plots
 ylim_lik = [-10 0];             % Limits of likelihood axis
-legend_lik = {'Full Info','Macro Only','3rd Momemnt','2nd Moment','1st Moment'}; % Likelihood type names in legend
+legend_lik = {'Full Info','Macro Only','3rd Moment','2nd Moment','1st Moment'}; % Likelihood type names in legend
 reposition_rep = [0 0.025 0 -0.05];                  % Reposition the repetition-specific plots due to legend
+
+% For each parameter, which likelihood type(s) cannot identify the parameter?
+nonid_param_lik = {[],[],[2 5]};
 
 % Folders
 results_folder = 'results';                         % Stores results
 save_folder = fullfile(results_folder, 'plots');    % Saved figures
 
-% For each parameter, which likelihood type(s) cannot identify the parameter?
-nonid_param_lik = {[],[],[2 5]};
 
 %% Load likelihood results
 
