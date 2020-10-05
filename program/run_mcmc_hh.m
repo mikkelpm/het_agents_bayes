@@ -127,6 +127,6 @@ mcmc_iter;
 save_mat(fullfile(save_folder, model_name));
 
 if likelihood_type == 1
-    delete(pool_obj);
+    delete(poolobj);
 end
 
