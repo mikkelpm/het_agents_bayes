@@ -81,5 +81,6 @@ for i_mcmc=1:mcmc_num_iter % For each MCMC step...
     
 end
 
+rng_status = rng;
 mcmc_elapsed = toc(timer_mcmc);
 fprintf('%s%8.2f\n', 'MCMC done. Elapsed minutes: ', mcmc_elapsed/60);
