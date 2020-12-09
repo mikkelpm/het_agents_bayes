@@ -16,8 +16,9 @@ plot_param = {'bbeta', 'ssigmaMeas', 'mu_l'};   % Names of parameters to plot
 tex_param = {'\beta','\sigma_e','\mu_\lambda'}; % Tex versions of parameter names (in same order as above)
 
 % Plot layout
-colors_lik = [zeros(1,3); 1 0 0; get(0, 'DefaultAxesColorOrder')]; % Posterior density colors for different liktypes
-colors_lik(4,:) = [];           % Delete color(s) too similar
+layer_order = 1:n_liktype;              % Layer order of likelihood types for overlaid plots: 1st element = top layer
+colors_default = get(0, 'DefaultAxesColorOrder'); % MATLAB default color palette
+colors_lik = [colors_default(1,:); zeros(1,3); colors_default(2:end,:)]; % Posterior density colors for different liktypes
 alpha_lik = 0.5;                % Opacity
 plot_fontsize = 12;             % Plot font size
 graph_size_rep = [6 2.3];       % Graph size for repetition-specific plots
@@ -119,10 +120,11 @@ for i_rep = 1:n_rep
         
         subplot(1,n_param,i_param); 
         hold on
-        for i_type = 1:n_liktype
+        for i_type = layer_order(end:-1:1) % Layer order of likelihood types for overlayed plots
+
             
             plot(all_param{i_param},all_lik{i_rep,i_type,i_param},...
-                'LineWidth',1,'Color',colors_lik(plot_liktypes(i_type),:));
+                'LineWidth',1+(plot_liktypes(i_type)==1),'Color',colors_lik(plot_liktypes(i_type),:));
             
         end
         hold off

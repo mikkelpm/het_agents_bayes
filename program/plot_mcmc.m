@@ -34,7 +34,8 @@ end
 
 % Plot layout
 layer_order = 1:n_liktype;              % Layer order of likelihood types for overlaid plots: 1st element = top layer
-colors_postdens = [zeros(1,3); 1 0 0];  % Posterior density colors for different liktypes
+colors_default = get(0, 'DefaultAxesColorOrder'); % MATLAB default color palette
+colors_postdens = [colors_default(1,:); zeros(1,3)]; % Posterior density colors for different liktypes
 linestyles_postdens_1rep = {'-';'--'};  % Line styles of single-repetition posterior density plots 
 alpha_postdens = 0.5;                   % Opacity of density curves when plotted on same figure
 plot_fontsize = 12;                     % Plot font size
@@ -52,15 +53,15 @@ is_run_dynare = false;          % Process Dynare model?
 comput_rep = 1;                 % Single repetition to use for computations (must be included in "plot_reps")
 dynare_model = 'firstOrderDynamics_polynomials'; % Dynare model file for 'hh' model
 thin_draw = 10;                 % Compute consumption policy or distribution every X-th draw
-emp_label = {'Unemployed','Employed'}; % Labels of employment states
+lik_label = {'Full Info','Macro Only'}; % Labels of likelihood types
 xlim_assets = [0 10];           % Limits of assets axis
 
 % Common layout of consumption policy function and Asset distribution IRF
-colors_hairline = [0.7*ones(1,3); 1 0 0]; % Colors for different liktypes
+colors_hairline = [colors_default(1,:); 0.5*ones(1,3)]; % Colors for different liktypes
 alpha_hairline = 0.05;          % Opacity
 
 % Specific layout of consumption policy function
-graph_size_polfct = [6 3];      % Graph size
+graph_size_polfct = [6 2.5];      % Graph size
 
 % Specific layout of Asset distribution IRF
 horzs = [0 2 4 8];              % Impulse response horizons to plot
@@ -157,7 +158,7 @@ if is_plot_param
                 figure(f_acf);
                 subplot(the_nparam,1,i_param);
                 the_acf = autocorr(the_draws(plot_burnin+1:end),acf_lags);
-                plot(0:acf_lags,the_acf,'-k','LineWidth',2);
+                plot(0:acf_lags,the_acf,'-k','LineWidth',1.5);
                 yline(0, 'k--');
                 title(the_tex,'FontSize',plot_fontsize,'FontWeight','bold');
 
@@ -166,7 +167,7 @@ if is_plot_param
                 subplot(1,nparam_all,the_param);
                 [the_f,the_xi] = ksdensity(the_draws(plot_burnin+1:end));
                 plot(the_xi,the_f,'LineStyle',linestyles_postdens_1rep{i_type},...
-                    'LineWidth',2,'Color',colors_postdens(i_type,:));
+                    'LineWidth',1.5,'Color',colors_postdens(i_type,:));
                 if isempty(get(get(gca,'Title'),'String'))
                     hold on; % hold off will be automatic when the figure is closed
                     xline(model_params_truth{i_rep,i_type}(i_param),'k--');

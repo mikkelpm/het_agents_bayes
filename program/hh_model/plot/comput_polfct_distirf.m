@@ -89,83 +89,90 @@ end
 
 %% Plot consumption policy function
 
-save_name = strrep(model_filename{comput_rep_ind,1},sprintf('%s%d','_liktype',plot_liktypes(1)),''); % Experiment name without "liktype"
-ylim_subplots = nan(nEpsilon,2);
-f_polfct = figure;
-
 for iEpsilon = 1:nEpsilon
     
-    subplot(1,nEpsilon,nEpsilon+1-iEpsilon); % Plot "Employed" on the left panel and "Unemployed" on the right panel
-    hold on;
-    for i_type = layer_order(end:-1:1) % Layer order of likelihood types for overlayed plots
+    f_polfct = figure;
+    ylim_subplots = nan(nEpsilon,2);
+
+    for i_type = 1:n_liktype
+        
+        subplot(1,n_liktype,i_type)
+        
+        hold on;
         for i_draw = 1:length(ixs{i_type})
             patchline(assets_draw_all{i_type}(:,i_draw),...
                 cons_draw_all{i_type}(:,iEpsilon,i_draw),...
                 'linestyle','-','edgecolor',colors_hairline(i_type,:),...
                 'linewidth',1,'edgealpha',alpha_hairline);
         end
+        plot(assets_truth,cons_truth(:,iEpsilon),'k-','linewidth',.75); % Truth
+        hold off;
+        
+        xlim(xlim_assets);
+        ylim_subplots(i_type,:) = get(gca,'ylim');
+        xlabel('assets');
+        ylabel('consumption');
+        title(lik_label{i_type},'FontSize',plot_fontsize,'FontWeight','bold');
+        
     end
-    plot(assets_truth,cons_truth(:,iEpsilon),'k-','linewidth',.75); % Truth
-    hold off;
     
-    xlim(xlim_assets);
-    ylim_subplots(iEpsilon,:) = get(gca,'ylim');
-    xlabel('assets');
-    ylabel('consumption');
-    title(emp_label{iEpsilon},'FontSize',plot_fontsize,'FontWeight','bold');
+    % Enforce same ylim
+    yylim = [min(ylim_subplots(:)) max(ylim_subplots(:))];
+    for i_type = 1:n_liktype
+        subplot(1,n_liktype,i_type)
+        ylim(yylim);
+    end
+    graph_out(f_polfct,fullfile(save_folder,sprintf('%s%s%d',...
+        model_filename{comput_rep_ind,1},'_conspolfct_emp',iEpsilon-1)),graph_size_polfct);
     
 end
-
-% Enforce same ylim
-yylim = [min(ylim_subplots(:)) max(ylim_subplots(:))];
-for iEpsilon = 1:nEpsilon
-    subplot(1,nEpsilon,iEpsilon);
-    ylim(yylim);
-end
-graph_out(f_polfct,fullfile(save_folder,strcat(save_name,'_conspolfct')),graph_size_polfct);
 
 
 %% Plot asset distribution IRF
 
 numhorz = length(horzs);
-f_distirf = figure;
 
 for iEpsilon = 1:nEpsilon
     
-    subplot(1,nEpsilon,nEpsilon+1-iEpsilon); % Plot "Employed" on the left panel and "Unemployed" on the right panel
-    hold on;
+    f_distirf = figure;
     
-    for i_horz = 1:numhorz
+    for i_type = 1:n_liktype
         
-        the_horz = horzs(i_horz);
-        the_y_wedge = wedge_param(1)+wedge_param(2)*i_horz;
+        subplot(1,n_liktype,i_type)    
+        hold on;
         
-        for i_type = layer_order(end:-1:1) % Layer order of likelihood types for overlayed plots
+        for i_horz = 1:numhorz
+            
+            the_horz = horzs(i_horz);
+            the_y_wedge = wedge_param(1)+wedge_param(2)*i_horz;
+            
             for i_draw = 1:length(ixs{i_type})
                 patchline(assets_fine_draw_all{i_type}(:,i_draw),...
                     distirf_draw_all{i_type}(:,iEpsilon,the_horz+1,i_draw)+the_y_wedge,...
                     'linestyle','-','edgecolor',colors_hairline(i_type,:),...
                     'linewidth',1,'edgealpha',alpha_hairline);
             end
+            
+            plot(assets_fine_truth,distirf_truth(:,iEpsilon,1)+the_y_wedge,'k-','linewidth',.75); % Truth
+            
+            text(xlim_assets(1)+xloc_text*diff(xlim_assets),the_y_wedge+wedge_text,...
+                ['h = ' num2str(the_horz)],'FontSize',plot_fontsize,'FontWeight','bold'); % Horizon label
+            
         end
-        
-        plot(assets_fine_truth,distirf_truth(:,iEpsilon,1)+the_y_wedge,'k-','linewidth',.75); % Truth
-        
-        text(xlim_assets(1)+xloc_text*diff(xlim_assets),the_y_wedge+wedge_text,...
-            ['h = ' num2str(the_horz)],'FontSize',plot_fontsize,'FontWeight','bold'); % Horizon label
+   
+        hold off;
+        xlim(xlim_assets);
+        ylim(ylim_distirf);
+        set(gca,'ytick',[]);
+        grid on;
+        title(lik_label{i_type},'FontSize',plot_fontsize,'FontWeight','bold');
         
     end
     
-    hold off;
-    xlim(xlim_assets);
-    ylim(ylim_distirf);
-    set(gca,'ytick',[]);
-    grid on;
-    title(emp_label{iEpsilon},'FontSize',plot_fontsize,'FontWeight','bold');
-    
+    graph_out(f_distirf,fullfile(save_folder,sprintf('%s%s%d',...
+        model_filename{comput_rep_ind,1},'_distirf_emp',iEpsilon-1)),graph_size_polfct);
+        
 end
-
-graph_out(f_distirf,fullfile(save_folder,strcat(save_name,'_distirf')),graph_size_distirf);
 
 
 %% Auxiliary function
