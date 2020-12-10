@@ -50,7 +50,7 @@ end
 is_plot_polfct_distirf = true;  % Plot consumption policy function and distribution IRF
 is_run_comput = true;           % true: run computations; false: load previous computations from file
 is_run_dynare = false;          % Process Dynare model?
-comput_rep = 1;                 % Single repetition to use for computations (must be included in "plot_reps")
+comput_rep = 4;                 % Single repetition to use for computations (must be included in "plot_reps")
 dynare_model = 'firstOrderDynamics_polynomials'; % Dynare model file for 'hh' model
 thin_draw = 10;                 % Compute consumption policy or distribution every X-th draw
 lik_label = {'Full Info','Macro Only'}; % Labels of likelihood types

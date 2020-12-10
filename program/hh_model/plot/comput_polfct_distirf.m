@@ -89,6 +89,8 @@ end
 
 %% Plot consumption policy function
 
+save_name = strrep(model_filename{comput_rep_ind,1},sprintf('%s%d','_liktype',plot_liktypes(1)),''); % Experiment name without "liktype"
+
 for iEpsilon = 1:nEpsilon
     
     f_polfct = figure;
@@ -123,7 +125,7 @@ for iEpsilon = 1:nEpsilon
         ylim(yylim);
     end
     graph_out(f_polfct,fullfile(save_folder,sprintf('%s%s%d',...
-        model_filename{comput_rep_ind,1},'_conspolfct_emp',iEpsilon-1)),graph_size_polfct);
+        save_name,'_conspolfct_emp',iEpsilon-1)),graph_size_polfct);
     
 end
 
@@ -170,7 +172,7 @@ for iEpsilon = 1:nEpsilon
     end
     
     graph_out(f_distirf,fullfile(save_folder,sprintf('%s%s%d',...
-        model_filename{comput_rep_ind,1},'_distirf_emp',iEpsilon-1)),graph_size_polfct);
+        save_name,'_distirf_emp',iEpsilon-1)),graph_size_polfct);
         
 end
 
