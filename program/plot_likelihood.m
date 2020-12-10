@@ -16,7 +16,7 @@ plot_param = {'bbeta', 'ssigmaMeas', 'mu_l'};   % Names of parameters to plot
 tex_param = {'\beta','\sigma_e','\mu_\lambda'}; % Tex versions of parameter names (in same order as above)
 
 % Plot layout
-layer_order = 1:n_liktype;              % Layer order of likelihood types for overlaid plots: 1st element = top layer
+layer_order = plot_liktypes;              % Layer order of likelihood types for overlaid plots: 1st element = top layer
 colors_default = get(0, 'DefaultAxesColorOrder'); % MATLAB default color palette
 colors_lik = [colors_default(1,:); zeros(1,3); colors_default(2:end,:)]; % Posterior density colors for different liktypes
 alpha_lik = 0.5;                % Opacity
@@ -137,7 +137,7 @@ for i_rep = 1:n_rep
         
         if i_param == 1
             
-            legend_handle = legend(legend_lik(plot_liktypes),... 
+            legend_handle = legend(legend_lik(layer_order(end:-1:1)),... 
                 'orientation','horizontal','color','none');
             legend('boxoff')
             legend_handle.Position(1) = 0.5 - legend_handle.Position(3)/2;
