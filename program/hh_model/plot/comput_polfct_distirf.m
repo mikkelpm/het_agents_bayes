@@ -114,7 +114,7 @@ for iEpsilon = 1:nEpsilon
         ylim_subplots(i_type,:) = get(gca,'ylim');
         xlabel('assets');
         ylabel('consumption');
-        title(lik_label{i_type},'FontSize',plot_fontsize,'FontWeight','bold');
+        title(lik_label{i_type},'FontSize',plot_fontsize-2,'FontWeight','bold');
         
     end
     
@@ -158,7 +158,7 @@ for iEpsilon = 1:nEpsilon
             plot(assets_fine_truth,distirf_truth(:,iEpsilon,1)+the_y_wedge,'k-','linewidth',.75); % Truth
             
             text(xlim_assets(1)+xloc_text*diff(xlim_assets),the_y_wedge+wedge_text,...
-                ['h = ' num2str(the_horz)],'FontSize',plot_fontsize,'FontWeight','bold'); % Horizon label
+                ['h = ' num2str(the_horz)],'FontSize',plot_fontsize-2,'FontWeight','bold'); % Horizon label
             
         end
    
@@ -167,7 +167,7 @@ for iEpsilon = 1:nEpsilon
         ylim(ylim_distirf);
         set(gca,'ytick',[]);
         grid on;
-        title(lik_label{i_type},'FontSize',plot_fontsize,'FontWeight','bold');
+        title(lik_label{i_type},'FontSize',plot_fontsize-2,'FontWeight','bold');
         
     end
     

@@ -33,7 +33,7 @@ else
 end
 
 % Plot layout
-layer_order = 1:n_liktype;              % Layer order of likelihood types for overlaid plots: 1st element = top layer
+layer_order = plot_liktypes;              % Layer order of likelihood types for overlaid plots: 1st element = top layer
 colors_default = get(0, 'DefaultAxesColorOrder'); % MATLAB default color palette
 colors_postdens = [colors_default(1,:); zeros(1,3)]; % Posterior density colors for different liktypes
 linestyles_postdens_1rep = {'-';'--'};  % Line styles of single-repetition posterior density plots 
