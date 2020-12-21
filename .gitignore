@@ -6,6 +6,8 @@
 !*.m
 !*.mod
 !*.gitignore
+!*.md
+!LICENSE
 
 # Remove specific files
 program/hh_model/dynare/firstOrderDynamics_polynomials*.*
