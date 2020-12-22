@@ -1,5 +1,7 @@
 clear all;
 
+% Compute likelihood function (for various observables) in heterogeneous household model
+
 model_name = 'hh';
 
 addpath(genpath('./functions'));
@@ -9,7 +11,7 @@ addpath(genpath(['./' model_name '_model/auxiliary_functions']));
 %% Settings
 
 % Decide what to do
-is_run_dynare = false;   % Process Dynare model?
+is_run_dynare = true;   % Process Dynare model?
 is_data_gen = true;     % Simulate data?
 
 % ID

@@ -1,5 +1,7 @@
 function [sim_struct, sim_array] = simulate_model(num_sim_periods,num_burnin_periods,M_,oo_,options_,varargin)
     
+    % Simulate macro data from Dynare model
+
     % Check if shocks are already supplied
     if ~isempty(varargin) && ~isempty(varargin{1})
         shocks = varargin{1};

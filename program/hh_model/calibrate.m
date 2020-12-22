@@ -1,3 +1,8 @@
+% Calibrate heterogeneous household model
+% including settings for numerical model solution
+
+% See Winberry (QE 2018)
+
 
 %% Set economic parameters 
 

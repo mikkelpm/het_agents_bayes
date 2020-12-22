@@ -1,5 +1,7 @@
 clear all;
 
+% Plot MCMC results produced by "run_mcmc_hh.m" or "run_mcmc_firm.m"
+
 addpath(fullfile('functions', 'plot'));
 
 

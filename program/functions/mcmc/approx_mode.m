@@ -1,4 +1,4 @@
-% Optimize over grid
+% Grid search for finding approximate posterior mode
 
 optim_numgrid = size(optim_grid,1);
 optim_logpost = nan(optim_numgrid,1);

@@ -1,4 +1,4 @@
-%% Simulate data
+% Simulate data
 
 set_dynare_seed(rng_seed);  % Seed Dynare RNG
 rng(rng_seed, 'twister');   % Seed Matlab RNG

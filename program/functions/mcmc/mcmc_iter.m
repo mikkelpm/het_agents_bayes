@@ -1,4 +1,4 @@
-% MCMC
+% Random Walk Metropolis-Hastings (RWMH) MCMC procedure
 
 accepts = zeros(mcmc_num_iter,1);
 

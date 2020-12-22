@@ -1,6 +1,6 @@
 function simul_data_micro_aux = simulate_micro_aux(sim_struct, ts_micro, N_micro)
 
-% Simulate household employment and income
+% Simulate household employment and normalized income
 
 global nMeasure aggEmployment aaBar mmu ttau;
 

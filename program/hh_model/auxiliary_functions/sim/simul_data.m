@@ -1,6 +1,6 @@
 % Simulate macro and micro data
 
-sim_struct = simulate_model(T,num_burnin_periods,M_,oo_,options_);  % Simulate data
+sim_struct = simulate_model(T,num_burnin_periods,M_,oo_,options_);  % Simulate macro data
 for i_Epsilon = 1:nEpsilon
     for i_Measure = 1:nMeasure
         sim_struct.(sprintf('%s%d%d', 'smpl_m', i_Epsilon, i_Measure)) = nan(T,1); 

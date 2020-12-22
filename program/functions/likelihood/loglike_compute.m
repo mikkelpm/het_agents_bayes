@@ -47,7 +47,7 @@ disp('Micro likelihood...');
 timer = tic;
 
 % for i_draw = 1:num_smooth_draws
-parfor i_draw = 1:num_smooth_draws
+parfor i_draw = 1:num_smooth_draws % For each smoothing draw...
     
     rng(rand_seeds(i_draw), 'twister'); % Set RNG
     
@@ -96,7 +96,7 @@ fprintf('Micro likelihood time: %6.1f sec\n\n', toc(timer));
 
 % Micro log likelihood
 ix_micro = isfinite(loglikes_micro);
-if sum(ix_micro) > 0 % as long as there is a draw survive
+if sum(ix_micro) > 0 % as long as there is a draw that survives
     loglikes_micro = loglikes_micro(ix_micro);
     log_max = max(loglikes_micro);
     loglike_micro = log_max + log(mean(exp(loglikes_micro-log_max))); % Formula deals with underflow

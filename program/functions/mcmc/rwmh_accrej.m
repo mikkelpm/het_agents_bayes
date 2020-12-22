@@ -1,6 +1,6 @@
 function [new_draw, new_logpost, accept, log_ar] = rwmh_accrej(curr_draw, prop_draw, curr_logpost, prop_logpost)
 
-    % Accept/reject
+    % Accept/reject Metropolis-Hastings proposal
 
     log_ar = min(prop_logpost-curr_logpost,0);
     

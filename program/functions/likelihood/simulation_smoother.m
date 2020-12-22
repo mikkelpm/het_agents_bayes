@@ -1,9 +1,8 @@
 function smooth_draw = simulation_smoother(smooth_means, smooth_vars, num_burnin_periods, sim_shocks, M_, oo_, options_, dataset_, dataset_info, xparam1, estim_params_, bayestopt_)
   
-    % Durbin-Koopman simulation smoother
-
+    % Simulation smoother
+    % Durbin & Koopman (Biometrika 2002)
     
-    %% Simulation smoother
     
     T = dataset_.nobs;  % Sample size
     
@@ -15,7 +14,7 @@ function smooth_draw = simulation_smoother(smooth_means, smooth_vars, num_burnin
     sim_smooth_means = sim_oo_smooth.SmoothedVariables;
 
     % Create draws from smoothing distribution
-    % See Durbin & Koopman, 2012, 2nd ed, ch. 4.9.1
+    % See Durbin & Koopman, 2012 book, 2nd ed, ch. 4.9.1
     smooth_draw = struct;
     for iter_j=1:size(smooth_vars,1)
         the_var = deblank(smooth_vars{iter_j});

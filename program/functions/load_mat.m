@@ -2,7 +2,7 @@ function varargout = load_mat(filename)
 
     % Load from .mat file with suffix
     
-    global mat_suff;
+    global mat_suff; % File suffix
     the_file = strcat(filename, mat_suff);
     
     varargout = cell(1,nargout);

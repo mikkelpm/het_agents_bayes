@@ -1,5 +1,8 @@
 % Part of measurement error cov matrix that doesn't change over parameter values
 
+% Here: cov matrix of cross-sectional moments (assumed constant over time)
+% estimated using sample higher moments
+
 smpl_m = zeros(2,6);
 num_obs = zeros(2,1);
 for eepsilon=0:1 % For each employment status

@@ -1,5 +1,7 @@
 clear all;
 
+% Simulate and estimate heterogeneous firm model
+
 model_name = 'hh';
 
 addpath(genpath('./functions'));

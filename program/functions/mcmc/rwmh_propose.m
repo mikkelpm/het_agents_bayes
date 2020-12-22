@@ -1,5 +1,6 @@
 function [prop_draw,is_adapt] = rwmh_propose(curr_draw, stepsize, chol, p_adapt, s_diffused)
-% Proposed draw
+
+% Random Walk Metropolis-Hastings proposal draw
 
 is_adapt = rand(1)<p_adapt;
 if is_adapt
