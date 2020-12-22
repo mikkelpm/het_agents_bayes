@@ -13,7 +13,7 @@ addpath(genpath(['./' model_name '_model/auxiliary_functions']));
 % Decide what to do
 is_run_dynare = true;   % Process Dynare model?
 is_data_gen = true;     % Simulate data?
-likelihood_type = 1;    % =1: macro + full-info micro; =2: macro + full-info micro, ignore truncation; =3: macro + micro moments
+likelihood_type = 1;    % =1: macro + full-info micro; =2: macro + full-info micro, ignore truncation
 
 % ID
 serial_id = 1;          % ID number of current run (used in file names and RNG seeds)
@@ -22,7 +22,7 @@ serial_id = 1;          % ID number of current run (used in file names and RNG s
 T = 50;                 % Number of periods of simulated macro data
 ts_micro = 10:10:T;     % Time periods where we observe micro data
 N_micro = 1e3;          % Number of micro entities per non-missing time period
-trunc_quant = 0.9;      % Micro sample selection: Lower truncation quantile for labor (steady state distribution)
+trunc_quant = 0.9;      % Micro sample selection: Lower truncation quantile for labor (steady state distribution), =0 if no truncation
 
 % File names
 global mat_suff;
@@ -75,12 +75,16 @@ dynare_model = 'dynamicModel';          % Dynare model file
 %% Calibrate parameters, execute initial Dynare processing
 
 run_calib_dynare;
+% Approximates cross-sec distribution of firm productivity and capital
+% using multivariate normal distribution, as in Winberry (2018)
 
 
 %% Truncation point
 
 compute_steady_state; % Re-compute steady state
-trunc_logn = M_.steady_vars.smpl_m1+norminv(trunc_quant)*sqrt(M_.steady_vars.smpl_m3); % Lower truncation value for log(n)
+empl_ss_mean = -(M_.steady_vars.moment_1-log(M_.steady_vars.wage)+log(nnu)+ttheta*M_.steady_vars.moment_2)/(nnu-1); % Steady-state cross-sectional mean of log employment
+empl_ss_var = (M_.steady_vars.moment_3+ttheta^2*M_.steady_vars.moment_5+2*ttheta*M_.steady_vars.moment_4)/(nnu-1)^2; % Steady-state cross-sectional variance of log employment
+trunc_logn = empl_ss_mean+norminv(trunc_quant)*sqrt(empl_ss_var); % Lower truncation value for log(n), exploiting approximating normal distribution
 
 
 %% Simulate data

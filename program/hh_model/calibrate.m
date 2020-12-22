@@ -58,7 +58,7 @@ nAssets = 25; % number of gridpoints in spline approximation or polynomials in p
 nAssetsFine = 100;
 
 % Approximation of distribution
-nMeasure = 3;
+nMeasure = 3; % (MUST BE =3 FOR LIKELIHOOD CALCULATION)
 nAssetsQuadrature = 8;
 
 % Iteration on individual decisions

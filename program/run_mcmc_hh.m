@@ -91,6 +91,8 @@ dynare_model = 'firstOrderDynamics_polynomials'; % Dynare model file
 %% Calibrate parameters, execute initial Dynare processing
 
 run_calib_dynare;
+% Approximates cross-sec distribution of assets conditional on employment
+% using third-order exponential family density, as in Winberry (2018)
 
 
 %% Simulate data
