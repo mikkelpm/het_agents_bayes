@@ -1,4 +1,4 @@
-function [assets,dist] = dist_irf(maxhorz,M_,oo_,options_,mMoments,mParameters)
+function [assets,dist] = dist_irf(maxhorz,shock,M_,oo_,options_,mMoments,mParameters)
 
     % Impulse response of asset distribution
 
@@ -11,7 +11,7 @@ function [assets,dist] = dist_irf(maxhorz,M_,oo_,options_,mMoments,mParameters)
     dist(:,:,1) = aux_dist(mMoments, mParameters(:,2:end));
     
     % Compute IRFs of all endogenous Dynare variables
-    the_irf = computeIRF(maxhorz,M_,oo_,options_);
+    the_irf = computeIRF(maxhorz,shock,M_,oo_,options_);
 
     % Compute asset distribution at each horizon
     for iHorizon = 1:maxhorz
@@ -43,12 +43,12 @@ end
 
 %% Auxiliary functions
 
-function irf_out = computeIRF(maxhorz,M_,oo_,options_)
+function irf_out = computeIRF(maxhorz,shock,M_,oo_,options_)
 
     % Call internal Dynare impulse response computation
     
     dr = resol(0, M_, options_, oo_); % Decision rule
-    irf_out = irf(M_, options_, dr, 1, maxhorz, [], [], 1); % IRFs of all endogenous variables
+    irf_out = irf(M_, options_, dr, shock, maxhorz, [], [], 1); % IRFs of all endogenous variables
     irf_out = irf_out+dr.ys; % Add back steady state
 
 end

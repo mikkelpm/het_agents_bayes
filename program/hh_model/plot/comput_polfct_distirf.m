@@ -28,7 +28,7 @@ if is_run_comput
     update_param(model_params_truth{comput_rep_ind,1}, model_param_names{comput_rep_ind,1});
     [M_new,oo_new,options_new,mMoments,mParameters] = newMod(M_,oo_,options_);
     [assets_truth,cons_truth] = cons_polfct(M_new.steady_vars);
-    [assets_fine_truth,distirf_truth] = dist_irf(maxhorz,M_new,oo_new,options_new,mMoments,mParameters);
+    [assets_fine_truth,distirf_truth] = dist_irf(maxhorz,shock,M_new,oo_new,options_new,mMoments,mParameters);
 
     % Loop over posterior draws
     ixs = cell(1,n_liktype);
@@ -60,7 +60,7 @@ if is_run_comput
             
             % Compute asset distribution IRF
             [assets_fine_draw_all{i_type}(:,i_draw),distirf_draw_all{i_type}(:,:,:,i_draw)] ...
-                = dist_irf(maxhorz,M_new,oo_new,options_new,mMoments,mParameters);
+                = dist_irf(maxhorz,shock,M_new,oo_new,options_new,mMoments,mParameters);
             
         end 
 

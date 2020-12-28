@@ -67,6 +67,7 @@ graph_size_polfct = [6 2.5];      % Graph size
 
 % Specific layout of Asset distribution IRF
 horzs = [0 2 4 8];              % Impulse response horizons to plot
+shock = -10;                    % Shock (unit = 1sd)
 graph_size_distirf = [6 3.5];   % Graph size
 ylim_distirf = [0 .9];          % y-axis limits
 wedge_param = [.8 -.2];         % Shift distributions vertically by wedge_param(1)+wedge_param(2)*horizon, in order to display on single plot
