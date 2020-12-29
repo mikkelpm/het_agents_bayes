@@ -19,7 +19,7 @@ for it=1:T_micro
     for eepsilon = 0:1
         ix = simul_data_micro_aux(it,:,1)==eepsilon;
 
-        % prepare the parameters
+        % Prepare the parameters
         mHat = sim_struct.(['mHat_' num2str(eepsilon+1)])(t-1);
         moment = nan(1,nMeasure);
         measureCoefficient = nan(1,nMeasure);
@@ -28,16 +28,16 @@ for it=1:T_micro
             measureCoefficient(i_Measure) = sim_struct.(['measureCoefficient_' num2str(eepsilon+1) '_' num2str(i_Measure)])(t);
         end
 
-        % draw asset
+        % Draw asset
         n_ix = sum(ix);
         asset_aux = nan(1,n_ix);
         ix0 = rand(1,n_ix)<mHat;
         ix1 = ~ix0;
 
-        % constrained assets
+        % Constrained assets
         asset_aux(ix0) = aaBar;
 
-        % unconstrained assets
+        % Unconstrained assets
         moment_aux = moment;
         moment_aux(1) = 0;
         g = @(a) exp(measureCoefficient*((a-moment(1)).^((1:nMeasure)')-moment_aux'));

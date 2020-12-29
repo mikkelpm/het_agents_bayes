@@ -3,7 +3,8 @@ function Sigma_Z = cov_smpl(mom_X)
     % Compute var-cov matrix of Z=(X,X^2,X^3)', E[X] = 0
     % Fisher (1930, PLMS)
     
-    % OK for nMeasure = 3, NEED to change if nMeasure takes other values
+    % For moment-based methods up to the 3rd moments. 
+    % NEED to change for moment-based methods with higher order moments.
     
     Sigma_Z = zeros(length(mom_X)/2);
     

@@ -23,7 +23,7 @@ end
 t0 = tic;
 fprintf('Computing initial guess from histogram...\n')
 
-% MPM: only run histogram calculation for very first Dynare run
+% Only run histogram calculation for very first Dynare run
 
 % if ~isfield(oo_, 'dr') || ~isfield(oo_.dr, 'ys') % If steady state has not been computed yet...
 

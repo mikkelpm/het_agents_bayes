@@ -1,16 +1,17 @@
 % Simulate macro and micro data
 
-sim_struct = simulate_model(T,num_burnin_periods,M_,oo_,options_);  % Simulate macro data
+sim_struct = simulate_model(T,num_burnin_periods,M_,oo_,options_); % Simulate macro data
 for i_Epsilon = 1:nEpsilon
     for i_Measure = 1:nMeasure
         sim_struct.(sprintf('%s%d%d', 'smpl_m', i_Epsilon, i_Measure)) = nan(T,1); 
             % Set sample moments to missing everywhere
     end
 end
+
 % Add measurement error to aggregate output
 sim_struct.logAggregateOutput_noerror = sim_struct.logAggregateOutput;
 sim_struct.logAggregateOutput = sim_struct.logAggregateOutput + ssigmaMeas*randn(T,1);
-save_mat('simul', '-struct', 'sim_struct');                         % Save simulated data
+save_mat('simul', '-struct', 'sim_struct'); % Save simulated data
 
 % draw normalized individual incomes
 simul_data_micro_aux = simulate_micro_aux(sim_struct, ts_micro, N_micro);

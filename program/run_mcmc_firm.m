@@ -35,7 +35,7 @@ transf_to_param = @(x) [1/(1+exp(-x(1))) exp(x(2))];    % Function mapping trans
 param_to_transf = @(x) [log(x(1)/(1-x(1))) log(x(2))];  % Function mapping parameters of interest into transformed parameters
 
 % Prior
-prior_logdens_transf = @(x) sum(x) - 2*log(1+exp(x(1)));    % Log prior density of transformed parameters
+prior_logdens_transf = @(x) sum(x) - 2*log(1+exp(x(1))); % Log prior density of transformed parameters
 
 % Optimization settings
 is_optimize = true;                 % Find posterior mode?

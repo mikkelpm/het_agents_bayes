@@ -7,16 +7,16 @@
 %% Set economic parameters 
 
 global bbeta ssigma aaBar aalpha ddelta vEpsilonGrid aggEmployment uDuration ...
-	mmu rrhoTFP ssigmaTFP ttau mu_l ssigmaMeas;
-	
+    mmu rrhoTFP ssigmaTFP ttau mu_l ssigmaMeas;
+  
 % Preferences
-bbeta = .96;										% discount factor (annual calibration)
-ssigma = 1;											% coefficient of relative risk aversion
-aaBar = 0;											% borrowing constraint
+bbeta = .96;                    % discount factor (annual calibration)
+ssigma = 1;                     % coefficient of relative risk aversion
+aaBar = 0;                      % borrowing constraint
 
 % Technology
-aalpha = .36;										% capital share
-ddelta = .1;										% depreciation rate (annual calibration)
+aalpha = .36;                   % capital share
+ddelta = .1;                    % depreciation rate (annual calibration)
 
 % Idiosyncratic shocks
 vEpsilonGrid = [0;1];
@@ -28,7 +28,7 @@ mmu = .15;
 ttau = mmu*(1-aggEmployment)/aggEmployment;
 
 % Aggregate Shocks
-rrhoTFP = .859;										
+rrhoTFP = .859;                    
 ssigmaTFP = .014;
 
 % Distribution of indv params log(lambda_i) ~ N(mu_l,-2*mu_l), 
@@ -42,13 +42,13 @@ ssigmaMeas = 0.02;
 %% Set approximation parameters
 
 global nEpsilon nAssets nAssetsFine nAssetsQuadrature ...
-	nMeasure maxIterations tolerance dampening splineOpt displayOpt;
+    nMeasure maxIterations tolerance dampening splineOpt displayOpt;
 
 % Whether approximating decision rule with splines or polynomials
-splineOpt = 0;	% MUST BE SET TO 0
+splineOpt = 0; % MUST BE SET TO 0 (for polynomial approximation)
 
 % Whether to print out results from steady state computation
-displayOpt = 'off';       % 'iter-detailed' or 'off'
+displayOpt = 'off'; % 'iter-detailed' or 'off'
 
 % Order of approximation
 nEpsilon = 2;
@@ -58,7 +58,7 @@ nAssets = 25; % number of gridpoints in spline approximation or polynomials in p
 nAssetsFine = 100;
 
 % Approximation of distribution
-nMeasure = 3; % (MUST BE =3 FOR LIKELIHOOD CALCULATION)
+nMeasure = 3; % NEED to change likelihood calculation if nMeasure ~= 3
 nAssetsQuadrature = 8;
 
 % Iteration on individual decisions

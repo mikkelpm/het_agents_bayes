@@ -8,7 +8,7 @@ addpath(fullfile('functions', 'plot'));
 %% Settings
 
 % Results to plot
-model_name = 'hh';      % Either 'hh' or 'firm'
+model_name = 'hh';      
 subspec = '_N1000';     % Format '_N1000'
 plot_liktypes = 1:5;    % Likelihood types to plot
 plot_reps = 1:10;       % Repetitions to include in plot (non-existing repetitions are ignored)

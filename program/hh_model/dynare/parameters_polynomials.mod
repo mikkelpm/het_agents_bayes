@@ -13,11 +13,11 @@ grids = load_mat('grids');
 polynomials = load_mat('polynomials');
 
 // Define economic parameters
-// MPM: Add mu_l
+// Note: add mu_l
 parameters bbeta ssigma aaBar aalpha ddelta aggEmployment
 	mmu ttau rrhoTFP ssigmaTFP mu_l;
-//Load in their values
-// MPM: Account for ssigmaMeas
+// Load in their values
+// Note: account for ssigmaMeas
 @#define nEconomicParameters = 11
 for iParam = 1 : @{nEconomicParameters}
 	parameterName = deblank(M_.param_names{iParam});

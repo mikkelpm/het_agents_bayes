@@ -35,7 +35,7 @@ else
 end
 
 % Plot layout
-layer_order = plot_liktypes;              % Layer order of likelihood types for overlaid plots: 1st element = top layer
+layer_order = plot_liktypes;            % Layer order of likelihood types for overlaid plots: 1st element = top layer
 colors_default = get(0, 'DefaultAxesColorOrder'); % MATLAB default color palette
 colors_postdens = [colors_default(1,:); zeros(1,3)]; % Posterior density colors for different liktypes
 linestyles_postdens_1rep = {'-';'--'};  % Line styles of single-repetition posterior density plots 
@@ -63,7 +63,7 @@ colors_hairline = [colors_default(1,:); 0.5*ones(1,3)]; % Colors for different l
 alpha_hairline = 0.05;          % Opacity
 
 % Specific layout of consumption policy function
-graph_size_polfct = [6 2.5];      % Graph size
+graph_size_polfct = [6 2.5];    % Graph size
 
 % Specific layout of Asset distribution IRF
 horzs = [0 2 4 8];              % Impulse response horizons to plot
@@ -98,7 +98,7 @@ for i_type = 1:n_liktype
         if ~isfile(strcat(the_file, '.mat'))
             continue;
         end
-        model_mcmc{i_rep,i_type} = load(the_file); %size ~ 1MB each
+        model_mcmc{i_rep,i_type} = load(the_file); % Size ~ 1MB each
         
         % Parameter names and true values
         model_param_names{i_rep,i_type} = model_mcmc{i_rep,i_type}.param_names;

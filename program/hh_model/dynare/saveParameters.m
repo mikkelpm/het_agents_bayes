@@ -1,5 +1,4 @@
-% MPM: Generated grids/polynomials and save parameter values
-% 2018-01-16
+% Generated grids/polynomials and save parameter values
 
 
 %% Call parameters (the next set of commands will overwrite some)

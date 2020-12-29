@@ -35,7 +35,7 @@ if ismember(likelihood_type,[1 3 4]) % When mu_l is identified
     transf_to_param = @(x) [1/(1+exp(-x(1))) exp(x(2)) -exp(x(3))];     % Function mapping transformed parameters into parameters of interest
     param_to_transf = @(x) [log(x(1)/(1-x(1))) log(x(2)) log(-x(3))];   % Function mapping parameters of interest into transformed parameters
 else % When mu_l is not identified
-    param_names = {'bbeta', 'ssigmaMeas'};                      % Names of parameters to estimate
+    param_names = {'bbeta', 'ssigmaMeas'};                   % Names of parameters to estimate
     transf_to_param = @(x) [1/(1+exp(-x(1))) exp(x(2))];     % Function mapping transformed parameters into parameters of interest
     param_to_transf = @(x) [log(x(1)/(1-x(1))) log(x(2))];   % Function mapping parameters of interest into transformed parameters
 end
@@ -56,11 +56,11 @@ clearvars aux*;
 
 % MCMC settings
 if likelihood_type ~= 2
-    mcmc_init = param_to_transf([.9 .06 -1]);   % Initial transformed draw (will be overwritten if is_optimize=true)
+    mcmc_init = param_to_transf([.9 .06 -1]); % Initial transformed draw (will be overwritten if is_optimize=true)
 else % mu_l is not identified with macro data only
     mcmc_init = param_to_transf([.9 .06]);
 end
-mcmc_num_iter = 1e4;                  % Number of MCMC steps (total)
+mcmc_num_iter = 1e4;                    % Number of MCMC steps (total)
 mcmc_thin = 1;                          % Store every X draws
 mcmc_stepsize_init = 1e-2;              % Initial MCMC step size
 mcmc_adapt_iter = [50 200 500 1000];    % Iterations at which to update the variance/covariance matrix for RWMH proposal; first iteration in list is start of adaptation phase

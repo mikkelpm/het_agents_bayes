@@ -61,15 +61,15 @@ for i_mcmc=1:mcmc_num_iter % For each MCMC step...
     fprintf('%s%5.1f%s\n', 'Accept. rate last 100: ', 100*mean(accepts(max(i_mcmc-99,1):i_mcmc)), '%');
     fprintf('%s%6d%s%6d\n\n', 'Progress: ', i_mcmc, '/', mcmc_num_iter);
     
-     % Adapt proposal step size
-     if is_adapt
-         if exist('the_log_ar','var')
-             the_ar = exp(the_log_ar);
-         else
-             the_ar = 0;
-         end
+    % Adapt proposal step size
+    if is_adapt
+        if exist('the_log_ar','var')
+            the_ar = exp(the_log_ar);
+        else
+            the_ar = 0;
+        end
         [the_stepsize, the_stepsize_iter] = adapt_stepsize(the_stepsize, the_stepsize_iter, i_mcmc, the_ar, mcmc_c, mcmc_ar_tg);
-     end
+    end
         
     % Adapt proposal covariance matrix
     [the_chol, the_stepsize_iter] = adapt_cov(the_chol, the_stepsize_iter, mcmc_adapt_iter, i_mcmc, post_draws, mcmc_thin, mcmc_adapt_diag, mcmc_adapt_param);

@@ -9,7 +9,7 @@ polynomials = load_mat('polynomials');
 
 %% Economic parameters
 
-nEconomicParameters = 11; % MPM: account for mu_l
+nEconomicParameters = 11; % Note: account for mu_l
 
 for iParam = 1 : nEconomicParameters
 	parameterName = deblank(M_.param_names{iParam});
