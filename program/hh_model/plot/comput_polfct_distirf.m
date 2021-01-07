@@ -155,7 +155,8 @@ for iEpsilon = 1:nEpsilon
                     'linewidth',1,'edgealpha',alpha_hairline);
             end
             
-            plot(assets_fine_truth,distirf_truth(:,iEpsilon,1)+the_y_wedge,'k-','linewidth',.75); % Truth
+            plot(assets_fine_truth,distirf_truth(:,iEpsilon,1)+the_y_wedge,'k--','linewidth',.5); % Steady state distribution under the true parameters
+            plot(assets_fine_truth,distirf_truth(:,iEpsilon,the_horz+1)+the_y_wedge,'k-','linewidth',.5); % IRF of cross-sec distribution under the true parameters
             
             text(xlim_assets(1)+xloc_text*diff(xlim_assets),the_y_wedge+wedge_text,...
                 ['h = ' num2str(the_horz)],'FontSize',plot_fontsize-2,'FontWeight','bold'); % Horizon label
