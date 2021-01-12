@@ -143,7 +143,7 @@ for i_rep = 1:n_rep
                 'orientation','horizontal','color','none');
             legend('boxoff')
             legend_handle.Position(1) = 0.5 - legend_handle.Position(3)/2;
-            legend_handle.Position(2) = 0;
+            legend_handle.Position(2) = 0.01;
             
         end
         
