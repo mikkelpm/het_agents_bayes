@@ -5,9 +5,6 @@ Matlab code for full-information Bayesian inference in heterogeneous agent model
 **Reference:**
 [Liu, Laura](https://laurayuliu.com/), and [Mikkel Plagborg-Møller](https://scholar.princeton.edu/mikkelpm) (2020), "Full-Information Estimation of Heterogeneous Agent Models Using Macro and Micro Data", https://scholar.princeton.edu/mikkelpm/het_agents (paper + online appendix)
 
-**Acknowledgements:**
-We build on the excellent Dynare code kindly made available by [Thomas Winberry](http://www.thomaswinberry.com/research/index.html) (see also [Winberry, QE 2018](https://qeconomics.org/ojs/index.php/qe/article/view/617))
-
 **Requirements:**
 [Dynare](https://www.dynare.org/) version 4.6.x
 
@@ -32,3 +29,9 @@ Tested in: Matlab R2020a on Windows 10 PC and Linux servers (64-bit) with Dynare
 **[program/firm_model](program/firm_model):** files specific to the heterogeneous firm model
 - [dynare](program/firm_model/dynare): sub-folder with Dynare model files adapted from Winberry (2018)
 - [auxiliary_functions/likelihood/likelihood_micro.m](program/firm_model/auxiliary_functions/likelihood/likelihood_micro.m): micro likelihood function
+
+## Acknowledgements
+
+We build on the excellent Dynare code kindly made available by [Thomas Winberry](http://www.thomaswinberry.com/research/index.html) (see also [Winberry, QE 2018](https://qeconomics.org/ojs/index.php/qe/article/view/617)).
+
+Plagborg-Møller acknowledges that this material is based upon work supported by the National Science Foundation under Grant #1851665.
