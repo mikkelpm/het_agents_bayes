@@ -14,7 +14,7 @@ function [the_loglike, the_loglike_macro, the_loglike_micro] = ...
             setDynareParameters;    % Update Dynare parameters in model struct
             compute_steady_state;   % Compute steady state, no need for parameters of agg dynamics
         end
-        compute_meas_err;       % Update measurement error var-cov matrix for sample moments
+        compute_meas_err;       % Update measurement error
         
         % Macro state variables used in micro likelihood
         num_mom = 3;
