@@ -11,7 +11,7 @@ addpath(genpath(['./' model_name '_model/auxiliary_functions']));
 %% Settings
 
 % Decide what to do
-is_run_dynare = true;   % Process Dynare model?
+is_run_dynare = false;   % Process Dynare model?
 is_data_gen = true;     % Simulate data?
 likelihood_type = 1;    % =1: macro + full-info micro; =2: macro + full-info micro, ignore truncation
 
@@ -22,33 +22,33 @@ serial_id = 1;          % ID number of current run (used in file names and RNG s
 T = 50;                 % Number of periods of simulated macro data
 ts_micro = 10:10:T;     % Time periods where we observe micro data
 N_micro = 1e3;          % Number of micro entities per non-missing time period
-trunc_quant = 0.9;      % Micro sample selection: Lower truncation quantile for labor (steady state distribution), =0 if no truncation
+trunc_quant = 0;      % Micro sample selection: Lower truncation quantile for labor (steady state distribution), =0 if no truncation
 
 % File names
 global mat_suff;
 mat_suff = sprintf('%s%d%s%d%s%02d', '_trunc', 100*trunc_quant, '_liktype', likelihood_type, '_', serial_id); % Suffix string for all saved .mat files
-save_folder = fullfile(pwd, 'results'); % Folder for saving results
+save_folder = fullfile(pwd, 'results2'); % Folder for saving results
 
 % Parameter transformation
-param_names = {'rrhoProd', 'ssigmaProd'};               % Names of parameters to estimate
-transf_to_param = @(x) [1/(1+exp(-x(1))) exp(x(2))];    % Function mapping transformed parameters into parameters of interest
-param_to_transf = @(x) [log(x(1)/(1-x(1))) log(x(2))];  % Function mapping parameters of interest into transformed parameters
+param_names = {'ppsiCapital', 'aaUpper'};               % Names of parameters to estimate
+transf_to_param = @(x) exp(x);    % Function mapping transformed parameters into parameters of interest
+param_to_transf = @(x) log(x);  % Function mapping parameters of interest into transformed parameters
 
 % Prior
-prior_logdens_transf = @(x) sum(x) - 2*log(1+exp(x(1))); % Log prior density of transformed parameters
+prior_logdens_transf = @(x) x(1)+log(normpdf(x(2),0,5)); % Log prior density of transformed parameters
 
 % Optimization settings
 is_optimize = true;                 % Find posterior mode?
-[aux1, aux2] = meshgrid(linspace(0.1,0.9,5),linspace(0.01,0.1,5));
+[aux1, aux2] = meshgrid(linspace(0.005,0.015,5),linspace(0.005,0.015,5));
 optim_grid = [aux1(:), aux2(:)];    % Optimization grid
 clearvars aux1 aux2;
 
 % MCMC settings
-mcmc_init = param_to_transf([0.7 0.02]);% Initial transformed draw (will be overwritten if is_optimize=true)
-mcmc_num_iter = 1e4;                    % Number of MCMC steps (total)
+mcmc_init = param_to_transf([0.01 0.005]);% Initial transformed draw (will be overwritten if is_optimize=true)
+mcmc_num_iter = 2e3;                    % Number of MCMC steps (total)
 mcmc_thin = 1;                          % Store every X draws
 mcmc_stepsize_init = 1e-2;              % Initial MCMC step size
-mcmc_adapt_iter = [50 200 500 1000];    % Iterations at which to update the variance/covariance matrix for RWMH proposal; first iteration in list is start of adaptation phase
+mcmc_adapt_iter = [50 100 200 500];    % Iterations at which to update the variance/covariance matrix for RWMH proposal; first iteration in list is start of adaptation phase
 mcmc_adapt_diag = false;                % =true: Adapt only to posterior std devs of parameters, =false: adapt to full var/cov matrix
 mcmc_adapt_param = 10;                  % Shrinkage parameter for adapting to var/cov matrix (higher values: more shrinkage)
 

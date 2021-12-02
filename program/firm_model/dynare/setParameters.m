@@ -27,6 +27,12 @@ global ttheta nnu ddelta rrhoProd ssigmaProd aaUpper aaLower ppsiCapital ...
 % mStatePoly2...
 % mFinePoly2
 
+%% Enforce parameter constraints
+
+global aaLower aaUpper
+aaLower = -aaUpper;
+
+
 %% Set approximation parameters
 
 global nProd nCapital nState prodMin prodMax capitalMin capitalMax nShocks nProdFine nCapitalFine nStateFine ...
