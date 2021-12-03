@@ -19,7 +19,7 @@ serial_id = 1;          % ID number of current run (used in file names and RNG s
 
 % Model/data settings
 T = 50;                % Number of periods of simulated macro data
-ts_micro = 10:10:T;     % Time periods where we observe micro data
+ts_micro = 1:T;     % Time periods where we observe micro data
 N_micro = 1e3;          % Number of households per non-missing time period
 
 % File names

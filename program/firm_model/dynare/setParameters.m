@@ -29,7 +29,6 @@ global ttheta nnu ddelta rrhoProd ssigmaProd aaUpper aaLower ppsiCapital ...
 
 %% Enforce parameter constraints
 
-global aaLower aaUpper
 aaLower = -aaUpper;
 
 

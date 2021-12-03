@@ -8,21 +8,21 @@ addpath(fullfile('functions', 'plot'));
 %% Settings
 
 % Results to plot
-model_name = 'hh';              % Either 'hh' or 'firm'
+model_name = 'firm';              % Either 'hh' or 'firm'
 if strcmp(model_name,'hh')
     plot_liktypes = 1:2;        % Likelihood types to plot
     subspecs = {'_N1000', '_N1000'}; % Number of households, for each likelihood type
 else
     plot_liktypes = 1;          % Likelihood types to plot
-    subspecs = {'_trunc90'};    % Truncation
+    subspecs = {'_trunc0'};    % Truncation
 end
-plot_reps = 1:10;               % Repetitions to include in plot (non-existing repetitions are ignored)
+plot_reps = 1;               % Repetitions to include in plot (non-existing repetitions are ignored)
 n_liktype = length(plot_liktypes);
 n_rep = length(plot_reps);
 
 % Reporting settings
 is_plot_param = true;           % Plot MCMC results for model parameters?
-plot_burnin = 1e3;              % Burn-in for MCMC chains
+plot_burnin = 5e2;              % Burn-in for MCMC chains
 acf_lags = 200;                 % No. of ACF lags
 
 % Parameter names
@@ -30,8 +30,8 @@ if strcmp(model_name, 'hh')
     plot_param = {'bbeta', 'ssigmaMeas', 'mu_l'};   % Names of parameters to plot
     tex_param = {'\beta','\sigma_e','\mu_\lambda'}; % Tex versions of parameter names (in same order as above)
 else
-    plot_param = {'rrhoProd', 'ssigmaProd'};
-    tex_param = {'\rho_\epsilon','\sigma_\epsilon'};
+    plot_param = {'ppsiCapital', 'aaUpper'};
+    tex_param = {'$\bar{\xi}$','$a$'};
 end
 
 % Plot layout
@@ -75,7 +75,7 @@ wedge_text = 0.1;               % Shift horizon label vertically by this much re
 xloc_text = 0.7;                % Horizon location of labels
 
 % Folders
-results_folder = 'results';                         % Stores results
+results_folder = 'results2';                         % Stores results
 save_folder = fullfile(results_folder, 'plots');    % Saved figures
 
 
@@ -155,7 +155,7 @@ if is_plot_param
                 subplot(the_nparam,1,i_param);
                 plot(the_draws,'-k');
                 xline(plot_burnin,'k--');
-                title(the_tex,'FontSize',plot_fontsize,'FontWeight','bold');
+                title(the_tex,'FontSize',plot_fontsize,'FontWeight','bold','Interpreter','latex');
 
                 % ACF
                 figure(f_acf);
@@ -163,7 +163,7 @@ if is_plot_param
                 the_acf = autocorr(the_draws(plot_burnin+1:end),acf_lags);
                 plot(0:acf_lags,the_acf,'-k','LineWidth',1.5);
                 yline(0, 'k--');
-                title(the_tex,'FontSize',plot_fontsize,'FontWeight','bold');
+                title(the_tex,'FontSize',plot_fontsize,'FontWeight','bold','Interpreter','latex');
 
                 % Posterior density
                 figure(f_postdens);
@@ -174,7 +174,7 @@ if is_plot_param
                 if isempty(get(get(gca,'Title'),'String'))
                     hold on; % hold off will be automatic when the figure is closed
                     xline(model_params_truth{i_rep,i_type}(i_param),'k--');
-                    title(the_tex,'FontSize',plot_fontsize,'FontWeight','bold');
+                    title(the_tex,'FontSize',plot_fontsize,'FontWeight','bold','Interpreter','latex');
                 end
 
                 % Posterior density, all repetitions together
@@ -187,7 +187,7 @@ if is_plot_param
                     hold on; % hold off will be automatic when the figure is closed
                     xline(model_params_truth{i_rep,i_type}(i_param),'k--');
                     stack_postdens_all{the_param} = [n_liktype+1 stack_postdens_all{the_param}]; % Bottom of the layer
-                    title(the_tex,'FontSize',plot_fontsize,'FontWeight','bold');
+                    title(the_tex,'FontSize',plot_fontsize,'FontWeight','bold','Interpreter','latex');
                 end
 
             end
