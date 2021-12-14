@@ -8,30 +8,35 @@ addpath(fullfile('functions', 'plot'));
 %% Settings
 
 % Results to plot
-model_name = 'firm';              % Either 'hh' or 'firm'
+model_name = 'hh';              % Either 'hh' or 'firm'
 if strcmp(model_name,'hh')
     plot_liktypes = 1:2;        % Likelihood types to plot
     subspecs = {'_N1000', '_N1000'}; % Number of households, for each likelihood type
 else
     plot_liktypes = 1;          % Likelihood types to plot
-    subspecs = {'_trunc0'};    % Truncation
+    subspecs = {'_exp1'};       % Experiment type
 end
-plot_reps = 1;               % Repetitions to include in plot (non-existing repetitions are ignored)
+plot_reps = 1:10;               % Repetitions to include in plot (non-existing repetitions are ignored)
 n_liktype = length(plot_liktypes);
 n_rep = length(plot_reps);
 
 % Reporting settings
 is_plot_param = true;           % Plot MCMC results for model parameters?
-plot_burnin = 5e2;              % Burn-in for MCMC chains
+plot_burnin = 1e3;              % Burn-in for MCMC chains
 acf_lags = 200;                 % No. of ACF lags
 
 % Parameter names
 if strcmp(model_name, 'hh')
     plot_param = {'bbeta', 'ssigmaMeas', 'mu_l'};   % Names of parameters to plot
-    tex_param = {'\beta','\sigma_e','\mu_\lambda'}; % Tex versions of parameter names (in same order as above)
+    tex_param = {'$\beta$','$\sigma_e$','$\mu_\lambda$'}; % Tex versions of parameter names (in same order as above)
 else
-    plot_param = {'ppsiCapital', 'aaUpper'};
-    tex_param = {'$\bar{\xi}$','$a$'};
+    if strcmp(subspecs{1}, '_exp3')
+        plot_param = {'rrhoProd', 'ssigmaProd'};
+        tex_param = {'$\rho_\epsilon$','$\sigma_\epsilon$'};
+    else
+        plot_param = {'ppsiCapital', 'aaUpper'};
+        tex_param = {'$\bar{\xi}$','$a$'};
+    end
 end
 
 % Plot layout
@@ -75,7 +80,7 @@ wedge_text = 0.1;               % Shift horizon label vertically by this much re
 xloc_text = 0.7;                % Horizon location of labels
 
 % Folders
-results_folder = 'results2';                         % Stores results
+results_folder = 'results';                         % Stored results
 save_folder = fullfile(results_folder, 'plots');    % Saved figures
 
 

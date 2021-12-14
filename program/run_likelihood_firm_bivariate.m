@@ -25,11 +25,11 @@ N_micro = 1e3;          % Number of households per non-missing time period
 % File names
 global mat_suff;
 mat_suff = sprintf('%s%02d', '_likelihood_', serial_id); % Suffix string for all saved .mat files
-save_folder = fullfile(pwd, 'results2'); % Folder for saving results
+save_folder = fullfile(pwd, 'results'); % Folder for saving results
 
 % Parameters to evaluate
 param_names = {'ppsiCapital', 'aaUpper'};          % Names of parameters to evaluate
-param_vals_mult = [0.5 1.5];                          % Lowest and highest multiples of true value on fine grid
+param_vals_mult = [0.5 2.5];                          % Lowest and highest multiples of true value on fine grid
 param_vals_num = 20;                              % Number of fine grid points (excluding true values) in interval defined by "param_vals_mult"
 param_space =        [0   Inf;   0   Inf];        % Boundaries of parameter space to enforce on fine grid
 

@@ -15,7 +15,7 @@ plot_reps = 1:10;       % Repetitions to include in plot (non-existing repetitio
 
 % Parameter names
 plot_param = {'bbeta', 'ssigmaMeas', 'mu_l'};   % Names of parameters to plot
-tex_param = {'\beta','\sigma_e','\mu_\lambda'}; % Tex versions of parameter names (in same order as above)
+tex_param = {'$\beta$','$\sigma_e$','$\mu_\lambda$'}; % Tex versions of parameter names (in same order as above)
 
 % Plot layout
 layer_order = plot_liktypes;              % Layer order of likelihood types for overlaid plots: 1st element = top layer
@@ -134,7 +134,7 @@ for i_rep = 1:n_rep
         xlim(xlim_param(i_param,:,i_rep))
         ylim(ylim_lik)
         xline(params_truth(i_param),'k--');
-        title(tex_param{i_param},'FontSize',plot_fontsize,'FontWeight','bold');
+        title(tex_param{i_param},'FontSize',plot_fontsize,'FontWeight','bold','Interpreter','latex');
         set(gca,'Position',get(gca,'Position')+reposition_rep) % Reposition subplots due to legend
         
         if i_param == 1
