@@ -3,7 +3,7 @@
 Matlab code for full-information Bayesian inference in heterogeneous agent models using both (i) macro time series data and (ii) repeated cross sections of micro data
 
 **Reference:**
-[Liu, Laura](https://laurayuliu.com/), and [Mikkel Plagborg-Møller](https://scholar.princeton.edu/mikkelpm) (2020), "Full-Information Estimation of Heterogeneous Agent Models Using Macro and Micro Data", https://scholar.princeton.edu/mikkelpm/het_agents (paper + online appendix)
+[Liu, Laura](https://laurayuliu.com/), and [Mikkel Plagborg-Møller](https://scholar.princeton.edu/mikkelpm) (2022), "Full-Information Estimation of Heterogeneous Agent Models Using Macro and Micro Data", https://scholar.princeton.edu/mikkelpm/het_agents (paper + online appendix)
 
 **Requirements:**
 [Dynare](https://www.dynare.org/) version 4.6.x
@@ -11,6 +11,10 @@ Matlab code for full-information Bayesian inference in heterogeneous agent model
 Tested in: Matlab R2020a on Windows 10 PC and Linux servers (64-bit) with Dynare 4.6.1
 
 ## Contents
+
+**[doc](doc):** documentation
+- [hh.md](doc/hh.md): documentation of code for heterogeneous household model
+- [firm.md](doc/firm.md): documentation of code for heterogeneous firm model
 
 **[program](program):** Matlab routines
 - [run_mcmc_hh.m](program/run_mcmc_hh.m): simulate and estimate heterogeneous household model
