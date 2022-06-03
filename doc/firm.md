@@ -19,7 +19,7 @@ The Dynare model file is called [dynamicModel.mod](../program/firm_model/dynare/
 
 ## Compute truncation point
 
-If the experiment being run involves selection of firms by size, the code computes the lower treshold for the truncation. The formula exploits the fact that the cross-sectional distribution of firm state variables (log capital and productivity) is approximated using a multivariate normal distribution when solving the model in Dynare.
+If the experiment being run involves selection of firms by size, the code computes the lower threshold for the truncation. The formula exploits the fact that the cross-sectional distribution of firm state variables (log capital and productivity) is approximated using a multivariate normal distribution when solving the model in Dynare. To apply our code to real-world data, this part may be ignored, since the threshold can either be known or be treated as another parameter to be estimated from the available data.
 
 ## Simulate data
 
@@ -31,7 +31,11 @@ The model-specific [likelihood_micro.m](../program/firm_model/auxiliary_function
 
 ## Visualization of file dependencies
 
-The following figure visualizes the dependencies between the various files used for the heterogeneus firm model. The color coding is as follows:
-- a
-- b
-- c
+The following figure visualizes the dependencies between the various files used for the heterogeneous firm model (please zoom in for details).[^1] The color coding is as follows:
+- Shades of yellow-orange: generic functions in folder [program/functions](../program/functions). Different shades indicate files in different sub-folders.
+- Shades of blue: model-specific files in folder [program/firm_model](../program/firm_model). Different shades indicate files in different sub-folders.
+- Gray: build-in [Dynare](https://www.dynare.org/) functions.
+
+![File dependencies for the heterogeneous firm model](fig/firm_filemap.png)
+
+[^1]: The code generating this visualization is adapted from the following package: Pedersen, C. (2022). [plot_depfun](https://www.mathworks.com/matlabcentral/fileexchange/46080-plot_depfun), MATLAB Central File Exchange. 

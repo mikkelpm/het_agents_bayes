@@ -30,7 +30,7 @@ The settings at the top of the file determine the specifics of the model, the in
   - `mcmc_adapt_diag`: This boolean determines whether the RWMH proposal uses a diagonal var-cov matrix or a full var-cov matrix.
   - `mcmc_adapt_param`: This variable determines how far the RWMH proposal var-cov matrix is shrunk towards an identity matrix in the updating process. It makes sense to use a bit of shrinkage so that outlier draws in the adaptation phase do not overly influence the later proposals.
   - `mcmc_c` and `mcmc_ar_tg`: These variables determine the process for adaptively setting the RWMH step size using the [Atchadé & Rosenthal (2005) algorithm](https://doi.org/10.3150/bj/1130077595).
-  - `mcmc_p_adapt`: This variable sets the probability of using a standard RWMH proposal draw witht the adaptive step size. With the complementary probability, the MCMC algorithm will instead generate a draw with the fixed step size `mcmc_stepsize_init`.
+  - `mcmc_p_adapt`: This variable sets the probability of using a standard RWMH proposal draw with the adaptive step size. With the complementary probability, the MCMC algorithm will instead generate a draw with the fixed step size `mcmc_stepsize_init`.
 - Likelihood approximation
   - `num_smooth_draws`: Number of smoothing draws used to compute the unbiased likelihood estimate (called *J* in Section 3.1 of our paper).
   - `num_interp`: Number of grid points for income at which the integral in Equation 4 of our paper is evaluated numerically. We then use cubic interpolation to evaluate the integral at other points.
@@ -50,7 +50,7 @@ When all parameters are set and saved, the code calls Dynare's preprocessor, whi
 - [variables_polynomials.mod](../program/hh_model/dynare/variables_polynomials.mod): define model variables
 - [equations_polynomials.mod](../program/hh_model/dynare/equations_polynomials.mod): equilibrium conditions
 
-Finally, the model file defines the macro observables. These include cross-sectional moments of the micro data, for use in evaluating the moment-based likelihood functions described in Section 4.4 of our paper.
+Finally, the model file defines potential macro observables. These include cross-sectional moments of the micro data, for use in evaluating the moment-based likelihood functions described in Section 4.4 of our paper. Note that it is always possible to use part of the macro observables for estimation by setting the other macro observables to missing values in [run_sim.m](../program/functions/sim/run_sim.m).
 
 As usual in Dynare, solving the model first requires computing the non-stochastic steady state of the model, which happens in the hierarchy of files [firstOrderDynamics_polynomials_steadystate.m](../program/hh_model/dynare/firstOrderDynamics_polynomials_steadystate.m), [compute_steady_state.m](../program/hh_model/dynare/compute_steady_state.m), and [coreSteadyState.m](../program/hh_model/dynare/coreSteadyState.m). These files are not essentially different from Winberry's, though we have slightly optimized the numerical performance in various parts.
 
@@ -60,7 +60,7 @@ When the steady state solver has converged, Dynare produces Matlab structures `M
 
 We use simulated data for the numerical exercises in Sections 4 and 5 of our paper. To apply our code to real data, this part can of course be skipped.
 
-The general `run_sim.m` file either loads previously simulated data (if indicated earlier in the settings) or runs the model-specific file [simul_data.m](../program/hh_model/auxiliary_functions/sim/simul_data.m). The latter file first simulates the macro time series data and then the repeated cross sections of micro data.
+The general [run_sim.m](../program/functions/sim/run_sim.m) file either loads previously simulated data (if indicated earlier in the settings) or runs the model-specific file [simul_data.m](../program/hh_model/auxiliary_functions/sim/simul_data.m). The latter file first simulates the macro time series data and then the repeated cross sections of micro data.
 
 The macro time series are simulated using Dynare's built-in `simulate_model` function, at the previously defined true calibrated parameters. We then add Gaussian measurement error to log output as specified in our paper.
 
@@ -68,7 +68,7 @@ To simulate micro data, we first call the function [simulate_micro_aux.m](../pro
 
 The final micro data is produced by the function [simulate_micro.m](../program/hh_model/auxiliary_functions/sim/simulate_micro.m), which multiplies income by the lognormal individual-specific permanent productivity draws $\lambda_i$, cf. Section 2.2 in our paper.
 
-The `simul_data.m` file also computes various cross-sectional moments of income at each point in time. These are used for the moment-based likelihood functions described in Section 4.4 of our paper.
+The [simul_data.m](../program/hh_model/auxiliary_functions/sim/simul_data.m) file also computes various cross-sectional moments of income at each point in time. These are used for the moment-based likelihood functions described in Section 4.4 of our paper.
 
 ## Measurement error for moment likelihoods: [compute_meas_err_const.m](../program/hh_model/auxiliary_functions/likelihood/compute_meas_err_const.m)
 
@@ -87,19 +87,19 @@ The cell array `smooth_vars` contains the Dynare names of the latent macro state
 ### Step 3: Call overall likelihood computation function: [loglike_compute.m](../program/functions/likelihood/loglike_compute.m)
 This general function executes the overall likelihood computation steps described in Section 3.1 of our paper. These steps are as follows.
 
-### Step 3a: Compute macro likelihood and smoothing means: [likelihood_smoother.m](../program/functions/likelihood/likelihood_smoother.m) 
-This general function is used to compute the macro likelihood and obtain smoothing means (i.e., conditional means of the macro state variables given the observed data at all points in time). This function uses Dynare's built-in `dsge_likelihood` routine to evaluate the macro likelihood of the model at the current parameters stored in the `M_` structure. It then calls the general function [mean_smoother.m](../program/functions/likelihood/mean_smoother.m), which in turn uses Dynare's built-in `DsgeSmoother` routine to compute the smoothing means of the macro state variables. 
+#### Step 3a: Compute macro likelihood and smoothing means: [likelihood_smoother.m](../program/functions/likelihood/likelihood_smoother.m) 
+This general function is used to compute the macro likelihood and obtain smoothing means (i.e., conditional means of the macro state variables given the observed macro data at all points in time). This function uses Dynare's built-in `dsge_likelihood` routine to evaluate the macro likelihood of the model at the current parameters stored in the `M_` structure. It then calls the general function [mean_smoother.m](../program/functions/likelihood/mean_smoother.m), which in turn uses Dynare's built-in `DsgeSmoother` routine to compute the smoothing means of the macro state variables. 
 
-### Step 3b: Simulate smoothing draws: [simulation_smoother.m](../program/functions/likelihood/simulation_smoother.m)
-Then the computation of the micro likelihood is parallelized across available workers. On each worker, we first call the general function `simulation_smoother.m`, which takes the previously computed smoothing means and uses them to generate draws from the Kalman smoothing distribution. This is done using the simulation smoother of [Durbin & Koopman (2002)](https://doi.org/10.1093/biomet/89.3.603).
+#### Step 3b: Simulate smoothing draws: [simulation_smoother.m](../program/functions/likelihood/simulation_smoother.m)
+Then the computation of the micro likelihood is parallelized across available workers. On each worker, we first call the general function [simulation_smoother.m](../program/functions/likelihood/simulation_smoother.m), which takes the previously computed smoothing means and uses them to generate draws from the Kalman smoothing distribution. This is done using the simulation smoother of [Durbin & Koopman (2002)](https://doi.org/10.1093/biomet/89.3.603).
 
-### Step 3c: Input smoothing draws and micro data into model-specified micro sampling density
+#### Step 3c: Input smoothing draws and micro data into model-specified micro sampling density
 Given the smoothing draws and the micro data, we plug into the model-specific micro sampling density of household income. In the household model, this sampling density is computed by the following function.
 
-### Step 4: Evaluate model-specific micro sampling density: [likelihood_micro.m](../program/hh_model/auxiliary_functions/likelihood/likelihood_micro.m)
+#### Step 3d: Evaluate model-specific micro sampling density: [likelihood_micro.m](../program/hh_model/auxiliary_functions/likelihood/likelihood_micro.m)
 This function evaluates the model-implied sampling density of income and employment. The employment distribution is a simple Bernoulli distribution. Conditional on employment, the density of income is stated in Equation 4 of our paper. This expression requires evaluating the density of household assets using the smoothing draws of the distributional parameters. We also need to numerically compute an integral over the lognormal distribution of individual heterogeneity. Rather than computing the integral at every data point, we evaluate it on a grid of points and then interpolate elsewhere using Matlab's built-in cubic interpolation routine `interp1`.
 
-### Step 5: Compute total log likelihood
+#### Step 3e: Compute total log likelihood
 Finally, the micro likelihood is averaged across smoothing draws, and the total log likelihood is computed as the sum of the macro log likelihood and the log (averaged) micro likelihood. Recall from our paper that this is not the exact log likelihood, but the exponential of it is a numerically unbiased estimate of the exact likelihood (for any finite number of smoothing draws).
 
 ## Approximate the posterior mode: [approx_mode.m](../program/functions/mcmc/approx_mode.m)
@@ -120,11 +120,15 @@ Finally, before moving on to the next iteration, the new adaptive step size is c
 
 ## Save results
 
-At the end of `run_mcmc_hh.m`, all numerical results are saved to a `.mat` file. There will also be several auxiliary `.mat` files in the [dynare](../program/hh_model/dynare) folder, which contain simulated data, stored parameters, internal Dynare calculations, and temporary MCMC results. These auxiliary files can be deleted upon completion of the program.
+At the end of [run_mcmc_hh.m](../program/run_mcmc_hh.m), all numerical results are saved to a `.mat` file. There will also be several auxiliary `.mat` files in the [dynare](../program/hh_model/dynare) folder, which contain simulated data, stored parameters, internal Dynare calculations, and temporary MCMC results. These auxiliary files can be deleted upon completion of the program.
 
 ## Visualization of file dependencies
 
-The following figure visualizes the dependencies between the various files used for the heterogeneus household model. The color coding is as follows:
-- a
-- b
-- c
+The following figure visualizes the dependencies between the various files used for the heterogeneous household model (please zoom in for details).[^1] The color coding is as follows:
+- Shades of yellow-orange: generic functions in folder [program/functions](../program/functions). Different shades indicate files in different sub-folders.
+- Shades of green: model-specific files in folder [program/hh_model](../program/hh_model). Different shades indicate files in different sub-folders.
+- Gray: build-in [Dynare](https://www.dynare.org/) functions.
+
+![File dependencies for the heterogeneous household model](fig/hh_filemap.png)
+
+[^1]: The code generating this visualization is adapted from the following package: Pedersen, C. (2022). [plot_depfun](https://www.mathworks.com/matlabcentral/fileexchange/46080-plot_depfun), MATLAB Central File Exchange. 
