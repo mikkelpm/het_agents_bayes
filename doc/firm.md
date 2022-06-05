@@ -34,7 +34,7 @@ The model-specific [likelihood_micro.m](../program/firm_model/auxiliary_function
 The following figure visualizes the dependencies between the various files used for the heterogeneous firm model (please zoom in for details).[^1] The color coding is as follows:
 - Shades of yellow-orange: generic functions in folder [program/functions](../program/functions). Different shades indicate files in different sub-folders.
 - Shades of blue: model-specific files in folder [program/firm_model](../program/firm_model). Different shades indicate files in different sub-folders.
-- Gray: build-in [Dynare](https://www.dynare.org/) functions.
+- Gray: built-in [Dynare](https://www.dynare.org/) functions.
 
 ![File dependencies for the heterogeneous firm model](fig/firm_filemap.png)
 

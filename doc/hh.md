@@ -50,7 +50,7 @@ When all parameters are set and saved, the code calls Dynare's preprocessor, whi
 - [variables_polynomials.mod](../program/hh_model/dynare/variables_polynomials.mod): define model variables
 - [equations_polynomials.mod](../program/hh_model/dynare/equations_polynomials.mod): equilibrium conditions
 
-Finally, the model file defines potential macro observables. These include cross-sectional moments of the micro data, for use in evaluating the moment-based likelihood functions described in Section 4.4 of our paper. Note that it is always possible to use part of the macro observables for estimation by setting the other macro observables to missing values in [run_sim.m](../program/functions/sim/run_sim.m).
+Finally, the model file defines potential macro observables. These include cross-sectional moments of the micro data, for use in evaluating the moment-based likelihood functions described in Section 4.4 of our paper. Note that it is always possible to use only part of the macro observables for estimation by setting the simulated values of other macro observables to missing in [run_sim.m](../program/functions/sim/run_sim.m).
 
 As usual in Dynare, solving the model first requires computing the non-stochastic steady state of the model, which happens in the hierarchy of files [firstOrderDynamics_polynomials_steadystate.m](../program/hh_model/dynare/firstOrderDynamics_polynomials_steadystate.m), [compute_steady_state.m](../program/hh_model/dynare/compute_steady_state.m), and [coreSteadyState.m](../program/hh_model/dynare/coreSteadyState.m). These files are not essentially different from Winberry's, though we have slightly optimized the numerical performance in various parts.
 
@@ -127,7 +127,7 @@ At the end of [run_mcmc_hh.m](../program/run_mcmc_hh.m), all numerical results a
 The following figure visualizes the dependencies between the various files used for the heterogeneous household model (please zoom in for details).[^1] The color coding is as follows:
 - Shades of yellow-orange: generic functions in folder [program/functions](../program/functions). Different shades indicate files in different sub-folders.
 - Shades of green: model-specific files in folder [program/hh_model](../program/hh_model). Different shades indicate files in different sub-folders.
-- Gray: build-in [Dynare](https://www.dynare.org/) functions.
+- Gray: built-in [Dynare](https://www.dynare.org/) functions.
 
 ![File dependencies for the heterogeneous household model](fig/hh_filemap.png)
 
