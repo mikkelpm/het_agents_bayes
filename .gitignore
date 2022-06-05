@@ -17,4 +17,4 @@ program/firm_model/dynare/+dynamicModel/*.*
 
 # Add some files back in
 !*_steadystate.m
-!doc/fig/*.*
+!doc/fig/*.png
