@@ -3,7 +3,7 @@
 Matlab code for full-information Bayesian inference in heterogeneous agent models using both (i) macro time series data and (ii) repeated cross sections of micro data
 
 **Reference:**
-[Liu, Laura](https://laurayuliu.com/), and [Mikkel Plagborg-Møller](https://scholar.princeton.edu/mikkelpm) (2022), "Full-Information Estimation of Heterogeneous Agent Models Using Macro and Micro Data", [arXiv:2101.04771](https://arxiv.org/abs/2101.04771)
+[Liu, Laura](https://laurayuliu.com/), and [Mikkel Plagborg-Møller](https://www.mikkelpm.com) (2022), "Full-Information Estimation of Heterogeneous Agent Models Using Macro and Micro Data", [arXiv:2101.04771](https://arxiv.org/abs/2101.04771)
 
 **Requirements:**
 [Dynare](https://www.dynare.org/) version 4.6.x
